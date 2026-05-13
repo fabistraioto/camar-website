@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta de Diárias - Câmara Municipal de Marília</title>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
@@ -12,28 +13,56 @@
 
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #fff; margin: 0; padding: 10px; color: #333; }
-        .filtros-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 20px; }
+        
+        /* Contentor de Filtros Profissional */
+        .filtros-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 15px; 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #e0e0e0; 
+            margin-bottom: 20px; 
+        }
+        
         .campo-filtro { display: flex; flex-direction: column; }
-        .campo-filtro label { font-size: 12px; font-weight: 600; color: #003b75; margin-bottom: 5px; text-transform: uppercase; }
-        .campo-filtro select, .campo-filtro input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-        .botoes-exportacao { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn-export { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
-        .btn-excel { background-color: #217346; color: white; }
-        .btn-csv { background-color: #003b75; color: white; }
-        .btn-export:hover { opacity: 0.9; transform: translateY(-1px); }
-        table.dataTable { width: 100% !important; border: 1px solid #eee !important; font-size: 13px; }
-        table.dataTable thead th { background-color: #003b75 !important; color: white !important; padding: 12px !important; }
+        .campo-filtro label { font-size: 11px; font-weight: 700; color: #003b75; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .campo-filtro select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: white; cursor: pointer; }
+
+        /* Botões de Exportação */
+        .botoes-exportacao { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-export { 
+            padding: 10px 18px; border: none; border-radius: 4px; cursor: pointer; 
+            font-weight: 600; font-size: 13px; display: flex; align-items: center; 
+            gap: 8px; transition: 0.2s; color: white;
+        }
+        .btn-excel { background-color: #217346; }
+        .btn-csv { background-color: #003b75; }
+        .btn-export:hover { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        /* Estilização da Tabela DataTables */
+        .dataTables_wrapper { padding-top: 10px; }
+        table.dataTable { width: 100% !important; border-collapse: collapse !important; border: 1px solid #ddd !important; font-size: 13px; }
+        table.dataTable thead th { background-color: #003b75 !important; color: white !important; padding: 14px 10px !important; border-bottom: none !important; text-align: left; }
+        table.dataTable tbody td { padding: 12px 10px !important; border-bottom: 1px solid #eee; }
+        table.dataTable tbody tr:hover { background-color: #f1f5f9 !important; }
+        
+        /* Ajustes de Responsividade */
+        @media (max-width: 600px) {
+            .filtros-container { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
     <div class="filtros-container">
         <div class="campo-filtro">
-            <label>Gabinete/Setor</label>
+            <label>Gabinete / Setor</label>
             <select id="filtroGabinete"><option value="">Todos</option></select>
         </div>
         <div class="campo-filtro">
-            <label>Servidor/Vereador</label>
+            <label>Servidor / Vereador</label>
             <select id="filtroServidor"><option value="">Todos</option></select>
         </div>
         <div class="campo-filtro">
@@ -64,100 +93,110 @@
             <tr>
                 <th>Data</th>
                 <th>Nome</th>
-                <th>Gabinete/Setor</th>
+                <th>Gabinete / Setor</th>
                 <th>Destino</th>
                 <th>Motivo</th>
-                <th>Valor (R$)</th>
+                <th style="text-align: right;">Valor (R$)</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
 
     <script>
-        const SHEET_ID = '1jw1AE_-VG0GvvWn5T6K-Io8nOnMiUydUlFuCYaYdN-M';
-        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+        // URL da folha de cálculo principal formatada para CSV direto (evita erro de JSON)
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/1jw1AE_-VG0GvvWn5T6K-Io8nOnMiUydUlFuCYaYdN-M/export?format=csv&gid=0";
         let tabela;
 
         $(document).ready(function() {
-            fetch(SHEET_URL)
-                .then(res => res.text())
-                .then(data => {
-                    const json = JSON.parse(data.substr(47).slice(0, -2));
-                    const rows = json.table.rows;
-                    const dadosFormatados = [];
+            carregarDados();
+        });
 
-                    const gabinetes = new Set();
-                    const servidores = new Set();
-                    const anos = new Set();
+        async function carregarDados() {
+            try {
+                const response = await fetch(CSV_URL);
+                const data = await response.text();
+                
+                // Processamento do CSV
+                const linhas = data.split(/\r?\n/);
+                const dadosFormatados = [];
+                const gabinetes = new Set();
+                const servidores = new Set();
+                const anos = new Set();
 
-                    rows.forEach(row => {
-                        const d = row.c;
+                // Começamos na linha 1 para saltar o cabeçalho
+                for (let i = 1; i < linhas.length; i++) {
+                    // Regex para lidar com vírgulas dentro de aspas no CSV
+                    const colunas = linhas[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    
+                    if (colunas.length >= 6) {
                         const item = {
-                            data: d[0]?.f || d[0]?.v || "",
-                            nome: d[1]?.v || "",
-                            gabinete: d[2]?.v || "",
-                            destino: d[3]?.v || "",
-                            motivo: d[4]?.v || "",
-                            valor: d[5]?.f || d[5]?.v || "0,00"
+                            data: colunas[0].replace(/"/g, '').trim(),
+                            nome: colunas[1].replace(/"/g, '').trim(),
+                            gabinete: colunas[2].replace(/"/g, '').trim(),
+                            destino: colunas[3].replace(/"/g, '').trim(),
+                            motivo: colunas[4].replace(/"/g, '').trim(),
+                            valor: colunas[5].replace(/"/g, '').trim()
                         };
+
                         dadosFormatados.push(item);
                         
                         if(item.gabinete) gabinetes.add(item.gabinete);
                         if(item.nome) servidores.add(item.nome);
-                        if(item.data) {
-                            const ano = item.data.split('/')[2];
-                            if(ano) anos.add(ano);
-                        }
-                    });
+                        const ano = item.data.split('/')[2];
+                        if(ano) anos.add(ano);
+                    }
+                }
 
-                    // Preencher Filtros
-                    Array.from(gabinetes).sort().forEach(g => $('#filtroGabinete').append(`<option value="${g}">${g}</option>`));
-                    Array.from(servidores).sort().forEach(s => $('#filtroServidor').append(`<option value="${s}">${s}</option>`));
-                    Array.from(anos).sort().reverse().forEach(a => $('#filtroAno').append(`<option value="${a}">${a}</option>`));
+                // Preencher Filtros Dinâmicos
+                Array.from(gabinetes).sort().forEach(g => $('#filtroGabinete').append(`<option value="${g}">${g}</option>`));
+                Array.from(servidores).sort().forEach(s => $('#filtroServidor').append(`<option value="${s}">${s}</option>`));
+                Array.from(anos).sort().reverse().forEach(a => $('#filtroAno').append(`<option value="${a}">${a}</option>`));
 
-                    tabela = $('#tabelaDiarias').DataTable({
-                        data: dadosFormatados,
-                        columns: [
-                            { data: 'data' },
-                            { data: 'nome' },
-                            { data: 'gabinete' },
-                            { data: 'destino' },
-                            { data: 'motivo' },
-                            { data: 'valor', className: 'dt-right' }
-                        ],
-                        language: { url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json' },
-                        pageLength: 15,
-                        order: [[0, 'desc']]
-                    });
-
-                    // Ação dos Filtros
-                    $('.filtros-container select').on('change', function() {
-                        const gab = $('#filtroGabinete').val();
-                        const serv = $('#filtroServidor').val();
-                        const mes = $('#filtroMes').val();
-                        const ano = $('#filtroAno').val();
-
-                        tabela.column(2).search(gab).column(1).search(serv);
-
-                        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                            const dataColuna = data[0]; // DD/MM/YYYY
-                            const parteMes = dataColuna.split('/')[1];
-                            const parteAno = dataColuna.split('/')[2];
-                            
-                            const matchMes = mes === "" || parteMes === mes;
-                            const matchAno = ano === "" || parteAno === ano;
-                            
-                            return matchMes && matchAno;
-                        });
-
-                        tabela.draw();
-                        $.fn.dataTable.ext.search.pop();
-                    });
+                // Inicializar DataTables
+                tabela = $('#tabelaDiarias').DataTable({
+                    data: dadosFormatados,
+                    columns: [
+                        { data: 'data' },
+                        { data: 'nome' },
+                        { data: 'gabinete' },
+                        { data: 'destino' },
+                        { data: 'motivo' },
+                        { data: 'valor', className: 'dt-right' }
+                    ],
+                    language: { url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json' },
+                    pageLength: 15,
+                    order: [[0, 'desc']]
                 });
-        });
 
-        // --- NOVA LÓGICA DE NOME DE ARQUIVO DINÂMICO ---
-        function obterNomeArquivoBase() {
+                // Lógica dos Filtros
+                $('.filtros-container select').on('change', function() {
+                    const gab = $('#filtroGabinete').val();
+                    const serv = $('#filtroServidor').val();
+                    const mes = $('#filtroMes').val();
+                    const ano = $('#filtroAno').val();
+
+                    tabela.column(2).search(gab).column(1).search(serv);
+
+                    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                        const dataColuna = data[0]; // Formato DD/MM/YYYY
+                        const partes = dataColuna.split('/');
+                        const m = partes[1];
+                        const a = partes[2];
+                        
+                        return (mes === "" || m === mes) && (ano === "" || a === ano);
+                    });
+
+                    tabela.draw();
+                    $.fn.dataTable.ext.search.pop();
+                });
+
+            } catch (error) {
+                console.error("Erro ao carregar:", error);
+            }
+        }
+
+        // --- NOME DE FICHEIRO DINÂMICO ---
+        function obterNomeArquivo() {
             const gab = $('#filtroGabinete').val();
             const serv = $('#filtroServidor').val();
             const mes = $('#filtroMes').val();
@@ -165,39 +204,37 @@
 
             if (!gab && !serv && !mes && !ano) return "diarias_completo";
 
-            let partes = ["diarias"];
-            if (gab) partes.push(gab);
-            if (serv) partes.push(serv);
-            if (mes) partes.push(mes);
-            if (ano) partes.push(ano);
+            let nome = "diarias";
+            if (gab) nome += "_" + gab;
+            if (serv) nome += "_" + serv;
+            if (mes) nome += "_" + mes;
+            if (ano) nome += "_" + ano;
 
-            return partes.join('_')
-                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
-                .replace(/\s+/g, '_') // Espaço vira _
-                .replace(/[^a-zA-Z0-9_]/g, ""); // Remove símbolos
+            return nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, "");
         }
 
         function exportarXLSX() {
-            const dados = tabela.rows({ filter: 'applied' }).data().toArray();
-            const worksheet = XLSX.utils.json_to_sheet(dados);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Diárias");
-            XLSX.writeFile(workbook, obterNomeArquivoBase() + ".xlsx");
+            const dadosVisiveis = tabela.rows({ filter: 'applied' }).data().toArray();
+            const ws = XLSX.utils.json_to_sheet(dadosVisiveis);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Diárias");
+            XLSX.writeFile(wb, obterNomeArquivo() + ".xlsx");
         }
 
         function exportarCSV() {
-            const dados = tabela.rows({ filter: 'applied' }).data().toArray();
-            if (!dados.length) return;
+            const dadosVisiveis = tabela.rows({ filter: 'applied' }).data().toArray();
             const headers = ["Data", "Nome", "Gabinete", "Destino", "Motivo", "Valor"];
             let csv = "\ufeff" + headers.join(",") + "\n";
-            dados.forEach(row => {
+            
+            dadosVisiveis.forEach(row => {
                 csv += [row.data, row.nome, row.gabinete, row.destino, row.motivo, row.valor]
                     .map(v => `"${String(v).replace(/"/g, '""')}"`).join(",") + "\n";
             });
+
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = obterNomeArquivoBase() + ".csv";
+            link.download = obterNomeArquivo() + ".csv";
             link.click();
         }
     </script>
