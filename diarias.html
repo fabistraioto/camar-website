@@ -25,36 +25,45 @@
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #003b75; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Layout */
-        .container { background: white; margin: 12px; padding: 12px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; }
-        .toolbar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-        .toolbar-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        /* Layout e Caixas de Agrupamento */
+        .container { background: white; margin: 12px; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; }
+        
+        .painel-grupo {
+            background-color: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .toolbar-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        
         select, button { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
         button { background: #003b75; color: white; border: none; cursor: pointer; transition: background 0.3s; display: flex; align-items: center; gap: 5px; }
         button:hover { background: #002a52; }
         .btn-acao { background: #17a2b8; }
         .btn-acao:hover { background: #138496; }
 
+        /* Controles do DataTables (Terceira Caixa) */
+        .dt-controles { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_length { margin-bottom: 0 !important; padding-top: 0 !important; float: none !important; }
+        .dataTables_wrapper .dataTables_filter label { font-size: 0; }
+        .dataTables_wrapper .dataTables_filter input { font-size: 14px; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; margin-left: 0; }
+
         /* Tabela DataTables */
         table.dataTable thead th { background: #003b75 !important; color: white !important; text-transform: uppercase; font-size: 12px; padding: 12px; }
         table.dataTable tfoot th { background: #f4f6f9 !important; color: #003b75 !important; font-size: 14px; font-weight: bold; padding: 12px; border-top: 2px solid #003b75; }
         
-        .dataTables_wrapper .dataTables_filter, 
-        .dataTables_wrapper .dataTables_length { margin-bottom: 30px; padding-top: 10px; }
-        
-        .dataTables_wrapper .dataTables_filter label { font-size: 0; }
-        .dataTables_wrapper .dataTables_filter input { font-size: 14px; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; }
-        
+        /* Impressão */
         @media print {
             @page { size: landscape; margin: 10mm; } 
-            .topo, .toolbar, .dataTables_filter, .dataTables_filter input, .dataTables_length, .dataTables_info, .dataTables_paginate { display: none !important; }
+            .topo, .toolbar, .dt-controles, .dataTables_info, .dataTables_paginate { display: none !important; }
             .container { box-shadow: none; width: 100%; margin: 0; padding: 0; }
             table.dataTable { border-collapse: collapse !important; width: 100% !important; }
             table.dataTable th, table.dataTable td { font-size: 9px !important; border: 1px solid #ddd !important; display: table-cell !important; padding: 6px 4px !important; white-space: normal !important; }
             table.dataTable tr.child { display: none !important; }
             table.dataTable td.dtr-control::before, table.dataTable th.dtr-control::before { display: none !important; }
-            
-            /* Esta linha impede que o total se repita em todas as páginas na impressão */
             tfoot { display: table-row-group !important; }
         }
     </style>
@@ -77,7 +86,7 @@
 
     <main class="container" id="main-container">
         <div class="toolbar">
-            <div class="toolbar-row">
+            <div class="painel-grupo toolbar-row">
                 <select id="filtroGabinete" title="Escolha o Vereador Ativo"><option value="">Gabinete</option></select>
                 <select id="filtroServidor"><option value="">Servidor</option></select>
                 <select id="filtroMes">
@@ -93,11 +102,11 @@
                 <button onclick="limparFiltros()">Limpar filtros</button>
             </div>
             
-            <div class="toolbar-row">
+            <div class="painel-grupo toolbar-row">
                 <button onclick="exportarCSV()">⬇️ CSV</button>
                 <button onclick="exportarXLSX()">⬇️ Excel</button>
                 <button onclick="exportarJSON()">⬇️ JSON</button>
-                <button class="btn-acao" onclick="window.print()">🖨️ Imprimir</button>
+                <button class="btn-acao" onclick="imprimirSeguro()">🖨️ Imprimir</button>
                 <button class="btn-acao" onclick="iniciarCarregamento()">🔄 Atualizar</button>
             </div>
         </div>
@@ -147,10 +156,16 @@
         let dadosGlobais = [];
         let listaGabinetes = [];
 
-        // Comunicação com o portal para esticar o iframe
+        function imprimirSeguro() {
+            const linhaRodape = $('#tabela tfoot tr');
+            $('#tabela tbody').append(linhaRodape);
+            window.print();
+            $('#tabela tfoot').append(linhaRodape);
+        }
+
         function enviarAltura() {
             setTimeout(function() {
-                const altura = document.body.scrollHeight + 30; // 30px de respiro
+                const altura = document.body.scrollHeight + 30; 
                 window.parent.postMessage({ tipo: 'ajustarAltura', valor: altura }, '*');
             }, 300);
         }
@@ -264,6 +279,8 @@
             tabela = $('#tabela').DataTable({
                 pageLength: 10, 
                 responsive: true, 
+                /* DOM ajustado para criar a CAIXA 3 com a mesma formatação das outras */
+                dom: '<"painel-grupo dt-controles"lf>rtip',
                 language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
                 initComplete: function() { $('.dataTables_filter input').attr('placeholder', 'Buscar na tabela...'); },
                 
@@ -280,10 +297,7 @@
                 }
             });
 
-            // Envia nova altura após desenhar a tabela (quando clica em "Próximo" ou pesquisa algo)
-            tabela.on('draw.dt', function() {
-                enviarAltura();
-            });
+            tabela.on('draw.dt', function() { enviarAltura(); });
             enviarAltura();
         }
 
@@ -343,7 +357,7 @@
                 
                 $('#loader').hide(); 
                 $('#main-container').fadeIn(400, function() {
-                    enviarAltura(); // Avisa o portal assim que carregar
+                    enviarAltura(); 
                 });
             } catch (e) {
                 $('#loader').html(`
