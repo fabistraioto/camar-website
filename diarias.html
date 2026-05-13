@@ -51,7 +51,41 @@
             letter-spacing: 0.5px;
         }
 
-        .toolbar-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        /* --- TRAVA DE TAMANHO PARA OS FILTROS --- */
+        .painel-filtros .toolbar-row { 
+            display: grid; 
+            /* Gabinete (2) | Servidor (2) | Mês (1) | Ano (1) | Botão (Auto) */
+            grid-template-columns: 2fr 2fr 1fr 1fr auto; 
+            gap: 10px; 
+            width: 100%; 
+            align-items: center;
+        }
+        .painel-filtros select {
+            width: 100%;
+            text-overflow: ellipsis; /* Coloca '...' se o texto for muito grande */
+            white-space: nowrap;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        /* --- BOTÕES DE EXPORTAÇÃO OCUPANDO O QUADRO TODO --- */
+        .painel-exportacao .toolbar-row { 
+            display: flex; 
+            gap: 10px; 
+            width: 100%; 
+            align-items: center;
+        }
+        .painel-exportacao button {
+            flex: 1; /* Faz os botões dividirem o espaço igualmente */
+            justify-content: center; /* Centraliza o ícone e o texto dentro do botão */
+            white-space: nowrap;
+        }
+
+        /* Comportamento responsivo para telas pequenas (Celulares) */
+        @media (max-width: 768px) {
+            .painel-filtros .toolbar-row { grid-template-columns: 1fr; }
+            .painel-exportacao .toolbar-row { flex-direction: column; }
+        }
         
         select, button { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
         button { background: #003b75; color: white; border: none; cursor: pointer; transition: background 0.3s; display: flex; align-items: center; gap: 5px; }
@@ -72,9 +106,9 @@
         /* Impressão */
         @media print {
             @page { size: landscape; margin: 10mm; } 
-            .topo, .toolbar, .dt-controles, .dataTables_info, .dataTables_paginate { display: none !important; }
-            .container { box-shadow: none; width: 100%; margin: 0; padding: 0; }
-            table.dataTable { border-collapse: collapse !important; width: 100% !important; }
+            .topo, .painel-grupo, .dt-controles, .dataTables_info, .dataTables_paginate { display: none !important; }
+            .container { box-shadow: none; width: 100%; margin: 0; padding: 0; border: none; }
+            table.dataTable { border-collapse: collapse !important; width: 100% !important; margin-top: 0 !important;}
             table.dataTable th, table.dataTable td { font-size: 9px !important; border: 1px solid #ddd !important; display: table-cell !important; padding: 6px 4px !important; white-space: normal !important; }
             table.dataTable tr.child { display: none !important; }
             table.dataTable td.dtr-control::before, table.dataTable th.dtr-control::before { display: none !important; }
@@ -100,7 +134,7 @@
 
     <main class="container" id="main-container">
         <div class="toolbar">
-            <div class="painel-grupo">
+            <div class="painel-grupo painel-filtros">
                 <h3 class="titulo-painel">Filtros de Pesquisa</h3>
                 <div class="toolbar-row">
                     <select id="filtroGabinete" title="Escolha o Vereador Ativo"><option value="">Gabinete</option></select>
@@ -119,7 +153,7 @@
                 </div>
             </div>
             
-            <div class="painel-grupo">
+            <div class="painel-grupo painel-exportacao">
                 <h3 class="titulo-painel">Exportação e Impressão</h3>
                 <div class="toolbar-row">
                     <button onclick="exportarCSV()">⬇️ CSV</button>
@@ -246,34 +280,29 @@
             return `${partes[2]}${partes[1]}${partes[0]}`;
         }
 
-        // --- ATUALIZAÇÃO: PREENCHIMENTO DINÂMICO DE SERVIDORES ---
         function preencherFiltros(apenasServidor = false) {
             const valServidor = $('#filtroServidor').val();
             const valGabinete = $('#filtroGabinete').val();
             const valAno = $('#filtroAno').val();
 
-            // Lógica para filtrar a lista de servidores baseada no Gabinete selecionado
             let servidoresFiltrados = [];
             if (valGabinete) {
                 const g = removerAcentos(valGabinete).toLowerCase();
                 servidoresFiltrados = [...new Set(dadosGlobais.filter(d => {
                     const n = removerAcentos(d.servidor || "").toLowerCase();
                     const c = removerAcentos(d["cargo ou função"] || "").toLowerCase();
-                    // Captura quem tem o nome do vereador no nome ou no cargo (motoristas, assessores, etc)
                     return n.includes(g) || c.includes(g);
                 }).map(d => d.servidor))].sort();
             } else {
                 servidoresFiltrados = [...new Set(dadosGlobais.map(d => d.servidor))].sort();
             }
 
-            // Atualiza o select de Servidor
             $('#filtroServidor').html('<option value="">Servidor</option>');
             servidoresFiltrados.forEach(s => { 
                 if(s) $('#filtroServidor').append(`<option value="${s}">${s}</option>`); 
             });
             $('#filtroServidor').val(valServidor);
 
-            // Atualiza Gabinete e Anos apenas na carga inicial ou refresh completo
             if (!apenasServidor) {
                 const anos = [...new Set(dadosGlobais.map(d => extrairData(d["data da partida"]).ano))].filter(a => a).sort();
                 
@@ -369,7 +398,7 @@
 
         function limparFiltros() { 
             $('#filtroServidor, #filtroMes, #filtroAno, #filtroGabinete').val(''); 
-            preencherFiltros(); // Reseta a lista de servidores
+            preencherFiltros(); 
             aplicarFiltros(); 
         }
 
@@ -475,9 +504,8 @@
             URL.revokeObjectURL(url);
         }
 
-        // Listener especial para o Gabinete
         $('#filtroGabinete').on('change', function() { 
-            preencherFiltros(true); // Atualiza apenas a lista de servidores
+            preencherFiltros(true); 
             aplicarFiltros(); 
         });
 
