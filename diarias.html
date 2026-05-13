@@ -59,7 +59,7 @@
         .btn-acao { background: #17a2b8; }
         .btn-acao:hover { background: #138496; }
 
-        /* Controles do DataTables (Terceira Caixa) */
+        /* Controles do DataTables */
         .dt-controles { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_length { margin-bottom: 0 !important; padding-top: 0 !important; float: none !important; }
         .dataTables_wrapper .dataTables_filter label { font-size: 0; }
@@ -100,30 +100,34 @@
 
     <main class="container" id="main-container">
         <div class="toolbar">
-            <div class="painel-grupo toolbar-row">
+            <div class="painel-grupo">
                 <h3 class="titulo-painel">Filtros de Pesquisa</h3>
-                <select id="filtroGabinete" title="Escolha o Vereador Ativo"><option value="">Gabinete</option></select>
-                <select id="filtroServidor"><option value="">Servidor</option></select>
-                <select id="filtroMes">
-                    <option value="">Mês</option>
-                    <option value="01">Janeiro</option><option value="02">Fevereiro</option>
-                    <option value="03">Março</option><option value="04">Abril</option>
-                    <option value="05">Maio</option><option value="06">Junho</option>
-                    <option value="07">Julho</option><option value="08">Agosto</option>
-                    <option value="09">Setembro</option><option value="10">Outubro</option>
-                    <option value="11">Novembro</option><option value="12">Dezembro</option>
-                </select>
-                <select id="filtroAno"><option value="">Ano</option></select>
-                <button onclick="limparFiltros()">Limpar filtros</button>
+                <div class="toolbar-row">
+                    <select id="filtroGabinete" title="Escolha o Vereador Ativo"><option value="">Gabinete</option></select>
+                    <select id="filtroServidor"><option value="">Servidor</option></select>
+                    <select id="filtroMes">
+                        <option value="">Mês</option>
+                        <option value="01">Janeiro</option><option value="02">Fevereiro</option>
+                        <option value="03">Março</option><option value="04">Abril</option>
+                        <option value="05">Maio</option><option value="06">Junho</option>
+                        <option value="07">Julho</option><option value="08">Agosto</option>
+                        <option value="09">Setembro</option><option value="10">Outubro</option>
+                        <option value="11">Novembro</option><option value="12">Dezembro</option>
+                    </select>
+                    <select id="filtroAno"><option value="">Ano</option></select>
+                    <button onclick="limparFiltros()">Limpar filtros</button>
+                </div>
             </div>
             
-            <div class="painel-grupo toolbar-row">
+            <div class="painel-grupo">
                 <h3 class="titulo-painel">Exportação e Impressão</h3>
-                <button onclick="exportarCSV()">⬇️ CSV</button>
-                <button onclick="exportarXLSX()">⬇️ Excel</button>
-                <button onclick="exportarJSON()">⬇️ JSON</button>
-                <button class="btn-acao" onclick="imprimirSeguro()">🖨️ Imprimir</button>
-                <button class="btn-acao" onclick="iniciarCarregamento()">🔄 Atualizar</button>
+                <div class="toolbar-row">
+                    <button onclick="exportarCSV()">⬇️ CSV</button>
+                    <button onclick="exportarXLSX()">⬇️ Excel</button>
+                    <button onclick="exportarJSON()">⬇️ JSON</button>
+                    <button class="btn-acao" onclick="imprimirSeguro()">🖨️ Imprimir</button>
+                    <button class="btn-acao" onclick="iniciarCarregamento()">🔄 Atualizar</button>
+                </div>
             </div>
         </div>
 
@@ -242,31 +246,50 @@
             return `${partes[2]}${partes[1]}${partes[0]}`;
         }
 
-        function preencherFiltros() {
+        // --- ATUALIZAÇÃO: PREENCHIMENTO DINÂMICO DE SERVIDORES ---
+        function preencherFiltros(apenasServidor = false) {
             const valServidor = $('#filtroServidor').val();
-            const valAno = $('#filtroAno').val();
             const valGabinete = $('#filtroGabinete').val();
+            const valAno = $('#filtroAno').val();
 
-            const servidores = [...new Set(dadosGlobais.map(d => d.servidor))].sort();
-            const anos = [...new Set(dadosGlobais.map(d => extrairData(d["data da partida"]).ano))].filter(a => a).sort();
-            
+            // Lógica para filtrar a lista de servidores baseada no Gabinete selecionado
+            let servidoresFiltrados = [];
+            if (valGabinete) {
+                const g = removerAcentos(valGabinete).toLowerCase();
+                servidoresFiltrados = [...new Set(dadosGlobais.filter(d => {
+                    const n = removerAcentos(d.servidor || "").toLowerCase();
+                    const c = removerAcentos(d["cargo ou função"] || "").toLowerCase();
+                    // Captura quem tem o nome do vereador no nome ou no cargo (motoristas, assessores, etc)
+                    return n.includes(g) || c.includes(g);
+                }).map(d => d.servidor))].sort();
+            } else {
+                servidoresFiltrados = [...new Set(dadosGlobais.map(d => d.servidor))].sort();
+            }
+
+            // Atualiza o select de Servidor
             $('#filtroServidor').html('<option value="">Servidor</option>');
-            servidores.forEach(s => { if(s) $('#filtroServidor').append(`<option value="${s}">${s}</option>`); });
-            
-            $('#filtroAno').html('<option value="">Ano</option>');
-            anos.forEach(a => { if(a) $('#filtroAno').append(`<option value="${a}">${a}</option>`); });
-
-            $('#filtroGabinete').html('<option value="">Gabinete</option>');
-            listaGabinetes.forEach(g => {
-                const colunas = Object.values(g);
-                if(colunas.length > 0 && colunas[0]) {
-                    $('#filtroGabinete').append(`<option value="${colunas[0]}">${colunas[0]}</option>`);
-                }
+            servidoresFiltrados.forEach(s => { 
+                if(s) $('#filtroServidor').append(`<option value="${s}">${s}</option>`); 
             });
-
             $('#filtroServidor').val(valServidor);
-            $('#filtroAno').val(valAno);
-            $('#filtroGabinete').val(valGabinete);
+
+            // Atualiza Gabinete e Anos apenas na carga inicial ou refresh completo
+            if (!apenasServidor) {
+                const anos = [...new Set(dadosGlobais.map(d => extrairData(d["data da partida"]).ano))].filter(a => a).sort();
+                
+                $('#filtroAno').html('<option value="">Ano</option>');
+                anos.forEach(a => { if(a) $('#filtroAno').append(`<option value="${a}">${a}</option>`); });
+                $('#filtroAno').val(valAno);
+
+                $('#filtroGabinete').html('<option value="">Gabinete</option>');
+                listaGabinetes.forEach(g => {
+                    const colunas = Object.values(g);
+                    if(colunas.length > 0 && colunas[0]) {
+                        $('#filtroGabinete').append(`<option value="${colunas[0]}">${colunas[0]}</option>`);
+                    }
+                });
+                $('#filtroGabinete').val(valGabinete);
+            }
         }
 
         function render(dados) {
@@ -299,7 +322,6 @@
                 language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
                 initComplete: function() { 
                     $('.dataTables_filter input').attr('placeholder', 'Buscar na tabela...'); 
-                    // Injeta o título dinamicamente na terceira caixa
                     $('.dt-controles').prepend('<h3 class="titulo-painel">Visualização e Busca Rápida</h3>');
                 },
                 
@@ -347,6 +369,7 @@
 
         function limparFiltros() { 
             $('#filtroServidor, #filtroMes, #filtroAno, #filtroGabinete').val(''); 
+            preencherFiltros(); // Reseta a lista de servidores
             aplicarFiltros(); 
         }
 
@@ -452,7 +475,15 @@
             URL.revokeObjectURL(url);
         }
 
-        $('#filtroServidor, #filtroMes, #filtroAno, #filtroGabinete').on('change', function() { aplicarFiltros(); });
+        // Listener especial para o Gabinete
+        $('#filtroGabinete').on('change', function() { 
+            preencherFiltros(true); // Atualiza apenas a lista de servidores
+            aplicarFiltros(); 
+        });
+
+        $('#filtroServidor, #filtroMes, #filtroAno').on('change', function() { 
+            aplicarFiltros(); 
+        });
         
         window.onload = iniciarCarregamento;
     </script>
