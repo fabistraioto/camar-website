@@ -59,15 +59,18 @@
         #cabecalho-impressao { display: none; }
         
         @media print {
-            @page { margin: 10mm; } 
+            /* ESTA REGRA É A PRINCIPAL PARA REMOVER OS ITENS DAS BORDAS */
+            @page { margin: 0; size: auto; } 
+
+            body { background: white !important; padding: 10mm !important; } /* Adiciona margem interna segura para não cortar o conteúdo */
             .topo, fieldset, .dt-controles, .dt-bottom-controls { display: none !important; }
+            
             #cabecalho-impressao { display: block !important; margin-bottom: 25px; }
             .cabecalho-print-flex { display: flex; align-items: center; gap: 15px; border-bottom: 2px solid #003b75; padding-bottom: 15px; margin-bottom: 15px; }
             .cabecalho-print-flex img { height: 60px; }
             .cabecalho-print-textos h2 { margin: 0 0 5px 0; color: #003b75; font-size: 22px; font-weight: 800; }
             .cabecalho-print-textos span { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
             
-            body { background: white !important; padding: 0 !important; }
             .container { margin: 0 !important; width: 100% !important; display: block !important; }
             .card-estagiario { break-inside: avoid; border: 1px solid #cbd5e1 !important; box-shadow: none !important; margin-bottom: 15px; }
         }
@@ -105,36 +108,22 @@
             <legend class="titulo-painel">Filtros de Pesquisa</legend>
             <div id="badge-atualizacao" class="badge-atualizacao">⏳ Sincronizando...</div>
             <div class="toolbar-row">
-                <select id="filtroNome">
-                    <option value="">Nome do Estagiário</option>
-                </select>
-
+                <select id="filtroNome"><option value="">Nome do Estagiário</option></select>
                 <select id="filtroStatus">
                     <option value="">Situação</option>
                     <option value="Ativo">Ativo</option>
                     <option value="Desligado">Desligado</option>
                 </select>
-
                 <select id="filtroMes">
                     <option value="">Mês</option>
-                    <option value="01">Janeiro</option>
-                    <option value="02">Fevereiro</option>
-                    <option value="03">Março</option>
-                    <option value="04">Abril</option>
-                    <option value="05">Maio</option>
-                    <option value="06">Junho</option>
-                    <option value="07">Julho</option>
-                    <option value="08">Agosto</option>
-                    <option value="09">Setembro</option>
-                    <option value="10">Outubro</option>
-                    <option value="11">Novembro</option>
-                    <option value="12">Dezembro</option>
+                    <option value="01">Janeiro</option><option value="02">Fevereiro</option>
+                    <option value="03">Março</option><option value="04">Abril</option>
+                    <option value="05">Maio</option><option value="06">Junho</option>
+                    <option value="07">Julho</option><option value="08">Agosto</option>
+                    <option value="09">Setembro</option><option value="10">Outubro</option>
+                    <option value="11">Novembro</option><option value="12">Dezembro</option>
                 </select>
-
-                <select id="filtroAno">
-                    <option value="">Ano</option>
-                </select>
-
+                <select id="filtroAno"><option value="">Ano</option></select>
                 <button onclick="limparFiltros()">Limpar filtros</button>
             </div>
         </fieldset>
