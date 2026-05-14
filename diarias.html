@@ -185,12 +185,29 @@
             $('#tabela tfoot').append(linhaRodape);
         }
 
+        // --- SOLUÇÃO DO CORTE DA TABELA: FÓRMULA MATEMÁTICA E SENSOR ---
         function enviarAltura() {
             setTimeout(function() {
-                const altura = document.body.scrollHeight + 50; 
+                const body = document.body;
+                const html = document.documentElement;
+                // Pega a maior altura possível que o navegador consegue detectar
+                const altura = Math.max(
+                    body.scrollHeight, body.offsetHeight, 
+                    html.clientHeight, html.scrollHeight, html.offsetHeight
+                ) + 60; // 60px de margem de segurança extra
+                
                 window.parent.postMessage({ tipo: 'ajustarAltura', valor: altura }, '*');
-            }, 300);
+            }, 300); // Dá 300ms para a tabela terminar a animação de desenhar
         }
+
+        // Sensor que vigia o corpo da página o tempo todo
+        const resizeObserver = new ResizeObserver(() => {
+            enviarAltura();
+        });
+        window.addEventListener('load', () => {
+            resizeObserver.observe(document.body);
+        });
+        // -------------------------------------------------------------
 
         function getCsvUrl(id) { return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&t=${Date.now()}`; }
 
@@ -202,10 +219,8 @@
             if (isDiarias) {
                 for (let i = 0; i < linhas.length; i++) {
                     if (linhas[i].toUpperCase().includes("MODIF_REAL:")) {
-                        // Regex captura data e hora: dd/mm/yyyy hh:mm:ss
                         let match = linhas[i].match(/MODIF_REAL:\s*(\d{1,2}\/\d{1,2}\/\d{4}[^\d]+\d{1,2}:\d{2}(?::\d{2})?)/i);
                         if (match && match[1]) {
-                            // Limpa vírgulas, insere "às" e REMOVE os segundos finais
                             let dataCrua = match[1].replace(/,/g, '').trim();
                             carimboCompleto = dataCrua.replace(/\s+/, ' às ').replace(/:\d{2}$/, '');
                         }
@@ -343,6 +358,8 @@
                     $(api.column(4).footer()).html(f.format(tA));
                 }
             });
+            
+            // Avisa o iframe sobre qualquer mudança nas páginas ou expansões
             tabela.on('draw.dt responsive-display.dt', function() { enviarAltura(); });
             enviarAltura();
         }
@@ -389,7 +406,6 @@
                 $('#filtroMes').val(maxM); $('#filtroAno').val(maxA);
                 aplicarFiltros();
                 
-                // MENSAGEM COM OS SEGUNDOS CORTADOS
                 if (carimboCompleto && carimboCompleto !== "") {
                     $('#badge-atualizacao').html(`🟢 Dados atualizados em ${carimboCompleto}`);
                 } else {
