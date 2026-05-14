@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Relatório de Estagiários</title>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', Arial, sans-serif; margin: 0; background: #f1f5f9; color: #1e293b; }
+        .topo { background: #003b75; color: white; padding: 20px 35px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; margin: 15px; gap: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .topo h1 { margin: 0; font-size: 1.8rem; font-weight: 800; }
+        .logo-container { display: flex; flex-direction: column; align-items: center; }
+        .brasao { height: 50px; width: auto; }
+        .texto-camara { font-size: 10px; color: #cbd5e1; letter-spacing: 2px; text-transform: uppercase; }
+
+        #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #003b75; font-weight: bold; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #003b75; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .container { margin: 0 15px 15px 15px; display: none; }
+        fieldset.painel-grupo { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        legend.titulo-painel { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 0 10px; }
+
+        .toolbar-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 12px; align-items: center; }
+        .painel-exportacao .toolbar-row { display: flex; flex-wrap: wrap; }
+        
+        select, button { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; width: 100%; }
+        button { background: #003b75; color: white; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        button:hover { background: #00274d; }
+        .btn-acao { background: #0284c7; }
+
+        /* Estilo dos Cards */
+        #tabela thead { display: none; }
+        table.dataTable { border: none !important; }
+        .card-estagiario { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card-header { padding: 15px 20px; background: #fff; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .nome-estagiario { font-size: 16px; font-weight: 800; color: #003b75; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .status-ativo { background: #d1fae5; color: #065f46; }
+        .status-desligado { background: #fee2e2; color: #991b1b; }
+        
+        .card-body { display: grid; grid-template-columns: 1fr 1fr; padding: 15px 20px; gap: 15px; }
+        .info-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; display: block; }
+        .info-valor { font-size: 14px; font-weight: 600; }
+
+        @media (max-width: 768px) {
+            .toolbar-row { grid-template-columns: 1fr; }
+            .topo { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="topo">
+        <h1>Relatório de Estagiários</h1>
+        <div class="logo-container">
+            <span class="texto-camara">Câmara Municipal de Marília</span>
+        </div>
+    </header>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <span>Carregando dados dos estagiários...</span>
+    </div>
+
+    <main class="container" id="main-container">
+        <fieldset class="painel-grupo">
+            <legend class="titulo-painel">Filtros de Pesquisa</legend>
+            <div class="toolbar-row">
+                <select id="filtroNome"><option value="">Nome do Estagiário</option></select>
+                <select id="filtroStatus">
+                    <option value="">Situação (Todos)</option>
+                    <option value="Ativo">Ativo</option>
+                    <option value="Desligado">Desligado</option>
+                </select>
+                <select id="filtroMes">
+                    <option value="">Mês (Admissão/Desl.)</option>
+                    <option value="01">Janeiro</option><option value="02">Fevereiro</option>
+                    <option value="03">Março</option><option value="04">Abril</option>
+                    <option value="05">Maio</option><option value="06">Junho</option>
+                    <option value="07">Julho</option><option value="08">Agosto</option>
+                    <option value="09">Setembro</option><option value="10">Outubro</option>
+                    <option value="11">Novembro</option><option value="12">Dezembro</option>
+                </select>
+                <select id="filtroAno"><option value="">Ano</option></select>
+                <button onclick="limparFiltros()">Limpar Filtros</button>
+            </div>
+        </fieldset>
+
+        <fieldset class="painel-grupo painel-exportacao">
+            <legend class="titulo-painel">Exportação e Impressão</legend>
+            <div class="toolbar-row" style="display: flex; gap: 10px;">
+                <button onclick="exportarCSV()">⬇️ CSV</button>
+                <button onclick="exportarXLSX()">⬇️ Excel</button>
+                <button onclick="exportarJSON()">⬇️ JSON</button>
+                <button class="btn-acao" onclick="window.print()">🖨️ Imprimir</button>
+                <button class="btn-acao" onclick="iniciarCarregamento()">🔄 Atualizar</button>
+            </div>
+        </fieldset>
+
+        <fieldset class="painel-grupo" id="painel-busca">
+            <legend class="titulo-painel">Visualização e Busca Rápida</legend>
+            <div id="controles-datatable"></div>
+        </fieldset>
+
+        <table id="tabela" style="width:100%">
+            <thead><tr><th>Dados</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        const SHEET_ID = "1A1L-OfSCiFyyER8BPaarBJASCYeH-uJ8BuBTe2y9hAs";
+        let dadosGlobais = [];
+        let tabela;
+
+        async function iniciarCarregamento() {
+            $('#loader').show(); $('#main-container').hide();
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${Date.now()}`;
+            
+            try {
+                const response = await fetch(url);
+                const csvText = await response.text();
+                dadosGlobais = csvParaArray(csvText);
+                
+                preencherFiltros();
+                aplicarFiltros();
+
+                $('#loader').hide();
+                $('#main-container').fadeIn();
+            } catch (e) {
+                $('#loader').html('<span style="color:red">Erro ao carregar dados da planilha.</span>');
+            }
+        }
+
+        function csvParaArray(str) {
+            const linhas = str.split("\n").filter(l => l.trim() !== "");
+            const cabecalho = linhas[0].split(",").map(c => c.trim().replace(/"/g, ''));
+            const resultado = [];
+
+            for (let i = 1; i < linhas.length; i++) {
+                const valores = linhas[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Regex para respeitar vírgulas em aspas
+                let obj = {};
+                cabecalho.forEach((col, idx) => {
+                    let val = valores[idx] ? valores[idx].trim().replace(/"/g, '') : "";
+                    obj[col] = val;
+                });
+                // Lógica de Situação
+                obj.situacao = (obj.data_desligamento === "" || obj.data_desligamento === "-") ? "Ativo" : "Desligado";
+                resultado.push(obj);
+            }
+            return resultado;
+        }
+
+        function preencherFiltros() {
+            const nomes = [...new Set(dadosGlobais.map(d => d.nome_estagiario))].sort();
+            $('#filtroNome').html('<option value="">Nome do Estagiário</option>');
+            nomes.forEach(n => $('#filtroNome').append(`<option value="${n}">${n}</option>`));
+
+            const anos = new Set();
+            dadosGlobais.forEach(d => {
+                if (d.dat_adminissao) anos.add(d.dat_adminissao.split('/')[2]);
+                if (d.data_desligamento && d.data_desligamento !== "-") anos.add(d.data_desligamento.split('/')[2]);
+            });
+            const anosOrdenados = Array.from(anos).sort((a, b) => b - a);
+            $('#filtroAno').html('<option value="">Ano</option>');
+            anosOrdenados.forEach(a => $('#filtroAno').append(`<option value="${a}">${a}</option>`));
+        }
+
+        function render(dados) {
+            if (tabela) tabela.destroy();
+
+            tabela = $('#tabela').DataTable({
+                data: dados,
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+                dom: '<"top"f>rt<"bottom"ip>',
+                columns: [{
+                    data: null,
+                    render: function(data) {
+                        const statusClass = data.situacao === 'Ativo' ? 'status-ativo' : 'status-desligado';
+                        return `
+                            <div class="card-estagiario">
+                                <div class="card-header">
+                                    <span class="nome-estagiario">${data.nome_estagiario}</span>
+                                    <span class="status-badge ${statusClass}">${data.situacao}</span>
+                                </div>
+                                <div class="card-body">
+                                    <div>
+                                        <span class="info-label">Data de Admissão</span>
+                                        <span class="info-valor">${data.dat_adminissao || '-'}</span>
+                                    </div>
+                                    <div>
+                                        <span class="info-label">Data de Desligamento</span>
+                                        <span class="info-valor">${data.data_desligamento || '-'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }],
+                initComplete: function() {
+                    $('.top').appendTo('#controles-datatable');
+                }
+            });
+        }
+
+        function aplicarFiltros() {
+            const nome = $('#filtroNome').val();
+            const situacao = $('#filtroStatus').val();
+            const mes = $('#filtroMes').val();
+            const ano = $('#filtroAno').val();
+
+            const filtrados = dadosGlobais.filter(d => {
+                const matchNome = !nome || d.nome_estagiario === nome;
+                const matchSitu = !situacao || d.situacao === situacao;
+                
+                // Busca data em admissão ou desligamento
+                const dataAdm = d.dat_adminissao.split('/');
+                const dataDes = d.data_desligamento.split('/');
+
+                const matchMes = !mes || (dataAdm[1] === mes || dataDes[1] === mes);
+                const matchAno = !ano || (dataAdm[2] === ano || dataDes[2] === ano);
+
+                return matchNome && matchSitu && matchMes && matchAno;
+            });
+
+            render(filtrados);
+        }
+
+        function limparFiltros() {
+            $('select').val('');
+            aplicarFiltros();
+        }
+
+        // Eventos
+        $('select').on('change', aplicarFiltros);
+        window.onload = iniciarCarregamento;
+
+        // Exportação simplificada baseada no que está visível
+        function exportarJSON() {
+            const data = tabela.rows({filter:'applied'}).data().toArray();
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = "relatorio_estagiarios.json"; a.click();
+        }
+        
+        function exportarCSV() {
+            const data = tabela.rows({filter:'applied'}).data().toArray();
+            let csv = "\ufeffNome,Admissão,Desligamento,Situação\n";
+            data.forEach(d => {
+                csv += `"${d.nome_estagiario}","${d.dat_adminissao}","${d.data_desligamento}","${d.situacao}"\n`;
+            });
+            const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = "relatorio_estagiarios.csv"; a.click();
+        }
+
+        function exportarXLSX() {
+            const data = tabela.rows({filter:'applied'}).data().toArray();
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Estagiários");
+            XLSX.writeFile(wb, "relatorio_estagiarios.xlsx");
+        }
+    </script>
+</body>
+</html>
