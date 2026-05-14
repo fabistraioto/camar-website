@@ -13,7 +13,7 @@
     <style>
         body { font-family: 'Inter', Arial, sans-serif; margin: 0; background: #f4f6f9; overflow-x: hidden; }
         
-        /* Cabeçalho */
+        /* Cabeçalho do Site */
         .topo { background: #003b75; color: white; padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; }
         .topo h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; }
         .logo-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
@@ -51,7 +51,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* SELO VERDE ATUALIZADO COM HORA */
+        /* SELO VERDE COM HORA */
         .badge-atualizacao {
             position: absolute;
             top: 10px;
@@ -195,7 +195,7 @@
             </tfoot>
         </table>
         
-        </main>
+    </main>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -240,7 +240,6 @@
             if (isDiarias) {
                 const primeiraLinha = linhas.shift(); // Pega a célula A1
                 if (primeiraLinha && primeiraLinha.toLowerCase().includes("modif_real:")) {
-                    // Limpa o texto e preserva data e hora
                     carimboReal = primeiraLinha.split(',')[0].replace(/"/g, '').replace(/modif_real:\s*/i, "").trim();
                 }
             }
@@ -369,7 +368,12 @@
                     $(api.column(4).footer()).html(f.format(totalA));
                 }
             });
+            
             tabela.on('draw.dt', function() { enviarAltura(); });
+            
+            // CORREÇÃO: Avisa o iframe para se esticar sempre que você clica para expandir uma linha (+)
+            tabela.on('responsive-display.dt', function() { enviarAltura(); });
+            
             enviarAltura();
         }
 
@@ -426,16 +430,15 @@
                 $('#filtroMes').val(maxMes); $('#filtroAno').val(maxAno);
                 aplicarFiltros();
                 
-                // ATUALIZAÇÃO DO SELO VERDE (BADGE) COM HORA
                 if (carimboReal) {
-                    $('#badge-atualizacao').html(`🟢 Última modificação real: ${carimboReal}`);
+                    $('#badge-atualizacao').html(`🟢 Última modificação: ${carimboReal}`);
                 } else {
                     $('#badge-atualizacao').html(`🟢 Dados sincronizados`);
                 }
                 
                 $('#loader').hide(); $('#main-container').fadeIn(400, function() { enviarAltura(); });
             } catch (e) {
-                $('#loader').html(`<div style="padding:20px; color:red;">Erro: ${e.message}</div>`);
+                $('#loader').html(`<div style="padding:20px; color:red; text-align:center;">Erro ao carregar: ${e.message}</div>`);
             }
         }
 
