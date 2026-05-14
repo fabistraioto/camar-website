@@ -6,137 +6,136 @@
     <title>Relatório de Diárias</title>
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        body { font-family: 'Inter', Arial, sans-serif; margin: 0; background: #f4f6f9; overflow-x: hidden; }
+        body { font-family: 'Inter', Arial, sans-serif; margin: 0; background: #f1f5f9; overflow-x: hidden; color: #1e293b; }
         
-        .topo { background: #003b75; color: white; padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .topo h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; }
+        .topo { background: #003b75; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .topo h1 { margin: 0; font-size: 1.4rem; letter-spacing: 0.5px; font-weight: 700; }
         .logo-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .brasao { height: 70px; width: auto; }
-        .texto-camara { font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
+        .brasao { height: 60px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        .texto-camara { font-size: 11px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; opacity: 0.9; }
 
         #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; font-size: 16px; color: #003b75; font-weight: bold; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #003b75; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .container { background: white; margin: 12px; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; }
+        .container { margin: 15px; display: none; }
         
-        /* NOVO DESIGN DAS CAIXAS DE FILTRO E EXPORTAÇÃO (PADRÃO FIELDSET) */
+        /* DESIGN DAS CAIXAS DE FILTRO E EXPORTAÇÃO */
         fieldset.painel-grupo {
             background-color: #ffffff;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 16px 20px 20px 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             position: relative;
         }
 
         legend.titulo-painel {
-            font-size: 11px;
-            font-weight: 800;
-            color: #6b7280;
-            text-transform: uppercase;
-            padding: 0 8px;
-            width: auto;
-            border-bottom: none;
-            margin-bottom: 0;
-            letter-spacing: 0.5px;
+            font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;
+            padding: 0 10px; letter-spacing: 1px;
         }
 
         .badge-atualizacao {
-            position: absolute; top: -12px; right: 16px; font-size: 11px; color: #065f46;
-            background: #d1fae5; padding: 4px 10px; border-radius: 12px; font-weight: bold;
-            border: 1px solid #a7f3d0;
+            position: absolute; top: -12px; right: 20px; font-size: 11px; color: #065f46;
+            background: #d1fae5; padding: 5px 12px; border-radius: 20px; font-weight: 700;
+            border: 1px solid #a7f3d0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        .painel-filtros .toolbar-row { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr auto; gap: 12px; width: 100%; align-items: center; margin-top: 5px; }
-        .painel-filtros select { width: 100%; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+        .painel-filtros .toolbar-row { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr auto; gap: 12px; align-items: center; }
+        .painel-exportacao .toolbar-row { display: flex; gap: 10px; align-items: center; }
+        .painel-exportacao button { flex: 1; justify-content: center; }
 
-        .painel-exportacao .toolbar-row { display: flex; gap: 10px; width: 100%; align-items: center; margin-top: 5px; }
-        .painel-exportacao button { flex: 1; justify-content: center; white-space: nowrap; }
-
-        @media (max-width: 768px) {
-            .badge-atualizacao { position: static; display: inline-block; margin-bottom: 15px; margin-top: 5px; }
+        @media (max-width: 900px) {
+            .painel-filtros .toolbar-row { grid-template-columns: 1fr 1fr; }
+            .painel-filtros button { grid-column: span 2; }
+        }
+        @media (max-width: 600px) {
             .painel-filtros .toolbar-row { grid-template-columns: 1fr; }
+            .painel-filtros button { grid-column: span 1; }
             .painel-exportacao .toolbar-row { flex-direction: column; }
         }
         
-        select, button { padding: 9px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; background-color: #fff;}
-        button { background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;}
-        button:hover { background: #00274d; }
+        select, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; transition: 0.2s; }
+        button { background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        button:hover { background: #00274d; transform: translateY(-1px); }
         .btn-acao { background: #64748b; }
-        .btn-acao:hover { background: #4b5563; }
 
-        .dt-controles { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
-        .dataTables_wrapper .dataTables_filter label { font-size: 0; }
-        .dataTables_wrapper .dataTables_filter input { font-size: 14px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; width: 250px;}
-
-        /* Estilização Base da Tabela */
-        table.dataTable { width: 100% !important; border-collapse: separate !important; border-spacing: 0; margin-bottom: 20px !important; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;}
-        table.dataTable thead th { 
-            background: #003b75 !important; color: white !important; text-transform: uppercase; font-size: 11px; padding: 14px 10px;
-            position: sticky; top: 0; z-index: 10; font-weight: 700; letter-spacing: 0.5px;
-        }
-        table.dataTable tbody td { padding: 14px 10px; font-size: 13.5px; border-bottom: 1px solid #f3f4f6; color: #111827; }
-        table.dataTable tfoot th { background: #f8fafc !important; color: #003b75 !important; font-size: 14px; font-weight: 800; padding: 14px 10px; border-top: 2px solid #003b75; }
+        /* CONTROLES DATATABLES */
+        .dt-controles { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 5px; }
+        .dataTables_filter input { padding: 10px 15px; border: 1px solid #e2e8f0; border-radius: 8px; width: 280px; background: white; }
 
         /* --------------------------------------------------- */
-        /* NOVO DESIGN DA SEGUNDA LINHA (QUADRO MASTER-DETAIL) */
-        /* --------------------------------------------------- */
-
-        /* Remove o ícone e cursor da primeira coluna */
-        table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control::before, 
-        table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control::before { display: none !important; }
-        table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control { cursor: default !important; }
-
-        /* Remove a linha separadora entre a linha pai e a linha do quadro para fundirem */
-        table.dataTable > tbody > tr.child > td { border-top: none !important; padding: 0 16px 20px 16px !important; }
-        table.dataTable > tbody > tr.parent > td { border-bottom: none !important; }
-
-        /* O Quadro de Detalhes em si */
-        .quadro-detalhes {
-            display: grid;
-            grid-template-columns: 1.5fr 1.5fr 3fr; /* Proporção das 3 colunas */
-            gap: 20px;
-            background-color: #f1f5f9; /* Fundo cinza suave */
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 16px 20px;
-            margin-top: -5px;
-            width: 100%;
-            box-sizing: border-box;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
-        }
-
-        /* Estrutura dos textos dentro do quadro */
-        .quadro-col { display: flex; flex-direction: column; }
-        .quadro-titulo {
-            font-size: 10.5px;
-            font-weight: 800;
-            color: #003b75;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-            letter-spacing: 0.5px;
-        }
-        .quadro-dado { font-size: 13.5px; color: #374151; line-height: 1.5; }
-
-        @media (max-width: 768px) {
-            .quadro-detalhes { grid-template-columns: 1fr; gap: 15px; }
-        }
+        /* DESIGN DOS CARTÕES (CARDS)                          */
         /* --------------------------------------------------- */
         
+        /* Esconde o cabeçalho da tabela pois os campos agora têm labels internos */
+        #tabela thead { display: none; }
+        table.dataTable { border: none !important; background: transparent !important; }
+        
+        /* Cada linha da tabela vira um Cartão */
+        .card-diaria {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Seção Superior do Card */
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            background: #fff;
+        }
+        .card-servidor { font-size: 18px; font-weight: 800; color: #003b75; margin-bottom: 4px; display: block; }
+        .card-cargo { font-size: 13px; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Seção de Dados Numéricos e Datas */
+        .card-body-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            padding: 16px 20px;
+            gap: 15px;
+            background: #fff;
+        }
+        .info-bloco { display: flex; flex-direction: column; }
+        .info-label { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+        .info-valor { font-size: 14px; font-weight: 700; color: #1e293b; }
+
+        /* O Quadro de Detalhes (Cinza) */
+        .card-footer-quadro {
+            background: #f8fafc;
+            margin: 0 15px 15px 15px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 1px solid #edf2f7;
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr;
+            gap: 20px;
+        }
+        .quadro-label { font-size: 10px; font-weight: 800; color: #003b75; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        .quadro-texto { font-size: 13px; color: #334155; line-height: 1.5; font-weight: 500; }
+
+        @media (max-width: 850px) {
+            .card-body-grid { grid-template-columns: 1fr 1fr; }
+            .card-footer-quadro { grid-template-columns: 1fr; gap: 12px; }
+        }
+
+        /* Paginação Customizada */
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #003b75 !important; color: white !important; border: none !important; border-radius: 6px; }
+        
         @media print {
-            @page { size: landscape; margin: 10mm; } 
-            .topo, fieldset, .dt-controles, .dataTables_info, .dataTables_paginate { display: none !important; }
-            .container { box-shadow: none; width: 100%; margin: 0; padding: 0; border: none; }
-            table.dataTable thead th { position: static !important; } 
-            table.dataTable { border-collapse: collapse !important; width: 100% !important; margin-top: 0 !important;}
-            table.dataTable th, table.dataTable td { font-size: 9px !important; border: 1px solid #ddd !important; padding: 6px 4px !important; }
+            .topo, fieldset, .dt-controles, .dataTables_paginate { display: none !important; }
+            .card-diaria { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; }
+            .card-footer-quadro { background: #eee !important; border: 1px solid #ccc !important; }
         }
     </style>
 </head>
@@ -144,7 +143,6 @@
 <body>
     
     <div id="wrapper">
-
         <header class="topo">
             <h1>Relatório de Diárias</h1>
             <div class="logo-container">
@@ -160,11 +158,9 @@
 
         <main class="container" id="main-container">
             <div class="toolbar">
-                
                 <fieldset class="painel-grupo painel-filtros">
                     <legend class="titulo-painel">Filtros de Pesquisa</legend>
                     <div id="badge-atualizacao" class="badge-atualizacao">⏳ Sincronizando...</div>
-                    
                     <div class="toolbar-row">
                         <select id="filtroGabinete"><option value="">Gabinete</option></select>
                         <select id="filtroServidor"><option value="">Servidor</option></select>
@@ -196,38 +192,16 @@
 
             <div class="dt-controles"></div>
 
-            <table id="tabela" class="display" style="width:100%">
+            <table id="tabela" style="width:100%">
                 <thead>
-                    <tr>
-                        <th>Servidor</th>
-                        <th>Cargo</th>
-                        <th>Nº Diárias</th>
-                        <th>Valor Diárias</th>
-                        <th>Adiantamento</th>
-                        <th>Partida</th>
-                        <th>Retorno</th>
-                        <th class="none">Destino</th>
-                        <th class="none">Cidade</th>
-                        <th class="none">Finalidade</th>
-                    </tr>
-                </thead>
+                    <tr><th>Card</th></tr> </thead>
                 <tbody></tbody>
-                <tfoot>
-                    <tr>
-                        <th></th><th></th>
-                        <th style="text-align: right; white-space: nowrap;">TOTAL FILTRADO:</th>
-                        <th>R$ 0,00</th><th>R$ 0,00</th>
-                        <th></th><th></th><th></th><th></th><th></th>
-                    </tr>
-                </tfoot>
             </table>
         </main>
-    
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
     <script>
         const SHEET_ID_DIARIAS = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo";
@@ -238,12 +212,7 @@
         let listaGabinetes = [];
         let carimboCompleto = "";
 
-        function imprimirSeguro() {
-            const linhaRodape = $('#tabela tfoot tr');
-            $('#tabela tbody').append(linhaRodape);
-            window.print();
-            $('#tabela tfoot').append(linhaRodape);
-        }
+        function imprimirSeguro() { window.print(); }
 
         function enviarAltura() {
             setTimeout(function() {
@@ -252,7 +221,7 @@
                     const altura = wrapper.offsetHeight + 40; 
                     window.parent.postMessage({ tipo: 'ajustarAltura', valor: altura }, '*');
                 }
-            }, 150); 
+            }, 200); 
         }
 
         const resizeObserver = new ResizeObserver(() => { enviarAltura(); });
@@ -317,21 +286,15 @@
         }
 
         function formatarMoeda(valor) {
-            if (!valor) return "";
+            if (!valor) return "R$ 0,00";
             let v = valor.trim();
-            if (v === "0" || v === "0,00" || v === "-") return "-";
+            if (v === "0" || v === "0,00" || v === "-") return "R$ 0,00";
             v = v.replace(/R\$\s?/g, "").trim();
             if (!v.includes(",")) v += ",00";
             return `R$ ${v}`;
         }
 
         function removerAcentos(str) { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : ""; }
-
-        function formatarDataParaOrdenacao(dataStr) {
-            if (!dataStr) return "00000000";
-            const partes = dataStr.split("/");
-            return partes.length === 3 ? `${partes[2]}${partes[1]}${partes[0]}` : dataStr;
-        }
 
         function preencherFiltros(apenasServidor = false) {
             const valServidor = $('#filtroServidor').val(), valGabinete = $('#filtroGabinete').val(), valAno = $('#filtroAno').val();
@@ -368,89 +331,71 @@
         }
 
         function render(dados) {
-            let html = "";
-            dados.forEach(d => {
-                html += `<tr>
-                    <td>${d.servidor || ""}</td>
-                    <td>${d["cargo ou função"] || ""}</td>
-                    <td>${d["n de diárias"] || ""}</td>
-                    <td>${formatarMoeda(d["valor diarias"])}</td>
-                    <td>${formatarMoeda(d["valor adiantamento"])}</td>
-                    <td data-sort="${formatarDataParaOrdenacao(d["data da partida"])}">${d["data da partida"] || ""}</td>
-                    <td data-sort="${formatarDataParaOrdenacao(d["data do retorno"])}">${d["data do retorno"] || ""}</td>
-                    <td>${d["local de destino"] || ""}</td>
-                    <td>${d.cidade || ""}</td>
-                    <td>${d.finalidade || ""}</td>
-                </tr>`;
-            });
             if (tabela) tabela.destroy();
-            $('#tabela tbody').html(html);
             
             tabela = $('#tabela').DataTable({
+                data: dados,
                 pageLength: 10,
-                
-                // MANTÉM AS LINHAS SEMPRE ABERTAS E USA O NOSSO "DESENHISTA" CUSTOMIZADO
-                responsive: {
-                    details: {
-                        display: $.fn.dataTable.Responsive.display.childRowImmediate,
-                        type: 'inline',
-                        renderer: function (api, rowIdx, columns) {
-                            let destino = "", cidade = "", finalidade = "";
-                            
-                            // Pesquisa qual coluna é qual pelo índice ou nome
-                            columns.forEach(function(col) {
-                                if (col.columnIndex === 7) destino = col.data;
-                                if (col.columnIndex === 8) cidade = col.data;
-                                if (col.columnIndex === 9) finalidade = col.data;
-                            });
-
-                            // O Código HTML exato que desenha o quadro com as informações
+                dom: '<"dt-controles"lf>rtip',
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+                columns: [
+                    { 
+                        data: null,
+                        render: function (data) {
+                            // CONSTRUÇÃO DO CARD HTML
                             return `
-                                <div class="quadro-detalhes">
-                                    <div class="quadro-col">
-                                        <span class="quadro-titulo">Destino da Viagem</span>
-                                        <span class="quadro-dado">${destino || "-"}</span>
+                                <div class="card-diaria">
+                                    <div class="card-header">
+                                        <span class="card-servidor">${data.servidor || "NÃO INFORMADO"}</span>
+                                        <span class="card-cargo">${data["cargo ou função"] || "-"}</span>
                                     </div>
-                                    <div class="quadro-col">
-                                        <span class="quadro-titulo">Cidade</span>
-                                        <span class="quadro-dado">${cidade || "-"}</span>
+                                    <div class="card-body-grid">
+                                        <div class="info-bloco">
+                                            <span class="info-label">Nº Diárias</span>
+                                            <span class="info-valor">${data["n de diárias"] || "0"}</span>
+                                        </div>
+                                        <div class="info-bloco">
+                                            <span class="info-label">Valor Diárias</span>
+                                            <span class="info-valor">${formatarMoeda(data["valor diarias"])}</span>
+                                        </div>
+                                        <div class="info-bloco">
+                                            <span class="info-label">Adiantamento</span>
+                                            <span class="info-valor">${formatarMoeda(data["valor adiantamento"])}</span>
+                                        </div>
+                                        <div class="info-bloco">
+                                            <span class="info-label">Partida</span>
+                                            <span class="info-valor">${data["data da partida"] || "-"}</span>
+                                        </div>
+                                        <div class="info-bloco">
+                                            <span class="info-label">Retorno</span>
+                                            <span class="info-valor">${data["data do retorno"] || "-"}</span>
+                                        </div>
                                     </div>
-                                    <div class="quadro-col">
-                                        <span class="quadro-titulo">Finalidade</span>
-                                        <span class="quadro-dado">${finalidade || "-"}</span>
+                                    <div class="card-footer-quadro">
+                                        <div class="quadro-col">
+                                            <span class="quadro-label">Destino da Viagem</span>
+                                            <span class="quadro-texto">${data["local de destino"] || "-"}</span>
+                                        </div>
+                                        <div class="quadro-col">
+                                            <span class="quadro-label">Cidade</span>
+                                            <span class="quadro-texto">${data["cidade"] || "-"}</span>
+                                        </div>
+                                        <div class="quadro-col">
+                                            <span class="quadro-label">Finalidade</span>
+                                            <span class="quadro-texto">${data["finalidade"] || "-"}</span>
+                                        </div>
                                     </div>
                                 </div>
                             `;
                         }
                     }
-                },
-
-                order: [[5, 'desc']],
-                dom: '<"dt-controles"lf>rtip',
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
-                
-                columnDefs: [
-                    { className: 'all', targets: [0, 1, 2, 3, 4, 5, 6] }
                 ],
-
                 initComplete: function() { 
-                    $('.dataTables_filter input').attr('placeholder', 'Buscar na tabela...'); 
-                },
-                footerCallback: function (row, data, start, end, display) {
-                    let api = this.api();
-                    let intVal = i => typeof i === 'string' ? parseFloat(i.replace(/R\$\s?|[.]/g, '').replace(',', '.')) || 0 : typeof i === 'number' ? i : 0;
-                    let tD = api.column(3, { search: 'applied' }).data().reduce((a, b) => intVal(a) + intVal(b), 0);
-                    let tA = api.column(4, { search: 'applied' }).data().reduce((a, b) => intVal(a) + intVal(b), 0);
-                    let f = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-                    $(api.column(3).footer()).html(f.format(tD));
-                    $(api.column(4).footer()).html(f.format(tA));
+                    $('.dataTables_filter input').attr('placeholder', 'Pesquisar servidor, cargo ou destino...'); 
                 }
             });
             
-            // Impede clicar para esconder
-            $('#tabela tbody').on('click', 'td.dtr-control', function (e) { e.stopPropagation(); });
-
-            tabela.on('draw.dt responsive-display.dt length.dt search.dt page.dt', function() { enviarAltura(); });
+            tabela.on('draw.dt page.dt search.dt', function() { enviarAltura(); });
             enviarAltura();
         }
 
@@ -463,7 +408,7 @@
                 let mG = true;
                 if (gab) {
                     const g = removerAcentos(gab).toLowerCase();
-                    mG = removerAcentos(d.servidor || "").toLowerCase().includes(g) || removerAcentos(d["cargo ou função"] || "").toLowerCase().includes(g);
+                    mG = removerAcentos(d.servidor).toLowerCase().includes(g) || removerAcentos(d["cargo ou função"]).toLowerCase().includes(g);
                 }
                 return mS && mM && mA && mG;
             });
@@ -493,44 +438,28 @@
                 if (carimboCompleto) $('#badge-atualizacao').html(`🟢 Dados atualizados em ${carimboCompleto}`);
                 else $('#badge-atualizacao').html(`🟢 Dados atualizados hoje`);
                 $('#loader').hide(); $('#main-container').fadeIn(400, function() { enviarAltura(); });
-            } catch (e) { $('#loader').html(`<div style="padding:20px; color:red;">Erro ao carregar: ${e.message}</div>`); }
-        }
-
-        function obterDadosFiltradosDoDOM() {
-            const dados = [];
-            $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
-                const c = $(this.node()).find('td').map(function() { return $(this).text(); }).get();
-                dados.push({ "Servidor": c[0], "Cargo": c[1], "Nº Diárias": c[2], "Valor Diárias": c[3], "Adiantamento": c[4], "Data Partida": c[5], "Data Retorno": c[6], "Destino": c[7], "Cidade": c[8], "Finalidade": c[9] });
-            });
-            return dados;
-        }
-
-        function obterNomeArquivoBase() {
-            const serv = $('#filtroServidor').val(), mes = $('#filtroMes').val(), ano = $('#filtroAno').val(), gab = $('#filtroGabinete').val();
-            if (!serv && !mes && !ano && !gab) return "diarias_completo";
-            let p = ["diarias"]; if (gab) p.push(gab); if (serv) p.push(serv); if (mes) p.push(mes); if (ano) p.push(ano);
-            return p.join('_').normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, "");
+            } catch (e) { $('#loader').html(`<div style="padding:20px; color:red;">Erro ao carregar dados. Verifique a internet.</div>`); }
         }
 
         function exportarCSV() {
-            const d = obterDadosFiltradosDoDOM(); if (!d.length) return;
-            const h = Object.keys(d[0]);
+            if (!dadosGlobais.length) return;
+            const h = Object.keys(dadosGlobais[0]);
             let csv = "\ufeff" + h.join(",") + "\n";
-            d.forEach(r => { csv += h.map(key => `"${r[key].replace(/"/g, '""')}"`).join(",") + "\n"; });
-            baixarArquivo(csv, obterNomeArquivoBase() + ".csv", "text/csv;charset=utf-8;");
+            dadosGlobais.forEach(r => { csv += h.map(key => `"${(r[key] || "").replace(/"/g, '""')}"`).join(",") + "\n"; });
+            baixarArquivo(csv, "relatorio_diarias.csv", "text/csv;charset=utf-8;");
         }
 
         function exportarXLSX() {
-            const d = obterDadosFiltradosDoDOM(); if (!d.length) return;
-            const ws = XLSX.utils.json_to_sheet(d);
+            if (!dadosGlobais.length) return;
+            const ws = XLSX.utils.json_to_sheet(dadosGlobais);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Diárias");
-            XLSX.writeFile(wb, obterNomeArquivoBase() + ".xlsx");
+            XLSX.writeFile(wb, "relatorio_diarias.xlsx");
         }
 
         function exportarJSON() {
-            const d = obterDadosFiltradosDoDOM(); if (!d.length) return;
-            baixarArquivo(JSON.stringify(d, null, 2), obterNomeArquivoBase() + ".json", "application/json");
+            if (!dadosGlobais.length) return;
+            baixarArquivo(JSON.stringify(dadosGlobais, null, 2), "relatorio_diarias.json", "application/json");
         }
 
         function baixarArquivo(c, n, t) {
