@@ -27,7 +27,7 @@
         .toolbar-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 12px; align-items: center; }
         .painel-exportacao .toolbar-row { display: flex; flex-wrap: wrap; }
         
-        select, button { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; width: 100%; }
+        select, button { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; width: 100%; box-sizing: border-box;}
         button { background: #003b75; color: white; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 5px; }
         button:hover { background: #00274d; }
         .btn-acao { background: #0284c7; }
@@ -116,16 +116,20 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <script>
-        const SHEET_ID = "1A1L-OfSCiFyyER8BPaarBJASCYeH-uJ8BuBTe2y9hAs";
+        // URL da planilha publicada na web (convertida para CSV)
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTK8EGvu2R21KpD3-E3SFDVC5qfWSihafXCpj_Y-ZnpM9DNBEb_Gimw0TboxkpiuMqJQ01WNNHm8-FA/pub?output=csv";
         let dadosGlobais = [];
         let tabela;
 
         async function iniciarCarregamento() {
             $('#loader').show(); $('#main-container').hide();
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${Date.now()}`;
             
             try {
-                const response = await fetch(url);
+                // Adiciona um timestamp para evitar o cache do navegador
+                const response = await fetch(`${SHEET_URL}&t=${Date.now()}`);
+                
+                if (!response.ok) throw new Error("Erro na requisição");
+                
                 const csvText = await response.text();
                 dadosGlobais = csvParaArray(csvText);
                 
@@ -135,12 +139,15 @@
                 $('#loader').hide();
                 $('#main-container').fadeIn();
             } catch (e) {
-                $('#loader').html('<span style="color:red">Erro ao carregar dados da planilha.</span>');
+                console.error(e);
+                $('#loader').html('<span style="color:red; font-size:16px;">Erro ao carregar dados da planilha. Verifique se a planilha está publicada na web e o link está correto.</span>');
             }
         }
 
         function csvParaArray(str) {
             const linhas = str.split("\n").filter(l => l.trim() !== "");
+            if(linhas.length === 0) return [];
+
             const cabecalho = linhas[0].split(",").map(c => c.trim().replace(/"/g, ''));
             const resultado = [];
 
@@ -149,26 +156,32 @@
                 let obj = {};
                 cabecalho.forEach((col, idx) => {
                     let val = valores[idx] ? valores[idx].trim().replace(/"/g, '') : "";
-                    obj[col] = val;
+                    // Se o cabeçalho tiver algum erro de digitação oculto, forçamos as chaves esperadas
+                    if(col.includes('nome_estagiario')) obj.nome_estagiario = val;
+                    if(col.includes('data_admissao')) obj.data_admissao = val;
+                    if(col.includes('data_desligamento')) obj.data_desligamento = val;
+                    
+                    obj[col] = val; // Mantém a chave original também por segurança
                 });
-                // Lógica de Situação
-                obj.situacao = (obj.data_desligamento === "" || obj.data_desligamento === "-") ? "Ativo" : "Desligado";
+                
+                // Lógica de Situação: Ativo se a data de desligamento for vazia, hifen ou algo similar
+                obj.situacao = (!obj.data_desligamento || obj.data_desligamento.trim() === "" || obj.data_desligamento.trim() === "-") ? "Ativo" : "Desligado";
                 resultado.push(obj);
             }
             return resultado;
         }
 
         function preencherFiltros() {
-            const nomes = [...new Set(dadosGlobais.map(d => d.nome_estagiario))].sort();
+            const nomes = [...new Set(dadosGlobais.map(d => d.nome_estagiario))].filter(n => n).sort();
             $('#filtroNome').html('<option value="">Nome do Estagiário</option>');
             nomes.forEach(n => $('#filtroNome').append(`<option value="${n}">${n}</option>`));
 
             const anos = new Set();
             dadosGlobais.forEach(d => {
-                if (d.dat_adminissao) anos.add(d.dat_adminissao.split('/')[2]);
+                if (d.data_admissao) anos.add(d.data_admissao.split('/')[2]);
                 if (d.data_desligamento && d.data_desligamento !== "-") anos.add(d.data_desligamento.split('/')[2]);
             });
-            const anosOrdenados = Array.from(anos).sort((a, b) => b - a);
+            const anosOrdenados = Array.from(anos).filter(a => a && a.length === 4).sort((a, b) => b - a);
             $('#filtroAno').html('<option value="">Ano</option>');
             anosOrdenados.forEach(a => $('#filtroAno').append(`<option value="${a}">${a}</option>`));
         }
@@ -187,13 +200,13 @@
                         return `
                             <div class="card-estagiario">
                                 <div class="card-header">
-                                    <span class="nome-estagiario">${data.nome_estagiario}</span>
+                                    <span class="nome-estagiario">${data.nome_estagiario || 'Não informado'}</span>
                                     <span class="status-badge ${statusClass}">${data.situacao}</span>
                                 </div>
                                 <div class="card-body">
                                     <div>
                                         <span class="info-label">Data de Admissão</span>
-                                        <span class="info-valor">${data.dat_adminissao || '-'}</span>
+                                        <span class="info-valor">${data.data_admissao || '-'}</span>
                                     </div>
                                     <div>
                                         <span class="info-label">Data de Desligamento</span>
@@ -220,9 +233,9 @@
                 const matchNome = !nome || d.nome_estagiario === nome;
                 const matchSitu = !situacao || d.situacao === situacao;
                 
-                // Busca data em admissão ou desligamento
-                const dataAdm = d.dat_adminissao.split('/');
-                const dataDes = d.data_desligamento.split('/');
+                // Trata as datas caso venham vazias para não dar erro no split
+                const dataAdm = (d.data_admissao || "").split('/');
+                const dataDes = (d.data_desligamento || "").split('/');
 
                 const matchMes = !mes || (dataAdm[1] === mes || dataDes[1] === mes);
                 const matchAno = !ano || (dataAdm[2] === ano || dataDes[2] === ano);
@@ -255,7 +268,7 @@
             const data = tabela.rows({filter:'applied'}).data().toArray();
             let csv = "\ufeffNome,Admissão,Desligamento,Situação\n";
             data.forEach(d => {
-                csv += `"${d.nome_estagiario}","${d.dat_adminissao}","${d.data_desligamento}","${d.situacao}"\n`;
+                csv += `"${d.nome_estagiario || ''}","${d.data_admissao || ''}","${d.data_desligamento || ''}","${d.situacao || ''}"\n`;
             });
             const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
             const url = URL.createObjectURL(blob);
