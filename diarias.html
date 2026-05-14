@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Relatório de Diárias</title>
+    <title>Relatório de Diárias e Adiantamentos</title>
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -14,7 +14,7 @@
         .topo { 
             background: #003b75; 
             color: white; 
-            padding: 20px 35px; /* Aumentado levemente para respirar melhor com as fontes novas */
+            padding: 20px 35px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -23,27 +23,24 @@
             margin: 15px 15px 20px 15px; 
         }
 
-        /* ----- MELHORIAS DE FONTE NO CABEÇALHO AZUL ----- */
         .topo h1 { 
             margin: 0; 
-            font-size: 1.8rem; /* Aumentado para dar destaque */
-            letter-spacing: 1px; /* Espaçamento premium */
-            font-weight: 800; /* Extra bold para autoridade */
-            text-shadow: 0 2px 2px rgba(0,0,0,0.3); /* Sombra sutil para profundidade */
+            font-size: 1.8rem; 
+            letter-spacing: 1px; 
+            font-weight: 800; 
+            text-shadow: 0 2px 2px rgba(0,0,0,0.3); 
         }
         
         .logo-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .brasao { height: 60px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
         
         .texto-camara { 
-            font-size: 10px; /* Menor para hierarquia visual */
-            color: #cbd5e1; /* Cinza claro elegante em vez de branco puro */
-            font-weight: 500; /* Peso médio */
-            letter-spacing: 3px; /* Espaçamento agressivo para sofisticação em caixa alta */
+            font-size: 10px; 
+            color: #cbd5e1; 
+            font-weight: 500; 
+            letter-spacing: 3px; 
             text-transform: uppercase; 
-            /* opacity removida, color fornece a suavidade */
         }
-        /* ------------------------------------------------ */
 
         #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; font-size: 16px; color: #003b75; font-weight: bold; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #003b75; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
@@ -246,7 +243,7 @@
     
     <div id="wrapper">
         <header class="topo">
-            <h1>Relatório de Diárias</h1>
+            <h1>Relatório de Diárias e Adiantamentos</h1>
             <div class="logo-container">
                 <img src="Brasão_de_Marília.png" alt="Brasão de Marília" class="brasao">
                 <span class="texto-camara">Câmara Municipal de Marília</span>
@@ -293,7 +290,7 @@
 
                 <fieldset class="painel-grupo" id="painel-busca">
                     <legend class="titulo-painel">Visualização e Busca Rápida</legend>
-                    </fieldset>
+                </fieldset>
             </div>
 
             <div id="painel-totais" class="painel-totais">
