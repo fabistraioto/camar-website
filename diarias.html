@@ -46,8 +46,7 @@
 
         .painel-filtros .toolbar-row { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr auto; gap: 12px; align-items: center; }
         .painel-exportacao .toolbar-row { display: flex; gap: 10px; align-items: center; }
-        .painel-exportacao button { flex: 1; justify-content: center; }
-
+        
         @media (max-width: 900px) {
             .painel-filtros .toolbar-row { grid-template-columns: 1fr 1fr; }
             .painel-filtros button { grid-column: span 2; }
@@ -59,13 +58,16 @@
         }
         
         select, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; transition: 0.2s; }
-        button { background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        
+        /* BOTÕES ATUALIZADOS - Agora com justify-content: center para centralizar o texto perfeitamente */
+        button { background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; flex: 1; }
         button:hover { background: #00274d; transform: translateY(-1px); }
-        .btn-acao { background: #64748b; }
+        
+        /* CORES MAIS VIVAS PARA OS BOTÕES DE AÇÃO */
+        .btn-acao { background: #0284c7; }
+        .btn-acao:hover { background: #0369a1; }
 
-        /* --------------------------------------------------- */
-        /* NOVO DESIGN DO PAINEL DE TOTAIS                     */
-        /* --------------------------------------------------- */
+        /* PAINEL DE TOTAIS EM TEMPO REAL */
         .painel-totais {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -84,7 +86,7 @@
             justify-content: center;
         }
         .total-bloco.destaque {
-            border-left: 5px solid #17a2b8; /* Cor secundária (Azul claro/Teal) para adiantamentos */
+            border-left: 5px solid #0284c7; /* Combinando com o novo azul vivo */
         }
         .total-label {
             font-size: 11px;
@@ -457,13 +459,9 @@
                     $('.dataTables_filter input').attr('placeholder', 'Pesquisar servidor, cargo ou destino...'); 
                 },
                 
-                // NOVO CÁLCULO DE TOTAIS QUE ALIMENTA OS CARDS DE TOTAL
                 drawCallback: function (settings) {
                     let api = this.api();
-                    
-                    // Pega apenas as linhas que passaram pelo filtro/pesquisa
                     let linhasFiltradas = api.rows({ filter: 'applied' }).data().toArray();
-                    
                     let totalDiarias = 0;
                     let totalAdiantamento = 0;
 
@@ -477,8 +475,6 @@
                     });
 
                     let formatador = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-                    
-                    // Atualiza o texto na tela
                     $('#total-diarias').html(formatador.format(totalDiarias));
                     $('#total-adiantamentos').html(formatador.format(totalAdiantamento));
                 }
