@@ -44,31 +44,41 @@
             border: 1px solid #a7f3d0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        /* ----- NOVA REGRA DE RESPONSIVIDADE PARA A BARRA DE FILTROS ----- */
-        /* Telas Grandes (Desktop largo) */
         .painel-filtros .toolbar-row { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 1.2fr; gap: 12px; align-items: center; }
         .painel-exportacao .toolbar-row { display: flex; gap: 10px; align-items: center; }
         
-        /* Telas Médias (O caso da sua print) */
         @media (max-width: 950px) {
             .painel-filtros .toolbar-row { grid-template-columns: repeat(6, 1fr); }
-            #filtroGabinete, #filtroServidor { grid-column: span 3; } /* Ocupam 50% cada na linha 1 */
-            #filtroMes, #filtroAno, .painel-filtros button { grid-column: span 2; } /* Ocupam 33,3% cada na linha 2 */
+            #filtroGabinete, #filtroServidor { grid-column: span 3; }
+            #filtroMes, #filtroAno, .painel-filtros button { grid-column: span 2; }
         }
 
-        /* Telas Pequenas (Celulares) */
         @media (max-width: 600px) {
             .painel-filtros .toolbar-row { grid-template-columns: 1fr; }
             #filtroGabinete, #filtroServidor, #filtroMes, #filtroAno, .painel-filtros button { grid-column: span 1; }
             .painel-exportacao .toolbar-row { flex-direction: column; }
         }
-        /* ----------------------------------------------------------------- */
         
         select, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; transition: 0.2s; box-sizing: border-box; width: 100%; white-space: nowrap; }
         button { background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; flex: 1; }
         button:hover { background: #00274d; transform: translateY(-1px); }
         .btn-acao { background: #0284c7; }
         .btn-acao:hover { background: #0369a1; }
+
+        /* NOVO DESIGN DO PAINEL DE BUSCA E VISUALIZAÇÃO */
+        .dt-controles { display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 0; padding: 0; }
+        
+        .dataTables_length label { font-size: 13px; color: #475569; font-weight: 600; display: flex; align-items: center; }
+        .dataTables_length select { width: auto !important; margin: 0 8px; padding: 8px 30px 8px 12px; } /* Evita que o select ocupe 100% da tela */
+        
+        .dataTables_filter label { font-size: 0; } 
+        .dataTables_filter input { font-size: 14px; padding: 10px 15px; border: 1px solid #e2e8f0; border-radius: 8px; width: 300px; background: white; margin-left: 0 !important; box-sizing: border-box; }
+
+        @media (max-width: 650px) {
+            .dt-controles { flex-direction: column-reverse; gap: 15px; align-items: stretch; }
+            .dataTables_filter input { width: 100%; }
+            .dataTables_length label { justify-content: center; }
+        }
 
         .painel-totais {
             display: grid;
@@ -107,10 +117,6 @@
             .painel-totais { grid-template-columns: 1fr; gap: 10px; }
             .total-valor { font-size: 20px; }
         }
-
-        .dt-controles { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 5px; }
-        .dataTables_filter label { font-size: 0; } 
-        .dataTables_filter input { font-size: 14px; padding: 10px 15px; border: 1px solid #e2e8f0; border-radius: 8px; width: 280px; background: white; margin-left: 0 !important; }
 
         #tabela thead { display: none; }
         table.dataTable { border: none !important; background: transparent !important; }
@@ -228,6 +234,10 @@
                         <button class="btn-acao" onclick="iniciarCarregamento()">🔄 Atualizar</button>
                     </div>
                 </fieldset>
+
+                <fieldset class="painel-grupo" id="painel-busca">
+                    <legend class="titulo-painel">Visualização e Busca Rápida</legend>
+                    </fieldset>
             </div>
 
             <div id="painel-totais" class="painel-totais">
@@ -240,8 +250,6 @@
                     <span class="total-valor" id="total-adiantamentos">R$ 0,00</span>
                 </div>
             </div>
-
-            <div class="dt-controles"></div>
 
             <table id="tabela" style="width:100%">
                 <thead>
@@ -454,8 +462,10 @@
                         }
                     }
                 ],
+                // MOVE OS CONTROLES PARA DENTRO DO NOVO FIELDSET
                 initComplete: function() { 
                     $('.dataTables_filter input').attr('placeholder', 'Pesquisar servidor, cargo ou destino...'); 
+                    $('.dt-controles').appendTo('#painel-busca');
                 },
                 
                 drawCallback: function (settings) {
