@@ -58,22 +58,16 @@
         .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #f1f5f9 !important; color: #003b75 !important; border: 1px solid #cbd5e1 !important; }
         .dataTables_wrapper .dataTables_paginate .paginate_button.current, .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover { background: #003b75 !important; color: white !important; border: 1px solid #003b75 !important; }
 
-        /* --- Estilos Específicos para Impressão --- */
         #cabecalho-impressao { display: none; }
         
         @media print {
-            /* Esconde as barras superiores, filtros, botões e controles de paginação */
             .topo, fieldset, .dt-controles, .dt-bottom-controls { display: none !important; }
-            
-            /* Exibe o cabeçalho formatado para papel */
             #cabecalho-impressao { display: block !important; margin-bottom: 25px; }
             .cabecalho-print-flex { display: flex; align-items: center; gap: 15px; border-bottom: 2px solid #003b75; padding-bottom: 15px; margin-bottom: 15px; }
             .cabecalho-print-flex img { height: 60px; }
             .cabecalho-print-textos h2 { margin: 0 0 5px 0; color: #003b75; font-size: 22px; font-weight: 800; }
             .cabecalho-print-textos span { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
             #texto-filtros-impressao { font-size: 14px; color: #1e293b; background: #f8fafc; padding: 10px 15px; border-left: 4px solid #0284c7; border-radius: 4px; }
-            
-            /* Ajustes gerais de layout para a folha A4 */
             body { background: white !important; padding: 0 !important; }
             .container { margin: 0 !important; width: 100% !important; display: block !important; }
             .card-estagiario { break-inside: avoid; border: 1px solid #cbd5e1 !important; box-shadow: none !important; margin-bottom: 15px; }
@@ -107,6 +101,7 @@
             </div>
             <div id="texto-filtros-impressao"></div>
         </div>
+
         <fieldset class="painel-grupo painel-filtros">
             <legend class="titulo-painel">Filtros de Pesquisa</legend>
             <div id="badge-atualizacao" class="badge-atualizacao">⏳ Sincronizando...</div>
@@ -146,7 +141,7 @@
         </fieldset>
 
         <fieldset class="painel-grupo" id="painel-busca">
-            <legend class="titulo-painel">Visualização e Busca Rápida</legend>
+            <legend class="titulo-painel">Visualização</legend>
         </fieldset>
 
         <table id="tabela" style="width:100%">
@@ -271,7 +266,6 @@
 
         function preencherFiltros() {
             const nomes = [...new Set(dadosGlobais.map(d => d.nome_estagiario))].filter(n => n).sort();
-            
             $('#listaNomes').empty();
             nomes.forEach(n => $('#listaNomes').append(`<option value="${n}">`));
 
@@ -354,34 +348,23 @@
         
         window.onload = iniciarCarregamento;
 
-        // --- FUNÇÃO DE IMPRESSÃO SEGURA ---
         function imprimirSeguro() {
             if (!tabela) return;
-
-            // Coleta os filtros atuais para exibir no cabeçalho
             const nomeFiltro = $('#filtroNome').val() || 'Todos';
             const statusFiltro = $('#filtroStatus').val() || 'Todas';
             const mesFiltro = $('#filtroMes option:selected').text() || 'Todos';
             const anoFiltro = $('#filtroAno').val() || 'Todos';
-
             let descFiltros = `<strong>Filtros Aplicados:</strong> Estagiário: ${nomeFiltro} | Situação: ${statusFiltro}`;
             if ($('#filtroMes').val()) descFiltros += ` | Mês: ${mesFiltro}`;
             if ($('#filtroAno').val()) descFiltros += ` | Ano: ${anoFiltro}`;
-
             $('#texto-filtros-impressao').html(descFiltros);
-
-            // Armazena a quantidade de itens por página atual e expande para mostrar todos
             const tamanhoOriginal = tabela.page.len();
-            tabela.page.len(-1).draw('page'); // -1 faz o DataTable renderizar todos os itens filtrados na mesma tela
-
-            // Dá um pequeno tempo para o navegador renderizar a tela completa e chama a impressão
+            tabela.page.len(-1).draw('page');
             setTimeout(function() {
                 window.print();
-                // Depois que a tela de impressão fecha, volta a tabela ao normal (ex: 10 itens por tela)
                 tabela.page.len(tamanhoOriginal).draw('page');
             }, 500);
         }
-        // ----------------------------------
 
         function exportarCSV() {
             const d = tabela.rows({filter:'applied'}).data().toArray();
