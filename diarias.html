@@ -167,6 +167,7 @@
         .info-label { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
         .info-valor { font-size: 14px; font-weight: 700; color: #1e293b; }
 
+        /* NOVO DESIGN DO QUADRO DE DETALHES (2 LINHAS) */
         .card-footer-quadro {
             background: #f8fafc;
             margin: 0 15px 15px 15px;
@@ -174,8 +175,13 @@
             border-radius: 10px;
             border: 1px solid #edf2f7;
             display: grid;
-            grid-template-columns: 1fr 2fr; 
-            gap: 20px;
+            grid-template-columns: 1fr 1fr; /* Duas colunas iguais */
+            gap: 15px 20px;
+        }
+        .quadro-col-full {
+            grid-column: 1 / -1; /* Força a ocupar a linha inteira */
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 10px;
         }
         .quadro-label { font-size: 10px; font-weight: 800; color: #003b75; text-transform: uppercase; margin-bottom: 5px; display: block; }
         .quadro-texto { font-size: 13px; color: #334155; line-height: 1.5; font-weight: 500; }
@@ -237,50 +243,14 @@
             .dt-bottom-controls { flex-direction: column; gap: 15px; text-align: center; }
         }
 
-        /* --------------------------------------------------- */
-        /* CONFIGURAÇÕES DE IMPRESSÃO - RETRATO E TOTAIS NO TOPO */
-        /* --------------------------------------------------- */
         @media print {
-            @page { 
-                size: portrait; /* Força o formato Retrato */
-                margin: 15mm; 
-            }
-            
-            /* Esconde menus e botões para uma impressão limpa */
+            @page { size: portrait; margin: 15mm; }
             .topo, fieldset, .dt-controles, .dt-bottom-controls { display: none !important; }
-            
-            /* Garante que o painel de totais apareça na primeira página */
-            .painel-totais { 
-                display: grid !important; 
-                grid-template-columns: 1fr 1fr; 
-                gap: 15px; 
-                margin-bottom: 30px !important;
-                page-break-inside: avoid;
-            }
-            
-            .total-bloco {
-                border: 2px solid #003b75 !important;
-                background: #f8fafc !important;
-                box-shadow: none !important;
-                padding: 12px;
-            }
-            
+            .painel-totais { display: grid !important; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px !important; page-break-inside: avoid; }
+            .total-bloco { border: 2px solid #003b75 !important; background: #f8fafc !important; box-shadow: none !important; padding: 12px; }
             .total-valor { font-size: 18px !important; color: #000 !important; }
-
-            /* Estilização dos Cards na Impressão */
-            .card-diaria { 
-                break-inside: avoid; /* Tenta não cortar o cartão entre páginas */
-                border: 1px solid #ccc; 
-                box-shadow: none; 
-                margin-bottom: 15px; 
-                page-break-inside: avoid;
-            }
-            
-            .card-footer-quadro { 
-                background: #f1f5f9 !important; 
-                border: 1px solid #ccc !important; 
-            }
-            
+            .card-diaria { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; margin-bottom: 15px; page-break-inside: avoid;}
+            .card-footer-quadro { background: #f1f5f9 !important; border: 1px solid #ccc !important; }
             .container { margin: 0; width: 100%; }
             body { background: white; }
         }
@@ -517,27 +487,21 @@
                     { 
                         data: null,
                         render: function (data) {
+                            // Captura a "Dotação" independentemente de como o usuário escreveu na planilha (com ou sem acento)
+                            const valDotacao = data.dotacao || data["dotação"] || "-";
+                            
                             return `
                                 <div class="card-diaria">
                                     <div class="card-header">
                                         <span class="card-servidor">${data.servidor || "NÃO INFORMADO"}</span>
                                         <span class="card-cargo">${data.cargo || "-"}</span>
                                     </div>
+                                    
                                     <div class="card-body-row">
                                         <div class="info-bloco">
                                             <span class="info-label">Quantidade de Diárias</span>
                                             <span class="info-valor">${data.qtde_diarias || "0"}</span>
                                         </div>
-                                        <div class="info-bloco">
-                                            <span class="info-label">Valor das Diárias</span>
-                                            <span class="info-valor">${formatarMoeda(data.valor_diarias)}</span>
-                                        </div>
-                                        <div class="info-bloco">
-                                            <span class="info-label">Valor do Adiantamento</span>
-                                            <span class="info-valor">${formatarMoeda(data.valor_adiantamento)}</span>
-                                        </div>
-                                    </div>
-                                    <div class="card-body-row border-top">
                                         <div class="info-bloco">
                                             <span class="info-label">Data da Partida</span>
                                             <span class="info-valor">${data.data_partida || "-"}</span>
@@ -546,17 +510,33 @@
                                             <span class="info-label">Data do Retorno</span>
                                             <span class="info-valor">${data.data_retorno || "-"}</span>
                                         </div>
+                                    </div>
+
+                                    <div class="card-body-row border-top">
                                         <div class="info-bloco">
-                                            <span class="info-label">Cidade de Destino</span>
-                                            <span class="info-valor">${data.cidade_destino || "-"}</span>
+                                            <span class="info-label">Valor das Diárias</span>
+                                            <span class="info-valor">${formatarMoeda(data.valor_diarias)}</span>
+                                        </div>
+                                        <div class="info-bloco">
+                                            <span class="info-label">Valor do Adiantamento</span>
+                                            <span class="info-valor">${formatarMoeda(data.valor_adiantamento)}</span>
+                                        </div>
+                                        <div class="info-bloco">
+                                            <span class="info-label">Dotação</span>
+                                            <span class="info-valor">${valDotacao}</span>
                                         </div>
                                     </div>
+                                    
                                     <div class="card-footer-quadro">
+                                        <div class="quadro-col">
+                                            <span class="quadro-label">Cidade de Destino</span>
+                                            <span class="quadro-texto">${data.cidade_destino || "-"}</span>
+                                        </div>
                                         <div class="quadro-col">
                                             <span class="quadro-label">Local do Destino</span>
                                             <span class="quadro-texto">${data.local_destino || "-"}</span>
                                         </div>
-                                        <div class="quadro-col">
+                                        <div class="quadro-col quadro-col-full">
                                             <span class="quadro-label">Motivação da Viagem</span>
                                             <span class="quadro-texto">${data.motivacao_viagem || "-"}</span>
                                         </div>
@@ -648,11 +628,12 @@
                     "Cargo": d.cargo || "", 
                     "Quantidade de Diárias": d.qtde_diarias || "", 
                     "Valor das Diárias": formatarMoeda(d.valor_diarias), 
-                    "Valor do Adiantamento": formatarMoeda(d.valor_adiantamento), 
+                    "Valor do Adiantamento": formatarMoeda(d.valor_adiantamento),
+                    "Dotação": d.dotacao || d["dotação"] || "", 
                     "Data da Partida": d.data_partida || "", 
                     "Data do Retorno": d.data_retorno || "", 
+                    "Cidade de Destino": d.cidade_destino || "",
                     "Local do Destino": d.local_destino || "", 
-                    "Cidade de Destino": d.cidade_destino || "", 
                     "Motivação da Viagem": d.motivacao_viagem || "" 
                 });
             });
