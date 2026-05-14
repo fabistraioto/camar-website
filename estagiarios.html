@@ -31,7 +31,10 @@
             border: 1px solid #a7f3d0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        select, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; transition: 0.2s; box-sizing: border-box; width: 100%; white-space: nowrap; }
+        /* Adicionado #filtroNome para herdar o estilo visual igual ao select */
+        #filtroNome, select, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; transition: 0.2s; box-sizing: border-box; width: 100%; white-space: nowrap; }
+        #filtroNome { white-space: normal; } /* Permite digitar normalmente */
+        
         button { background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; flex: 1; }
         button:hover { background: #00274d; transform: translateY(-1px); }
         .btn-acao { background: #0284c7; }
@@ -40,22 +43,28 @@
         .painel-exportacao .toolbar-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
         .dt-controles { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .dataTables_length label { font-size: 13px; color: #475569; font-weight: 600; display: flex; align-items: center; }
+        /* CORREÇÃO DO TEXTO QUEBRADO: white-space: nowrap adicionado abaixo */
+        .dataTables_length label { font-size: 13px; color: #475569; font-weight: 600; display: flex; align-items: center; white-space: nowrap; }
+        .dataTables_length select { width: auto !important; margin: 0 8px; padding: 8px 30px 8px 12px; }
+        .dataTables_filter label { font-size: 0; }
         .dataTables_filter input { font-size: 14px; padding: 10px 15px; border: 1px solid #e2e8f0; border-radius: 8px; width: 300px; }
 
         #tabela thead { display: none; }
         .card-estagiario { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden; }
         .card-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
         .nome-estagiario { font-size: 16px; font-weight: 800; color: #003b75; }
-        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-        .status-ativo { background: #d1fae5; color: #065f46; }
-        .status-desligado { background: #fee2e2; color: #991b1b; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid transparent; }
+        .status-ativo { background: #d1fae5; color: #065f46; border-color: #a7f3d0;}
+        .status-desligado { background: #fee2e2; color: #991b1b; border-color: #fecaca;}
         
         .card-body { display: grid; grid-template-columns: 1fr 1fr; padding: 15px 20px; gap: 15px; }
         .info-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px;}
         .info-valor { font-size: 14px; font-weight: 700; color: #1e293b;}
 
         .dt-bottom-controls { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: -5px; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button { border-radius: 8px !important; padding: 6px 12px !important; border: 1px solid transparent !important; font-size: 13px; font-weight: 600; color: #475569 !important; margin: 0 2px !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #f1f5f9 !important; color: #003b75 !important; border: 1px solid #cbd5e1 !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current, .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover { background: #003b75 !important; color: white !important; border: 1px solid #003b75 !important; }
     </style>
 </head>
 <body>
@@ -78,7 +87,9 @@
             <legend class="titulo-painel">Filtros de Pesquisa</legend>
             <div id="badge-atualizacao" class="badge-atualizacao">⏳ Sincronizando...</div>
             <div class="toolbar-row">
-                <select id="filtroNome"><option value="">Nome do Estagiário</option></select>
+                <input type="text" id="filtroNome" list="listaNomes" placeholder="Nome do Estagiário..." autocomplete="off">
+                <datalist id="listaNomes"></datalist>
+
                 <select id="filtroStatus">
                     <option value="">Situação</option>
                     <option value="Ativo">Ativo</option>
@@ -136,6 +147,7 @@
                 const csvText = await response.text();
                 
                 dadosGlobais = csvParaArrayOriginal(csvText);
+                dadosGlobais = ordenarDados(dadosGlobais); // Aplica ordenação inicial
                 
                 preencherFiltros();
                 aplicarFiltros();
@@ -150,12 +162,10 @@
             }
         }
 
-        // LÓGICA RESTAURADA DO SEU CÓDIGO INICIAL
         function csvParaArrayOriginal(str) {
             if (str.startsWith('\ufeff')) str = str.substring(1);
             let linhas = str.trim().split("\n");
             
-            // 1. Procura o MODIF_REAL em qualquer linha (geralmente a primeira)
             for (let i = 0; i < linhas.length; i++) {
                 if (linhas[i].toUpperCase().includes("MODIF_REAL:")) {
                     let match = linhas[i].match(/MODIF_REAL:\s*(\d{1,2}\/\d{1,2}\/\d{4}[^\d]+\d{1,2}:\d{2}(?::\d{2})?)/i);
@@ -163,12 +173,11 @@
                         let dataCrua = match[1].replace(/,/g, '').trim();
                         carimboCompleto = dataCrua.replace(/\s+/, ' às ').replace(/:\d{2}$/, '');
                     }
-                    linhas.splice(i, 1); // Remove a linha de metadata
+                    linhas.splice(i, 1);
                     break; 
                 }
             }
 
-            // 2. Captura o cabeçalho real (que agora é a próxima linha válida)
             let cabecalhoLinha = "";
             while (linhas.length > 0) {
                 cabecalhoLinha = linhas.shift();
@@ -197,7 +206,6 @@
                 if (valores.filter(v => v !== "").length > 0) {
                     let obj = {};
                     colunas.forEach((col, i) => {
-                        // Mapeamento flexível para suas colunas
                         if(col.includes('nome')) obj.nome_estagiario = valores[i];
                         if(col.includes('admissao')) obj.data_admissao = valores[i];
                         if(col.includes('desligamento')) obj.data_desligamento = valores[i];
@@ -213,10 +221,40 @@
             return dados;
         }
 
+        // --- FUNÇÕES DE ORDENAÇÃO CUSTOMIZADA ---
+        function converterDataParaNumero(dataStr) {
+            if (!dataStr || dataStr === '-' || dataStr.trim() === '') return 0;
+            const p = dataStr.split('/');
+            // Transforma DD/MM/YYYY em YYYYMMDD para comparar numericamente
+            if(p.length === 3) return parseInt(p[2] + p[1] + p[0], 10);
+            return 0;
+        }
+
+        function ordenarDados(dadosArray) {
+            return dadosArray.sort((a, b) => {
+                // 1. Situação (Ativos primeiro)
+                if (a.situacao !== b.situacao) {
+                    return a.situacao === 'Ativo' ? -1 : 1;
+                }
+                
+                // 2. Se for Ativo, ordena por Data de Admissão mais antiga primeiro (Crescente)
+                if (a.situacao === 'Ativo') {
+                    return converterDataParaNumero(a.data_admissao) - converterDataParaNumero(b.data_admissao);
+                } 
+                // 3. Se for Desligado, ordena por Data de Desligamento mais recente primeiro (Decrescente)
+                else {
+                    return converterDataParaNumero(b.data_desligamento) - converterDataParaNumero(a.data_desligamento);
+                }
+            });
+        }
+        // ------------------------------------------
+
         function preencherFiltros() {
             const nomes = [...new Set(dadosGlobais.map(d => d.nome_estagiario))].filter(n => n).sort();
-            $('#filtroNome').html('<option value="">Nome do Estagiário</option>');
-            nomes.forEach(n => $('#filtroNome').append(`<option value="${n}">${n}</option>`));
+            
+            // Popula o datalist para o campo de input pesquisável
+            $('#listaNomes').empty();
+            nomes.forEach(n => $('#listaNomes').append(`<option value="${n}">`));
 
             const anos = new Set();
             dadosGlobais.forEach(d => {
@@ -237,6 +275,7 @@
             tabela = $('#tabela').DataTable({
                 data: dados,
                 pageLength: 10,
+                ordering: false, // Desativa a ordenação padrão para respeitar a nossa customizada
                 language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
                 dom: '<"dt-controles"lf>rt<"dt-bottom-controls"ip>',
                 columns: [{
@@ -258,15 +297,16 @@
                     }
                 }],
                 initComplete: function() {
-                    $('.dataTables_filter input').attr('placeholder', 'Pesquisar...');
+                    $('.dataTables_filter input').attr('placeholder', 'Pesquisar na tabela...');
                     $('.dt-controles').appendTo('#painel-busca');
                 }
             });
         }
 
         function aplicarFiltros() {
+            // O input de nome agora usa .val() da mesma forma que o select usava
             const n = $('#filtroNome').val(), s = $('#filtroStatus').val(), m = $('#filtroMes').val(), a = $('#filtroAno').val();
-            const res = dadosGlobais.filter(d => {
+            let res = dadosGlobais.filter(d => {
                 const matchN = !n || d.nome_estagiario === n;
                 const matchS = !s || d.situacao === s;
                 const dAdm = (d.data_admissao || "").split('/');
@@ -275,11 +315,22 @@
                 const matchA = !a || (dAdm[2] === a || dDes[2] === a);
                 return matchN && matchS && matchM && matchA;
             });
+
+            // Aplica ordenação nos resultados filtrados
+            res = ordenarDados(res);
             render(res);
         }
 
-        function limparFiltros() { $('select').val(''); aplicarFiltros(); }
+        function limparFiltros() { 
+            $('#filtroNome').val('');
+            $('select').val(''); 
+            aplicarFiltros(); 
+        }
+        
+        // Dispara o filtro ao digitar no input de nome ou mudar as opções dos selects
+        $('#filtroNome').on('input', aplicarFiltros);
         $('select').on('change', aplicarFiltros);
+        
         window.onload = iniciarCarregamento;
 
         // Exportações
