@@ -14,7 +14,7 @@
         .topo { 
             background: #003b75; 
             color: white; 
-            padding: 15px 30px; 
+            padding: 20px 35px; /* Aumentado levemente para respirar melhor com as fontes novas */
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -22,10 +22,28 @@
             border-radius: 12px;
             margin: 15px 15px 20px 15px; 
         }
-        .topo h1 { margin: 0; font-size: 1.4rem; letter-spacing: 0.5px; font-weight: 700; }
+
+        /* ----- MELHORIAS DE FONTE NO CABEÇALHO AZUL ----- */
+        .topo h1 { 
+            margin: 0; 
+            font-size: 1.8rem; /* Aumentado para dar destaque */
+            letter-spacing: 1px; /* Espaçamento premium */
+            font-weight: 800; /* Extra bold para autoridade */
+            text-shadow: 0 2px 2px rgba(0,0,0,0.3); /* Sombra sutil para profundidade */
+        }
+        
         .logo-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .brasao { height: 60px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-        .texto-camara { font-size: 11px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; opacity: 0.9; }
+        
+        .texto-camara { 
+            font-size: 10px; /* Menor para hierarquia visual */
+            color: #cbd5e1; /* Cinza claro elegante em vez de branco puro */
+            font-weight: 500; /* Peso médio */
+            letter-spacing: 3px; /* Espaçamento agressivo para sofisticação em caixa alta */
+            text-transform: uppercase; 
+            /* opacity removida, color fornece a suavidade */
+        }
+        /* ------------------------------------------------ */
 
         #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; font-size: 16px; color: #003b75; font-weight: bold; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #003b75; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
@@ -67,7 +85,7 @@
             .painel-filtros .toolbar-row { grid-template-columns: 1fr; }
             #filtroGabinete, #filtroServidor, #filtroMes, #filtroAno, .painel-filtros button { grid-column: span 1; }
             .painel-exportacao .toolbar-row { flex-direction: column; }
-            .topo { flex-direction: column; gap: 15px; text-align: center; }
+            .topo { flex-direction: column; gap: 15px; text-align: center; padding: 20px;}
         }
         
         select, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; transition: 0.2s; box-sizing: border-box; width: 100%; white-space: nowrap; }
@@ -442,7 +460,6 @@
         function render(dados) {
             if (tabela) {
                 tabela.destroy();
-                // A MÁGICA AQUI: Apaga a barra de pesquisa antiga antes de criar a nova
                 $('#painel-busca .dt-controles').remove();
             }
             
