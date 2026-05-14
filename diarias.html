@@ -210,7 +210,28 @@
         let listaGabinetes = [];
         let carimboCompleto = "";
 
-        function imprimirSeguro() { window.print(); }
+        // --- NOVA FUNÇÃO DE IMPRESSÃO INTELIGENTE ---
+        function imprimirSeguro() {
+            if (!tabela) {
+                window.print();
+                return;
+            }
+            
+            // 1. Guarda qual era a configuração de paginação atual (ex: 10 itens)
+            const tamanhoPaginaOriginal = tabela.page.len();
+            
+            // 2. Muda para mostrar TUDO (-1)
+            tabela.page.len(-1).draw();
+            
+            // 3. Aguarda 500ms para o navegador desenhar todos os cards na tela e abre a tela de impressão
+            setTimeout(function() {
+                window.print();
+                
+                // 4. Assim que a tela de impressão fechar, devolve a tabela para os 10 itens originais
+                tabela.page.len(tamanhoPaginaOriginal).draw();
+            }, 500);
+        }
+        // ---------------------------------------------
 
         function enviarAltura() {
             setTimeout(function() {
@@ -440,13 +461,11 @@
                 if (carimboCompleto) $('#badge-atualizacao').html(`🟢 Dados atualizados em ${carimboCompleto}`);
                 else $('#badge-atualizacao').html(`🟢 Dados atualizados hoje`);
                 $('#loader').hide(); $('#main-container').fadeIn(400, function() { enviarAltura(); });
-            } catch (e) { $('#loader').html(`<div style="padding:20px; color:red;">Erro ao carregar dados.</div>`); }
+            } catch (e) { $('#loader').html(`<div style="padding:20px; color:red;">Erro ao carregar dados. Verifique a internet.</div>`); }
         }
 
-        // Alterados os nomes aqui também para saírem corretamente nos botões de Exportar (Excel, CSV, JSON)
         function obterDadosFiltradosDoDOM() {
             const dados = [];
-            // Como agora usamos Cards, pegamos os dados filtrados diretamente da API do DataTables (dadosGlobais filtrados)
             const dadosAtuais = tabela.rows({ filter: 'applied' }).data().toArray();
             
             dadosAtuais.forEach(d => {
