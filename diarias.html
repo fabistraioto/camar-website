@@ -187,19 +187,16 @@
             $('#tabela tfoot').append(linhaRodape);
         }
 
-        // --- NOVA FÓRMULA DE MEDIÇÃO: Pega apenas o Wrapper interno ---
         function enviarAltura() {
             setTimeout(function() {
                 const wrapper = document.getElementById('wrapper');
                 if (wrapper) {
-                    // Pega a altura real do conteúdo + 30px de "respiro" no final
                     const altura = wrapper.offsetHeight + 30; 
                     window.parent.postMessage({ tipo: 'ajustarAltura', valor: altura }, '*');
                 }
-            }, 150); // Reduzido o delay para ficar mais rápido na resposta
+            }, 150); 
         }
 
-        // --- O SENSOR CONTINUA VIGIANDO O WRAPPER ---
         const resizeObserver = new ResizeObserver(() => {
             enviarAltura();
         });
@@ -251,9 +248,14 @@
             const cabecalhoLimpo = extrairValores(cabecalhoLinha).map(c => c.toLowerCase());
             
             let dadosFiltrados = [];
+            
+            // CORREÇÃO AQUI: Se for a planilha de diárias exige 2 colunas para ignorar a "sujeira" de data solta.
+            // Se for a planilha de gabinetes, só exige 1 coluna, já que ela só tem 1 coluna de nomes!
+            const minimoColunasPreenchidas = isDiarias ? 2 : 1; 
+
             linhas.forEach(linha => {
                 const valores = extrairValores(linha);
-                if (valores.filter(v => v !== "").length > 1) {
+                if (valores.filter(v => v !== "").length >= minimoColunasPreenchidas) {
                     let obj = {};
                     cabecalhoLimpo.forEach((coluna, i) => obj[coluna] = valores[i] || "");
                     dadosFiltrados.push(obj);
@@ -312,6 +314,8 @@
                 $('#filtroAno').html('<option value="">Ano</option>');
                 anos.forEach(a => $('#filtroAno').append(`<option value="${a}">${a}</option>`));
                 $('#filtroAno').val(valAno);
+                
+                // POPULANDO OS GABINETES CORRETAMENTE AGORA
                 $('#filtroGabinete').html('<option value="">Gabinete</option>');
                 listaGabinetes.forEach(g => {
                     const v = Object.values(g)[0];
