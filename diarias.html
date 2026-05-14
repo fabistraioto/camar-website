@@ -44,7 +44,8 @@
             border: 1px solid #a7f3d0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        .painel-filtros .toolbar-row { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr auto; gap: 12px; align-items: center; }
+        /* AJUSTE AQUI: 2 partes para os grandes, e 1 parte exata para Mês, Ano e Limpar Filtros */
+        .painel-filtros .toolbar-row { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 1fr; gap: 12px; align-items: center; }
         .painel-exportacao .toolbar-row { display: flex; gap: 10px; align-items: center; }
         
         @media (max-width: 900px) {
@@ -57,8 +58,8 @@
             .painel-exportacao .toolbar-row { flex-direction: column; }
         }
         
-        select, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; transition: 0.2s; }
-        button { background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; flex: 1; }
+        select, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; transition: 0.2s; box-sizing: border-box; width: 100%; }
+        button { background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; }
         button:hover { background: #00274d; transform: translateY(-1px); }
         .btn-acao { background: #0284c7; }
         .btn-acao:hover { background: #0369a1; }
