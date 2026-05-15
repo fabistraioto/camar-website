@@ -50,7 +50,7 @@
 
         /* Estilo dos Cards de Funcionário */
         #tabela thead { display: none; }
-        table.dataTable { border: none !important; background: transparent !important; }
+        table.dataTable { border: none !important; background: transparent !important; margin-top: 10px !important;}
         .card-func { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); overflow: hidden; }
         
         .card-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
@@ -68,10 +68,10 @@
         .info-valor { font-size: 14px; font-weight: 700; color: #334155; }
 
         /* Controles DataTables (Topo) */
-        .dt-controles { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; }
+        .dt-controles { display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 0; padding: 0; }
         
         /* Correção do visual "Exibir X resultados" */
-        .dataTables_length label { display: flex !important; align-items: center; font-size: 13px; font-weight: 600; color: #475569; white-space: nowrap; }
+        .dataTables_length label { display: flex !important; align-items: center; font-size: 13px; font-weight: 600; color: #475569; white-space: nowrap; margin-bottom: 0; }
         .dataTables_length select { width: auto !important; margin: 0 8px !important; padding: 6px 30px 6px 12px !important; border-radius: 6px; }
 
         /* Estilo da nova contagem de registros */
@@ -91,7 +91,6 @@
             }
             .card-func { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; margin-bottom: 15px; }
             .container { display: block !important; margin: 0; }
-            /* Numeração de página via CSS */
             .page-footer { position: fixed; bottom: 0; right: 0; font-size: 10px; color: #666; content: "Página " counter(page); }
         }
     </style>
@@ -162,6 +161,10 @@
             </div>
         </fieldset>
 
+        <fieldset class="painel-grupo" id="painel-visualizacao">
+            <legend class="titulo-painel">Visualização</legend>
+            </fieldset>
+
         <table id="tabela" style="width:100%">
             <thead><tr><th>Dados</th></tr></thead>
             <tbody></tbody>
@@ -185,7 +188,7 @@
             return new Date(p[2], p[1] - 1, p[0]);
         }
 
-        // Função de Impressão (revela tudo, imprime, restaura)
+        // Função de Impressão
         function imprimirRelatorio() {
             if(!tabela) return;
             const len = tabela.page.len();
@@ -200,9 +203,9 @@
         function processarCSV(csvText) {
             const linhas = csvText.split(/\r?\n/);
             
-            // 1. Pega carimbo da Célula A1 e extrai Data e Hora com Regex
+            // 1. Pega carimbo da Célula A1 e extrai Data e Hora com Regex Flexível (\d{1,2})
             let textoA1 = linhas[0].split(',')[0].replace(/"/g, '');
-            let matchDataHora = textoA1.match(/(\d{2}\/\d{2}\/\d{4})[^\d]*(\d{2}:\d{2})/);
+            let matchDataHora = textoA1.match(/(\d{1,2}\/\d{1,2}\/\d{4})[^\d]*(\d{1,2}:\d{2})/);
             
             if (matchDataHora) {
                 carimboAtualizacao = `Atualizado em ${matchDataHora[1]} às ${matchDataHora[2]}`;
@@ -231,7 +234,7 @@
                 obj.situacao = obj.data_demissao === "" ? "Ativo" : "Desligado";
                 
                 // Lógica de Jornada
-                if (obj.jornada.toLowerCase() === "padrão") obj.jornada = "40h/semana";
+                if (obj.jornada && obj.jornada.toLowerCase() === "padrão") obj.jornada = "40h/semana";
 
                 lista.push(obj);
             }
@@ -334,6 +337,10 @@
                         `;
                     }
                 }],
+                initComplete: function() {
+                    // Move a barra de controles ("Exibir X" e "Registros Encontrados") para dentro do novo card
+                    $('.dt-controles').appendTo('#painel-visualizacao');
+                },
                 drawCallback: function(settings) {
                     // Atualiza dinamicamente o número de registros encontrados ao desenhar tabela
                     const total = this.api().rows({ filter: 'applied' }).count();
