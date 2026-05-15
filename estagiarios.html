@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Relatório de Estagiários</title>
+    <title>Relatório de Estagiários - Sênior Edition</title>
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -30,25 +30,13 @@
 
         .badge-atualizacao { position: absolute; top: -12px; right: 20px; font-size: 11px; color: #065f46; background: #d1fae5; padding: 5px 12px; border-radius: 20px; font-weight: 700; border: 1px solid #a7f3d0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-        /* Grid de Filtros Consolidado */
-        .painel-filtros .toolbar-row { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-            gap: 12px; 
-            align-items: center; 
-        }
-
+        .painel-filtros .toolbar-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: center; }
         select, input, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; transition: 0.2s; box-sizing: border-box; width: 100%; height: 42px;}
-        
         button { background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; }
         button:hover { background: #00274d; transform: translateY(-1px); }
         .btn-acao { background: #0284c7; }
         
         .painel-exportacao .toolbar-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-
-        .dt-controles { display: flex; justify-content: flex-start; align-items: center; width: 100%; }
-        .dataTables_length label { font-size: 13px; color: #475569; font-weight: 600; display: flex; align-items: center; white-space: nowrap; }
-        .dataTables_length select { width: auto !important; margin: 0 8px; height: 35px;}
 
         #tabela thead { display: none; }
         .card-estagiario { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden; }
@@ -57,17 +45,73 @@
         .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid transparent; }
         .status-ativo { background: #d1fae5; color: #065f46; border-color: #a7f3d0;}
         .status-desligado { background: #fee2e2; color: #991b1b; border-color: #fecaca;}
-        
         .card-body { display: grid; grid-template-columns: 1fr 1fr; padding: 15px 20px; gap: 15px; }
         .info-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px;}
         .info-valor { font-size: 14px; font-weight: 700; color: #1e293b;}
 
-        .dt-bottom-controls { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: -5px; }
-        
+        /* --- IMPLEMENTAÇÃO IGUAL À IMAGEM ANEXADA (PAGINAÇÃO) --- */
+        .dt-bottom-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .dataTables_info {
+            font-size: 15px !important;
+            color: #475569 !important;
+            font-weight: 500 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .dataTables_paginate {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            float: none !important;
+        }
+
+        .dataTables_paginate .paginate_button {
+            border: none !important;
+            background: transparent !important;
+            color: #475569 !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            margin: 0 4px !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+        }
+
+        .dataTables_paginate .paginate_button.current {
+            background: #003b75 !important;
+            color: white !important;
+            box-shadow: 0 4px 6px rgba(0, 59, 117, 0.3) !important;
+        }
+
+        .dataTables_paginate .paginate_button:hover:not(.current) {
+            background: #f1f5f9 !important;
+            color: #003b75 !important;
+        }
+
+        .dataTables_paginate .paginate_button.previous, 
+        .dataTables_paginate .paginate_button.next {
+            color: #475569 !important;
+        }
+        /* ------------------------------------------------------- */
+
         @media print {
             @page { margin: 0; size: auto; } 
             body { background: white !important; padding: 10mm !important; }
-            .topo, fieldset, .dt-controles, .dt-bottom-controls { display: none !important; }
+            .topo, fieldset, .dt-bottom-container { display: none !important; }
             .card-estagiario { break-inside: avoid; border: 1px solid #cbd5e1 !important; box-shadow: none !important; margin-bottom: 15px; }
         }
     </style>
@@ -89,24 +133,20 @@
     </div>
 
     <main class="container" id="main-container">
-
         <fieldset class="painel-grupo painel-filtros">
             <legend class="titulo-painel">Filtros de Pesquisa</legend>
             <div id="badge-atualizacao" class="badge-atualizacao">⏳ Sincronizando...</div>
             <div class="toolbar-row">
-                <input type="text" id="filtroNome" placeholder="Pesquisar por nome (sem acentos)..." autocomplete="off">
-                
+                <input type="text" id="filtroNome" placeholder="Pesquisar por nome..." autocomplete="off">
                 <select id="filtroStatus">
                     <option value="">Situação (Todas)</option>
                     <option value="Ativo">Ativos</option>
                     <option value="Desligado">Desligados</option>
                 </select>
-
                 <select id="filtroTipoData">
                     <option value="data_admissao">Por Data de Admissão</option>
                     <option value="data_desligamento">Por Data de Desligamento</option>
                 </select>
-
                 <select id="filtroMes">
                     <option value="">Mês (Todos)</option>
                     <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
@@ -114,11 +154,7 @@
                     <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
                     <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                 </select>
-
-                <select id="filtroAno">
-                    <option value="">Ano (Todos)</option>
-                </select>
-
+                <select id="filtroAno"><option value="">Ano (Todos)</option></select>
                 <button onclick="limparFiltros()">Limpar filtros</button>
             </div>
         </fieldset>
@@ -129,7 +165,7 @@
                 <button onclick="exportarRelatorio('csv')">⬇️ CSV</button>
                 <button onclick="exportarRelatorio('xlsx')">⬇️ Excel</button>
                 <button onclick="exportarRelatorio('json')">⬇️ JSON</button>
-                <button onclick="exportarRelatorio('xml')">⬇️ XML</button>
+                <button onclick="exportarXML()">⬇️ XML</button>
                 <button class="btn-acao" onclick="imprimirSeguro()">🖨️ Imprimir</button>
                 <button class="btn-acao" onclick="iniciarCarregamento()">🔄 Atualizar</button>
             </div>
@@ -137,6 +173,7 @@
 
         <fieldset class="painel-grupo" id="painel-busca">
             <legend class="titulo-painel">Visualização</legend>
+            <div id="controles-custom"></div>
         </fieldset>
 
         <table id="tabela" style="width:100%">
@@ -146,226 +183,177 @@
     </main>
 </div>
 
-    <script>
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTK8EGvu2R21KpD3-E3SFDVC5qfWSihafXCpj_Y-ZnpM9DNBEb_Gimw0TboxkpiuMqJQ01WNNHm8-FA/pub?output=csv";
-        let dadosGlobais = [];
-        let tabela;
-        let carimboCompleto = "";
+<script>
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTK8EGvu2R21KpD3-E3SFDVC5qfWSihafXCpj_Y-ZnpM9DNBEb_Gimw0TboxkpiuMqJQ01WNNHm8-FA/pub?output=csv";
+    let dadosGlobais = [];
+    let tabela;
+    let carimboCompleto = "";
 
-        // 1. Função Sênior: Comunicação com Iframe (PostMessage)
-        function enviarAltura() {
-            setTimeout(() => {
-                const wrapper = document.getElementById('wrapper');
-                if (wrapper) {
-                    const h = wrapper.offsetHeight + 40;
-                    window.parent.postMessage({ tipo: 'ajustarAltura', valor: h }, '*');
-                }
-            }, 100);
-        }
-
-        // 2. Utilitários de Normalização (Regra 4)
-        const normalizar = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-
-        // 3. Processamento de Dados (Regex Carimbo e CSV)
-        async function iniciarCarregamento() {
-            $('#loader').show(); $('#main-container').hide();
-            try {
-                const response = await fetch(`${SHEET_URL}&t=${Date.now()}`);
-                const csvText = await response.text();
-                
-                // Extração via Regex (Regra 1)
-                const metaLinha = csvText.split("\n")[0];
-                const regexData = /(\d{2}\/\d{2}\/\d{4},?\s*\d{2}:\d{2}(?::\d{2})?)/;
-                const match = metaLinha.match(regexData);
-                if(match) carimboCompleto = match[1].replace(',', '');
-
-                dadosGlobais = processarCSV(csvText);
-                
-                popularFiltroAno(dadosGlobais);
-                aplicarFiltros();
-
-                if (carimboCompleto) $('#badge-atualizacao').html(`🟢 Dados atualizados em ${carimboCompleto}`);
-                $('#loader').hide();
-                $('#main-container').fadeIn(400, () => enviarAltura());
-            } catch (e) {
-                $('#loader').html('<span style="color:red">Erro ao sincronizar com Google Sheets.</span>');
+    function enviarAltura() {
+        setTimeout(() => {
+            const wrapper = document.getElementById('wrapper');
+            if (wrapper) {
+                const h = wrapper.offsetHeight + 40;
+                window.parent.postMessage({ tipo: 'ajustarAltura', valor: h }, '*');
             }
+        }, 100);
+    }
+
+    const normalizar = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+    async function iniciarCarregamento() {
+        $('#loader').show(); $('#main-container').hide();
+        try {
+            const response = await fetch(`${SHEET_URL}&t=${Date.now()}`);
+            const csvText = await response.text();
+            
+            const metaLinha = csvText.split("\n")[0];
+            const regexData = /(\d{2}\/\d{2}\/\d{4},?\s*\d{2}:\d{2}(?::\d{2})?)/;
+            const match = metaLinha.match(regexData);
+            if(match) carimboCompleto = match[1].replace(',', '');
+
+            dadosGlobais = processarCSV(csvText);
+            popularFiltroAno(dadosGlobais);
+            aplicarFiltros();
+
+            if (carimboCompleto) $('#badge-atualizacao').html(`🟢 Dados atualizados em ${carimboCompleto}`);
+            $('#loader').hide();
+            $('#main-container').fadeIn(400, () => enviarAltura());
+        } catch (e) {
+            $('#loader').html('<span style="color:red">Erro ao sincronizar dados.</span>');
         }
+    }
 
-        function processarCSV(str) {
-            const linhas = str.trim().split("\n");
-            // Regra 1: Linha 2 contém os headers. Dados começam na Linha 3.
-            const headers = linhas[1].split(",").map(h => h.trim().replace(/"/g, ''));
-            const dataRows = linhas.slice(2);
+    function processarCSV(str) {
+        const linhas = str.trim().split("\n");
+        const headers = linhas[1].split(",").map(h => h.trim().replace(/"/g, ''));
+        const dataRows = linhas.slice(2);
 
-            return dataRows.map(row => {
-                const colunas = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                let obj = {};
-                headers.forEach((h, i) => {
-                    let val = colunas[i] ? colunas[i].replace(/"/g, '').trim() : "";
-                    // Mapeamento dinâmico para garantir compatibilidade
-                    if (normalizar(h).includes("nome")) obj.nome_estagiario = val;
-                    if (normalizar(h).includes("admissao")) obj.data_admissao = val;
-                    if (normalizar(h).includes("desligamento")) obj.data_desligamento = val;
-                });
-                // Lógica de Situação
-                obj.situacao = (!obj.data_desligamento || obj.data_desligamento === "-") ? "Ativo" : "Desligado";
-                return obj;
-            }).filter(d => d.nome_estagiario);
-        }
-
-        // 4. Regras de Ordenação Mista (Regra 3)
-        function ordenarMisto(lista) {
-            const paraNum = (d) => {
-                if(!d || d === "-") return 0;
-                const p = d.split("/");
-                return parseInt(p[2] + p[1] + p[0], 10);
-            };
-
-            return lista.sort((a, b) => {
-                if (a.situacao !== b.situacao) return a.situacao === 'Ativo' ? -1 : 1;
-                
-                if (a.situacao === 'Ativo') {
-                    // Ativo: Antigo -> Novo (Crescente)
-                    return paraNum(a.data_admissao) - paraNum(b.data_admissao);
-                } else {
-                    // Desligado: Novo -> Antigo (Decrescente)
-                    return paraNum(b.data_desligamento) - paraNum(a.data_desligamento);
-                }
+        return dataRows.map(row => {
+            const colunas = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            let obj = {};
+            headers.forEach((h, i) => {
+                let val = colunas[i] ? colunas[i].replace(/"/g, '').trim() : "";
+                if (normalizar(h).includes("nome")) obj.nome_estagiario = val;
+                if (normalizar(h).includes("admissao")) obj.data_admissao = val;
+                if (normalizar(h).includes("desligamento")) obj.data_desligamento = val;
             });
-        }
+            obj.situacao = (!obj.data_desligamento || obj.data_desligamento === "-") ? "Ativo" : "Desligado";
+            return obj;
+        }).filter(d => d.nome_estagiario);
+    }
 
-        function popularFiltroAno(dados) {
-            const anos = new Set();
-            dados.forEach(d => {
-                if(d.data_admissao) anos.add(d.data_admissao.split('/')[2]);
-                if(d.data_desligamento && d.data_desligamento !== "-") anos.add(d.data_desligamento.split('/')[2]);
-            });
-            const listaSorted = Array.from(anos).filter(a => a).sort((a,b) => b-a);
-            $('#filtroAno').html('<option value="">Ano (Todos)</option>');
-            listaSorted.forEach(a => $('#filtroAno').append(new Option(a, a)));
-        }
+    function ordenarMisto(lista) {
+        const paraNum = (d) => {
+            if(!d || d === "-") return 0;
+            const p = d.split("/");
+            return parseInt(p[2] + p[1] + p[0], 10);
+        };
+        return lista.sort((a, b) => {
+            if (a.situacao !== b.situacao) return a.situacao === 'Ativo' ? -1 : 1;
+            if (a.situacao === 'Ativo') return paraNum(a.data_admissao) - paraNum(b.data_admissao);
+            return paraNum(b.data_desligamento) - paraNum(a.data_desligamento);
+        });
+    }
 
-        // 5. Motor de Filtro (Regra 4)
-        function aplicarFiltros() {
-            const txt = normalizar($('#filtroNome').val());
-            const sit = $('#filtroStatus').val();
-            const tipoDt = $('#filtroTipoData').val();
-            const mes = $('#filtroMes').val();
-            const ano = $('#filtroAno').val();
+    function popularFiltroAno(dados) {
+        const anos = new Set();
+        dados.forEach(d => {
+            if(d.data_admissao) anos.add(d.data_admissao.split('/')[2]);
+            if(d.data_desligamento && d.data_desligamento !== "-") anos.add(d.data_desligamento.split('/')[2]);
+        });
+        const listaSorted = Array.from(anos).filter(a => a).sort((a,b) => b-a);
+        $('#filtroAno').html('<option value="">Ano (Todos)</option>');
+        listaSorted.forEach(a => $('#filtroAno').append(new Option(a, a)));
+    }
 
-            let res = dadosGlobais.filter(d => {
-                const matchNome = !txt || normalizar(d.nome_estagiario).includes(txt);
-                const matchSit = !sit || d.situacao === sit;
-                
-                const dataAlvo = d[tipoDt] || "";
-                const [dDia, dMes, dAno] = dataAlvo.split("/");
-                const matchMes = !mes || dMes === mes;
-                const matchAno = !ano || dAno === ano;
+    function aplicarFiltros() {
+        const txt = normalizar($('#filtroNome').val());
+        const sit = $('#filtroStatus').val();
+        const tipoDt = $('#filtroTipoData').val();
+        const mes = $('#filtroMes').val();
+        const ano = $('#filtroAno').val();
 
-                return matchNome && matchSit && matchMes && matchAno;
-            });
+        let res = dadosGlobais.filter(d => {
+            const matchNome = !txt || normalizar(d.nome_estagiario).includes(txt);
+            const matchSit = !sit || d.situacao === sit;
+            const dataAlvo = d[tipoDt] || "";
+            const parts = dataAlvo.split("/");
+            const matchMes = !mes || parts[1] === mes;
+            const matchAno = !ano || parts[2] === ano;
+            return matchNome && matchSit && matchMes && matchAno;
+        });
+        render(ordenarMisto(res));
+    }
 
-            render(ordenarMisto(res));
-        }
-
-        function render(dados) {
-            if (tabela) {
-                tabela.destroy();
-                $('#painel-busca .dt-controles').remove();
-            }
-            tabela = $('#tabela').DataTable({
-                data: dados,
-                pageLength: 10,
-                ordering: false, // Regra 3
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
-                dom: '<"dt-controles"l>rt<"dt-bottom-controls"ip>',
-                columns: [{
-                    data: null,
-                    render: function(data) {
-                        const statusClass = data.situacao === 'Ativo' ? 'status-ativo' : 'status-desligado';
-                        return `
-                            <div class="card-estagiario">
-                                <div class="card-header">
-                                    <span class="nome-estagiario">${data.nome_estagiario}</span>
-                                    <span class="status-badge ${statusClass}">${data.situacao}</span>
-                                </div>
-                                <div class="card-body">
-                                    <div><span class="info-label">Data de Admissão</span><span class="info-valor">${data.data_admissao || '-'}</span></div>
-                                    <div><span class="info-label">Data de Desligamento</span><span class="info-valor">${data.data_desligamento || '-'}</span></div>
-                                </div>
+    function render(dados) {
+        if (tabela) tabela.destroy();
+        
+        tabela = $('#tabela').DataTable({
+            data: dados,
+            pageLength: 10,
+            ordering: false,
+            language: { 
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json',
+                paginate: { previous: "Anterior", next: "Próximo" }
+            },
+            // DOM customizado para criar o container da paginação estilo imagem
+            dom: 'rt<"dt-bottom-container"ip>',
+            columns: [{
+                data: null,
+                render: function(data) {
+                    const statusClass = data.situacao === 'Ativo' ? 'status-ativo' : 'status-desligado';
+                    return `
+                        <div class="card-estagiario">
+                            <div class="card-header">
+                                <span class="nome-estagiario">${data.nome_estagiario}</span>
+                                <span class="status-badge ${statusClass}">${data.situacao}</span>
                             </div>
-                        `;
-                    }
-                }],
-                initComplete: function() {
-                    $('.dt-controles').appendTo('#painel-busca');
-                    enviarAltura();
-                },
-                drawCallback: () => enviarAltura() // Regra 6
-            });
-        }
-
-        // 6. Exportação Inteligente (Regra 5)
-        function exportarRelatorio(formato) {
-            const filtrados = tabela.rows({search:'applied'}).data().toArray();
-            if(!filtrados.length) return;
-
-            // Gerar Nome Dinâmico
-            let nParts = ["relatorio"];
-            if($('#filtroNome').val()) nParts.push(normalizar($('#filtroNome').val()));
-            if($('#filtroStatus').val()) nParts.push($('#filtroStatus').val());
-            if($('#filtroAno').val()) nParts.push($('#filtroAno').val());
-            const nomeFinal = nParts.join("_").replace(/[^a-zA-Z0-9_]/g, "");
-
-            if(formato === 'xlsx') {
-                const ws = XLSX.utils.json_to_sheet(filtrados);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Dados");
-                XLSX.writeFile(wb, `${nomeFinal}.xlsx`);
-            } else {
-                let conteudo = "";
-                let tipo = "";
-                if(formato === 'csv') {
-                    conteudo = "\ufeffNome,Admissao,Desligamento,Situacao\n";
-                    filtrados.forEach(r => conteudo += `"${r.nome_estagiario}","${r.data_admissao}","${r.data_desligamento}","${r.situacao}"\n`);
-                    tipo = "text/csv;charset=utf-8;";
-                } else if (formato === 'json') {
-                    conteudo = JSON.stringify(filtrados, null, 2);
-                    tipo = "application/json";
-                } else if (formato === 'xml') {
-                    conteudo = '<?xml version="1.0" encoding="UTF-8"?><estagiarios>';
-                    filtrados.forEach(r => conteudo += `<estagiario><nome>${r.nome_estagiario}</nome><adm>${r.data_admissao}</adm><des>${r.data_desligamento}</des></estagiario>`);
-                    conteudo += '</estagiarios>';
-                    tipo = "application/xml";
+                            <div class="card-body">
+                                <div><span class="info-label">Data de Admissão</span><span class="info-valor">${data.data_admissao || '-'}</span></div>
+                                <div><span class="info-label">Data de Desligamento</span><span class="info-valor">${data.data_desligamento || '-'}</span></div>
+                            </div>
+                        </div>
+                    `;
                 }
-                const b = new Blob([conteudo], { type: tipo });
-                const u = URL.createObjectURL(b);
-                const a = document.createElement("a");
-                a.href = u; a.download = `${nomeFinal}.${formato}`; a.click();
-            }
-        }
+            }],
+            drawCallback: () => enviarAltura()
+        });
+    }
 
-        function imprimirSeguro() {
-            const tOriginal = tabela.page.len();
-            tabela.page.len(-1).draw('page');
-            setTimeout(() => {
-                window.print();
-                tabela.page.len(tOriginal).draw('page');
-            }, 500);
+    function exportarRelatorio(formato) {
+        const filtrados = tabela.rows({search:'applied'}).data().toArray();
+        if(!filtrados.length) return;
+        const nomeFinal = "relatorio_estagiarios";
+        if(formato === 'xlsx') {
+            const ws = XLSX.utils.json_to_sheet(filtrados);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Dados");
+            XLSX.writeFile(wb, `${nomeFinal}.xlsx`);
+        } else {
+            let conteudo = formato === 'csv' ? "\ufeffNome,Admissao,Desligamento,Situacao\n" : "";
+            if(formato === 'csv') filtrados.forEach(r => conteudo += `"${r.nome_estagiario}","${r.data_admissao}","${r.data_desligamento}","${r.situacao}"\n`);
+            if(formato === 'json') conteudo = JSON.stringify(filtrados, null, 2);
+            const b = new Blob([conteudo], { type: "text/plain" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(b); a.download = `${nomeFinal}.${formato}`; a.click();
         }
+    }
 
-        function limparFiltros() { 
-            $('#filtroNome').val(''); 
-            $('select').val(''); 
-            $('#filtroTipoData').val('data_admissao');
-            aplicarFiltros(); 
-        }
+    function imprimirSeguro() {
+        const tOriginal = tabela.page.len();
+        tabela.page.len(-1).draw('page');
+        setTimeout(() => { window.print(); tabela.page.len(tOriginal).draw('page'); }, 500);
+    }
 
-        // Listeners
-        $('#filtroNome').on('input', aplicarFiltros);
-        $('select').on('change', aplicarFiltros);
-        window.onload = iniciarCarregamento;
-    </script>
+    function limparFiltros() { 
+        $('#filtroNome').val(''); $('select').val(''); 
+        $('#filtroTipoData').val('data_admissao'); aplicarFiltros(); 
+    }
+
+    $('#filtroNome').on('input', aplicarFiltros);
+    $('select').on('change', aplicarFiltros);
+    window.onload = iniciarCarregamento;
+</script>
 </body>
 </html>
