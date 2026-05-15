@@ -10,7 +10,7 @@
 
     <style>
         /* Estilos Globais */
-        body { font-family: 'Inter', Arial, sans-serif; margin: 0; background: #f1f5f9; color: #1e293b; }
+        body { font-family: 'Inter', Arial, sans-serif; margin: 0; background: #f1f5f9; color: #1e293b; overflow-x: hidden; }
         
         /* Cabeçalho do Site */
         .topo { 
@@ -36,15 +36,18 @@
 
         .badge-atualizacao { position: absolute; top: -12px; right: 20px; font-size: 11px; color: #065f46; background: #d1fae5; padding: 5px 12px; border-radius: 20px; font-weight: 700; border: 1px solid #a7f3d0; }
 
-        /* GRADE DE FILTROS RESPONSIVA: Adaptando todos os campos e o botão para o mesmo tamanho */
-        .filtro-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; align-items: center; }
+        /* --- NOVAS CLASSES DE GRADE FIXA --- */
+        /* Linha 1 dos Filtros (3 colunas iguais) */
+        .filtro-linha-1 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+        /* Linha 2 dos Filtros (5 colunas iguais) */
+        .filtro-linha-2 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
         
-        select, button, input[type="text"] { padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; transition: 0.2s; box-sizing: border-box; width: 100%; font-family: inherit; }
-        button { background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; height: 35px; }
+        /* Exportação (6 colunas iguais) */
+        .export-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; align-items: center; margin-top: 5px; }
+        
+        select, input[type="text"] { padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; transition: 0.2s; box-sizing: border-box; width: 100%; font-family: inherit; }
+        button { padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; box-sizing: border-box; width: 100%; background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; height: 35px; white-space: nowrap; }
         button:hover { background: #00274d; transform: translateY(-1px); }
-        
-        .export-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; align-items: center; margin-top: 5px; }
-        .export-row button { padding: 10px 12px; border-radius: 8px; font-size: 14px; height: auto; }
         .btn-acao { background: #0284c7; }
 
         #tabela thead { display: none; }
@@ -110,10 +113,13 @@
             <legend class="titulo-painel">Filtros de Pesquisa</legend>
             <div id="badge-atualizacao" class="badge-atualizacao">Sincronizando...</div>
             
-            <div class="filtro-grade">
+            <div class="filtro-linha-1">
                 <input type="text" id="filtroNome" placeholder="Pesquisar por nome...">
                 <select id="filtroCargo"><option value="">Cargo (Todos)</option></select>
                 <select id="filtroLotacao"><option value="">Lotação (Todas)</option></select>
+            </div>
+
+            <div class="filtro-linha-2">
                 <select id="filtroSituacao">
                     <option value="">Situação (Todas)</option>
                     <option value="Ativo" selected>Ativos</option>
@@ -125,6 +131,7 @@
                     <option value="admissao">Por Admissão</option>
                     <option value="demissao">Por Demissão</option>
                 </select>
+                
                 <select id="filtroMes">
                     <option value="">Mês</option>
                     <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
@@ -132,6 +139,7 @@
                     <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
                     <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                 </select>
+                
                 <select id="filtroAno">
                     <option value="">Ano</option>
                 </select>
@@ -263,7 +271,12 @@
                 aplicarFiltros();
                 $('#badge-atualizacao').text(`🟢 ${carimboAtualizacao}`);
                 $('#loader').hide();
-                $('#main-container').fadeIn();
+                
+                // Comunica ao Iframe que carregou e ajusta altura
+                $('#main-container').fadeIn(400, () => {
+                    const h = document.body.scrollHeight;
+                    window.parent.postMessage({ tipo: 'ajustarAltura', valor: h }, '*');
+                });
             } catch (error) {
                 console.error(error);
                 $('#loader').html('<b style="color:red">Erro ao carregar dados.</b>');
@@ -325,10 +338,18 @@
                             </div>`;
                     }
                 }],
-                initComplete: function() { $('.dt-controles').appendTo('#painel-visualizacao'); },
+                initComplete: function() { 
+                    $('.dt-controles').appendTo('#painel-visualizacao'); 
+                },
                 drawCallback: function() {
                     const total = this.api().rows({ filter: 'applied' }).count();
                     $('.info-total').html(`<b>${total}</b> registros encontrados`);
+                    
+                    // Avisa o iframe sobre mudança de tamanho sempre que paginação mudar
+                    setTimeout(() => {
+                        const h = document.body.scrollHeight;
+                        window.parent.postMessage({ tipo: 'ajustarAltura', valor: h }, '*');
+                    }, 100);
                 }
             });
         }
@@ -339,7 +360,6 @@
             const lot = $('#filtroLotacao').val();
             const sit = $('#filtroSituacao').val();
             
-            // Filtros de Data Restaurados
             const tipoData = $('#filtroTipoData').val();
             const mes = $('#filtroMes').val();
             const ano = $('#filtroAno').val();
@@ -355,6 +375,7 @@
                 if (tipoData || mes || ano) {
                     const mAdm = d.data_admissao ? (!mes || d.data_admissao.split('/')[1] === mes) && (!ano || d.data_admissao.split('/')[2] === ano) : false;
                     const mDem = d.data_demissao ? (!mes || d.data_demissao.split('/')[1] === mes) && (!ano || d.data_demissao.split('/')[2] === ano) : false;
+                    
                     if (tipoData === 'admissao') {
                         matchData = !!d.data_admissao && mAdm;
                     } else if (tipoData === 'demissao') {
