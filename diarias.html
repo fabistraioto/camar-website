@@ -3,241 +3,197 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Relatório de Diárias e Adiantamentos - CMC</title>
-
+    <title>Relatório de Diárias CMC</title>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
     <style>
         body { font-family: 'Inter', sans-serif; margin: 0; background: #f1f5f9; color: #1e293b; }
         #wrapper { padding: 15px; }
-
-        .topo { background: #003b75; color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .topo h1 { margin: 0; font-size: 1.6rem; font-weight: 800; }
-        .logo-camara { display: flex; flex-direction: column; align-items: center; }
-        .logo-camara img { height: 55px; }
-        .logo-camara span { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #cbd5e1; margin-top: 5px; }
-
-        #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 250px; }
-        .spinner { border: 4px solid #e2e8f0; border-top: 4px solid #003b75; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .painel { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; position: relative; }
-        .painel-titulo { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 0 10px; letter-spacing: 1px; }
-        .badge-sinc { position: absolute; top: -12px; right: 20px; font-size: 10px; background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; border: 1px solid #a7f3d0; font-weight: 700; }
-
-        /* GRID DE FILTROS - 2 LINHAS DE 3 COLUNAS */
-        .grid-filtros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .topo { background: #003b75; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; margin-bottom: 20px; }
+        .topo h1 { margin: 0; font-size: 1.5rem; font-weight: 800; }
+        .brasao { height: 50px; }
+        .painel { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 15px; position: relative; }
+        .painel-titulo { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 0 10px; }
+        .badge-sinc { position: absolute; top: -10px; right: 20px; font-size: 10px; background: #d1fae5; color: #065f46; padding: 3px 10px; border-radius: 20px; font-weight: 700; border: 1px solid #a7f3d0; }
         
-        /* GRID DE BOTÕES - 6 COLUNAS */
-        .grid-botoes { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+        /* A SOLUÇÃO BRUTA: TABELAS PARA FORÇAR O LAYOUT NO IFRAME */
+        .layout-fixo { width: 100%; border-collapse: separate; border-spacing: 8px; table-layout: fixed; }
+        .layout-fixo td { padding: 0; vertical-align: middle; }
+        
+        select, input, button { height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 8px; font-size: 13px; box-sizing: border-box; width: 100%; }
+        button { background: #003b75; color: white; font-weight: 600; cursor: pointer; border: none; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .btn-acao { background: #0284c7; }
 
-        select, input, button { height: 42px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 12px; font-size: 14px; box-sizing: border-box; width: 100%; }
-        button { background: #003b75; color: white; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
-        button:hover { background: #00274d; }
-        .btn-destaque { background: #0284c7; }
+        .totais-container { display: flex; gap: 10px; margin-bottom: 15px; }
+        .total-box { flex: 1; background: white; border: 1px solid #e2e8f0; border-left: 4px solid #003b75; border-radius: 10px; padding: 12px; }
+        .total-box label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; }
+        .total-box span { font-size: 18px; font-weight: 800; }
 
-        .totais-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .total-box { background: white; border: 1px solid #e2e8f0; border-left: 5px solid #003b75; border-radius: 12px; padding: 15px 20px; }
-        .total-box.azul { border-left-color: #0284c7; }
-        .total-box label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px; }
-        .total-box span { font-size: 24px; font-weight: 800; color: #1e293b; }
+        /* HEADER DA VISUALIZAÇÃO CORRIGIDO */
+        .dt-header-flex { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
+        .badge-count { background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; border: 1px solid #bae6fd; }
 
-        /* CORREÇÃO DO HEADER DATATABLES */
-        .visualizacao-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .registros-badge { background: #e0f2fe; color: #0369a1; padding: 10px 25px; border-radius: 10px; font-weight: 700; border: 1px solid #bae6fd; font-size: 14px; }
-        .dataTables_length label { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #475569; font-size: 14px; }
-        .dataTables_length select { width: auto !important; height: auto !important; padding: 4px 8px !important; }
-
-        /* REMOÇÃO DO TEXTO "DADOS" E LINHA */
         #tabela-base thead { display: none !important; }
-        table.dataTable.no-footer { border-bottom: none !important; }
-        table.dataTable { border: none !important; margin-top: 10px !important; }
-
-        /* CARD DE DIÁRIA */
-        .card-diaria { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; }
-        .card-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; }
-        .card-nome { font-size: 18px; font-weight: 800; color: #003b75; text-transform: uppercase; display: block; }
-        .card-cargo { font-size: 13px; color: #64748b; font-weight: 500; text-transform: uppercase; }
+        table.dataTable { border: none !important; }
         
-        .card-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 15px 20px; gap: 15px; }
-        .card-grid.separador { border-top: 1px dashed #f1f5f9; }
-        .card-item label { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 4px; }
-        .card-item span { font-size: 14px; font-weight: 700; color: #1e293b; }
-
-        .card-footer { background: #f8fafc; padding: 15px 20px; border-top: 1px solid #edf2f7; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .quadro-cheio { grid-column: 1 / -1; border-top: 1px dashed #e2e8f0; padding-top: 10px; }
-
-        .controles-inferiores { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 10px; margin-bottom: 30px; }
-
-        @media (max-width: 850px) {
-            .grid-filtros, .grid-botoes, .totais-container { grid-template-columns: 1fr; }
-            .card-grid { grid-template-columns: 1fr 1fr; }
-            .controles-inferiores { flex-direction: column; gap: 15px; }
-        }
+        /* CARD ORIGINAL */
+        .card-diaria { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card-header { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; background: #fff; }
+        .card-nome { font-size: 16px; font-weight: 800; color: #003b75; text-transform: uppercase; }
+        .card-cargo { font-size: 12px; color: #64748b; text-transform: uppercase; display: block; }
+        .card-body { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 12px 15px; gap: 10px; }
+        .card-body.sep { border-top: 1px dashed #f1f5f9; }
+        .item-label { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; display: block; }
+        .item-valor { font-size: 13px; font-weight: 700; }
+        .card-footer { background: #f8fafc; padding: 12px 15px; border-top: 1px solid #edf2f7; font-size: 12px; }
+        
+        .controles-datatable { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 10px; }
+        
+        #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; }
+        .spinner { border: 4px solid #e2e8f0; border-top: 4px solid #003b75; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-
 <div id="wrapper">
     <header class="topo">
-        <h1>Diárias e Adiantamentos</h1>
-        <div class="logo-camara">
-            <img src="Brasão_de_Marília.png" alt="Câmara de Marília">
-            <span>Câmara Municipal de Marília</span>
-        </div>
+        <h1>Diárias</h1>
+        <img src="Brasão_de_Marília.png" class="brasao">
     </header>
 
-    <div id="loader"><div class="spinner"></div><span>Sincronizando dados...</span></div>
+    <div id="loader"><div class="spinner"></div><span>Carregando...</span></div>
 
-    <main id="main-content" style="display: none;">
-        
+    <main id="main-content" style="display:none;">
         <fieldset class="painel">
-            <legend class="painel-titulo">Filtros de Pesquisa</legend>
-            <div id="sync-info" class="badge-sinc">Sincronizando...</div>
-            <div class="grid-filtros">
-                <input type="text" id="buscaNome" placeholder="Pesquisar por nome...">
-                <select id="selGabinete"><option value="">Gabinete (Todos)</option></select>
-                <select id="selServidor"><option value="">Servidor (Todos)</option></select>
-                
-                <select id="selMes"><option value="">Mês (Todos)</option><option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select>
-                <select id="selAno"><option value="">Ano (Todos)</option></select>
-                <button onclick="resetarFiltros()">Limpar Filtros</button>
-            </div>
+            <legend class="painel-titulo">Filtros</legend>
+            <div id="sync-info" class="badge-sinc">Aguardando...</div>
+            <table class="layout-fixo">
+                <tr>
+                    <td><input type="text" id="buscaNome" placeholder="Nome..."></td>
+                    <td><select id="selGabinete"><option value="">Gabinete</option></select></td>
+                    <td><select id="selServidor"><option value="">Servidor</option></select></td>
+                </tr>
+                <tr>
+                    <td><select id="selMes"><option value="">Mês</option><option value="01">Jan</option><option value="02">Fev</option><option value="03">Mar</option><option value="04">Abr</option><option value="05">Mai</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Ago</option><option value="09">Set</option><option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option></select></td>
+                    <td><select id="selAno"><option value="">Ano</option></select></td>
+                    <td><button onclick="resetarFiltros()">Limpar</button></td>
+                </tr>
+            </table>
         </fieldset>
 
         <fieldset class="painel">
-            <legend class="painel-titulo">Exportação e Ações</legend>
-            <div class="grid-botoes">
-                <button onclick="exportarCSV()">⬇️ CSV</button>
-                <button onclick="exportarExcel()">⬇️ Excel</button>
-                <button onclick="exportarJSON()">⬇️ JSON</button>
-                <button onclick="exportarXML()">⬇️ XML</button>
-                <button class="btn-destaque" onclick="window.print()">🖨️ Imprimir</button>
-                <button class="btn-destaque" onclick="carregarDados()">🔄 Atualizar</button>
-            </div>
+            <legend class="painel-titulo">Exportação</legend>
+            <table class="layout-fixo">
+                <tr>
+                    <td><button onclick="exportarCSV()">CSV</button></td>
+                    <td><button onclick="exportarExcel()">Excel</button></td>
+                    <td><button onclick="exportarJSON()">JSON</button></td>
+                </tr>
+                <tr>
+                    <td><button onclick="exportarXML()">XML</button></td>
+                    <td><button class="btn-acao" onclick="window.print()">Imprimir</button></td>
+                    <td><button class="btn-acao" onclick="carregarDados()">Atualizar</button></td>
+                </tr>
+            </table>
         </fieldset>
 
         <div class="totais-container">
-            <div class="total-box">
-                <label>Soma das Diárias (Filtrado)</label>
-                <span id="txt-total-diarias">R$ 0,00</span>
-            </div>
-            <div class="total-box azul">
-                <label>Soma dos Adiantamentos (Filtrado)</label>
-                <span id="txt-total-adiantamentos">R$ 0,00</span>
-            </div>
+            <div class="total-box"><label>Diárias</label><span id="txt-total-diarias">R$ 0,00</span></div>
+            <div class="total-box" style="border-left-color:#0284c7;"><label>Adiantamentos</label><span id="txt-total-adiantamentos">R$ 0,00</span></div>
         </div>
 
-        <fieldset class="painel">
+        <fieldset class="painel" style="padding: 10px 15px;">
             <legend class="painel-titulo">Visualização</legend>
-            <div class="visualizacao-header">
-                <div id="dt-length-place"></div>
-                <div class="registros-badge"><span id="count-rows">0</span> registros encontrados</div>
+            <div class="dt-header-flex">
+                <div id="area-length"></div>
+                <div class="badge-count"><span id="count-rows">0</span> registros</div>
             </div>
         </fieldset>
 
-        <table id="tabela-base" style="width:100%">
-            <thead><tr><th>Dados</th></tr></thead>
-            <tbody></tbody>
-        </table>
+        <table id="tabela-base" style="width:100%"><thead><tr><th>Dados</th></tr></thead><tbody></tbody></table>
     </main>
 </div>
 
 <script>
-    const URL_DIARIAS = "https://docs.google.com/spreadsheets/d/1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo/export?format=csv";
-    const URL_GABINETES = "https://docs.google.com/spreadsheets/d/1GwDig1yn9YIX8FSsHFPHL2iLCtwsZkNnquNjp5D7Oaw/export?format=csv";
-
+    const URL_D = "https://docs.google.com/spreadsheets/d/1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo/export?format=csv";
+    const URL_G = "https://docs.google.com/spreadsheets/d/1GwDig1yn9YIX8FSsHFPHL2iLCtwsZkNnquNjp5D7Oaw/export?format=csv";
     let dadosBrutos = [], listaGabinetes = [], grid;
 
     async function carregarDados() {
         $('#loader').show(); $('#main-content').hide();
         try {
-            const [rD, rG] = await Promise.all([fetch(`${URL_DIARIAS}&t=${Date.now()}`), fetch(`${URL_GABINETES}&t=${Date.now()}`)]);
-            const textoD = await rD.text();
-            processarDados(textoD);
-            const textoG = await rG.text();
-            listaGabinetes = textoG.trim().split("\n").slice(1).map(l => l.replace(/"/g, '').trim().toUpperCase());
-            popularSelects();
-            filtrar();
+            const [rD, rG] = await Promise.all([fetch(`${URL_D}&t=${Date.now()}`), fetch(`${URL_G}&t=${Date.now()}`)]);
+            const textoD = await rD.text(); processarDados(textoD);
+            const textoG = await rG.text(); listaGabinetes = textoG.trim().split("\n").slice(1).map(l => l.replace(/"/g, '').trim().toUpperCase());
+            popularSelects(); filtrar();
             $('#loader').hide(); $('#main-content').fadeIn(400, ajustarIframe);
-        } catch (e) { alert("Erro ao carregar dados."); }
+        } catch (e) { alert("Erro de conexão."); }
     }
 
     function processarDados(csv) {
         const linhas = csv.trim().split("\n");
         const match = csv.match(/MODIF_REAL:\s*(\d{2}\/\d{2}\/\d{4}[^\d]+\d{2}:\d{2})/i);
-        if(match) $('#sync-info').text(`🟢 Atualizado em ${match[1]}`);
+        if(match) $('#sync-info').text(`🟢 ${match[1]}`);
         const cab = linhas[1].split(',').map(c => c.replace(/"/g, '').toLowerCase().trim());
         dadosBrutos = linhas.slice(2).map(l => {
             const cols = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            let o = {};
-            cab.forEach((c, i) => o[c] = (cols[i] || "").replace(/"/g, '').trim());
+            let o = {}; cab.forEach((c, i) => o[c] = (cols[i] || "").replace(/"/g, '').trim());
             if(o.servidor) o.servidor = o.servidor.toUpperCase();
             return o;
         }).filter(d => d.servidor);
     }
 
     function popularSelects() {
-        $('#selGabinete').html('<option value="">Gabinete (Todos)</option>');
+        $('#selGabinete').html('<option value="">Gabinete</option>');
         [...new Set(listaGabinetes)].sort().forEach(g => $('#selGabinete').append(new Option(g, g)));
-        $('#selServidor').html('<option value="">Servidor (Todos)</option>');
+        $('#selServidor').html('<option value="">Servidor</option>');
         [...new Set(dadosBrutos.map(d => d.servidor))].sort().forEach(s => $('#selServidor').append(new Option(s, s)));
         const anos = [...new Set(dadosBrutos.map(d => d.data_partida.split('/')[2]))].filter(a => a).sort((a,b)=>b-a);
-        $('#selAno').html('<option value="">Ano (Todos)</option>');
+        $('#selAno').html('<option value="">Ano</option>');
         anos.forEach(a => $('#selAno').append(new Option(a, a)));
     }
 
     function filtrar() {
         const n = $('#buscaNome').val().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const g = $('#selGabinete').val();
-        const s = $('#selServidor').val();
-        const m = $('#selMes').val();
-        const a = $('#selAno').val();
-
+        const g = $('#selGabinete').val(), s = $('#selServidor').val(), m = $('#selMes').val(), a = $('#selAno').val();
         const res = dadosBrutos.filter(d => {
             const dp = d.data_partida.split('/');
             const sn = d.servidor.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            return (!n || sn.includes(n)) && 
-                   (!g || d.servidor.includes(g) || (d.cargo && d.cargo.includes(g))) && 
-                   (!s || d.servidor === s) && 
-                   (!m || dp[1] === m) && 
-                   (!a || dp[2] === a);
+            return (!n || sn.includes(n)) && (!g || d.servidor.includes(g) || (d.cargo && d.cargo.includes(g))) && (!s || d.servidor === s) && (!m || dp[1] === m) && (!a || dp[2] === a);
         });
         renderizarGrid(res);
     }
 
     function renderizarGrid(dados) {
-        if (grid) { grid.destroy(); $('#dt-length-place').empty(); }
+        if (grid) { grid.destroy(); $('#area-length').empty(); }
         grid = $('#tabela-base').DataTable({
             data: dados, pageLength: 10, ordering: false,
-            dom: 'lrt<"controles-inferiores"ip>',
-            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json', lengthMenu: "Exibir _MENU_ resultados por página" },
+            dom: 'lrt<"controles-datatable"ip>',
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json', lengthMenu: "_MENU_" },
             columns: [{
                 data: null,
                 render: d => `
                     <div class="card-diaria">
                         <div class="card-header"><span class="card-nome">${d.servidor}</span><span class="card-cargo">${d.cargo || "-"}</span></div>
-                        <div class="card-grid">
-                            <div class="card-item"><label>Diárias</label><span>${d.qtde_diarias}</span></div>
-                            <div class="card-item"><label>Partida</label><span>${d.data_partida}</span></div>
-                            <div class="card-item"><label>Retorno</label><span>${d.data_retorno}</span></div>
+                        <div class="card-body">
+                            <div><label class="item-label">Diárias</label><span class="item-valor">${d.qtde_diarias}</span></div>
+                            <div><label class="item-label">Partida</label><span class="item-valor">${d.data_partida}</span></div>
+                            <div><label class="item-label">Retorno</label><span class="item-valor">${d.data_retorno}</span></div>
                         </div>
-                        <div class="card-grid separador">
-                            <div class="card-item"><label>Valor Diárias</label><span>${formatarMoeda(d.valor_diarias)}</span></div>
-                            <div class="card-item"><label>Adiantamento</label><span>${formatarMoeda(d.valor_adiantamento)}</span></div>
-                            <div class="card-item"><label>Dotação</label><span>${d.dotacao || "-"}</span></div>
+                        <div class="card-body sep">
+                            <div><label class="item-label">Valor</label><span class="item-valor">${d.valor_diarias}</span></div>
+                            <div><label class="item-label">Adiant.</label><span class="item-valor">${d.valor_adiantamento}</span></div>
+                            <div><label class="item-label">Dotação</label><span class="item-valor">${d.dotacao || "-"}</span></div>
                         </div>
                         <div class="card-footer">
-                            <div class="card-item"><label>Cidade Destino</label><span>${d.cidade_destino}</span></div>
-                            <div class="card-item"><label>Local Destino</label><span>${d.local_destino}</span></div>
-                            <div class="quadro-cheio card-item"><label>Motivação</label><span style="font-weight:500; font-size:12px;">${d.motivacao_viagem}</span></div>
+                            <strong>Destino:</strong> ${d.cidade_destino}<br><br>
+                            <strong>Motivação:</strong> ${d.motivacao_viagem}
                         </div>
                     </div>`
             }],
-            initComplete: function() { $('.dataTables_length').appendTo('#dt-length-place'); },
+            initComplete: function() { $('.dataTables_length').appendTo('#area-length'); },
             drawCallback: function() {
                 let sD = 0, sA = 0;
                 const parse = v => parseFloat((v || "0").replace(/R\$\s?|[.]/g, '').replace(',', '.')) || 0;
@@ -250,24 +206,10 @@
         });
     }
 
-    function formatarMoeda(v) { return (!v || v === "0") ? "R$ 0,00" : (v.includes("R$") ? v : `R$ ${v}`); }
-    function ajustarIframe() { window.parent.postMessage({ tipo: 'ajustarAltura', valor: document.getElementById('wrapper').offsetHeight + 50 }, '*'); }
+    function ajustarIframe() { window.parent.postMessage({ tipo: 'ajustarAltura', valor: document.getElementById('wrapper').offsetHeight + 40 }, '*'); }
     function resetarFiltros() { $('input, select').val(''); filtrar(); }
-    
-    function exportarExcel() {
-        const data = grid.rows({filter:'applied'}).data().toArray();
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Diarias");
-        XLSX.writeFile(wb, "diarias_marilia.xlsx");
-    }
-
-    function exportarCSV() {
-        let csv = "\ufeffServidor,Cargo,Diarias,Partida,Retorno,Valor,Adiantamento\n";
-        grid.rows({filter:'applied'}).data().each(d => { csv += `"${d.servidor}","${d.cargo}","${d.qtde_diarias}","${d.data_partida}","${d.data_retorno}","${d.valor_diarias}","${d.valor_adiantamento}"\n`; });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "diarias.csv"; link.click();
-    }
+    function exportarExcel() { const ws = XLSX.utils.json_to_sheet(grid.rows({filter:'applied'}).data().toArray()); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Diarias"); XLSX.writeFile(wb, "diarias.xlsx"); }
+    function exportarCSV() { let csv = "\ufeffServidor,Cargo,Diarias,Partida,Retorno,Valor,Adiantamento\n"; grid.rows({filter:'applied'}).data().each(d => { csv += `"${d.servidor}","${d.cargo}","${d.qtde_diarias}","${d.data_partida}","${d.data_retorno}","${d.valor_diarias}","${d.valor_adiantamento}"\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "diarias.csv"; link.click(); }
 
     $('#buscaNome').on('input', filtrar);
     $('select').on('change', filtrar);
