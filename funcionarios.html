@@ -203,14 +203,17 @@
         function processarCSV(csvText) {
             const linhas = csvText.split(/\r?\n/);
             
-            // 1. Pega carimbo da Célula A1 e extrai Data e Hora com Regex Flexível (\d{1,2})
-            let textoA1 = linhas[0].split(',')[0].replace(/"/g, '');
-            let matchDataHora = textoA1.match(/(\d{1,2}\/\d{1,2}\/\d{4})[^\d]*(\d{1,2}:\d{2})/);
+            // 1. Pega a linha 1 inteira (para não perder a hora na vírgula do CSV) e tira aspas
+            let textoPrimeiraLinha = linhas[0].replace(/"/g, '');
+            
+            // Busca o padrão de Data (DD/MM/YYYY) e Hora (HH:MM) ignorando os segundos
+            let matchDataHora = textoPrimeiraLinha.match(/(\d{1,2}\/\d{1,2}\/\d{4})[^\d]*(\d{1,2}:\d{2})/);
             
             if (matchDataHora) {
                 carimboAtualizacao = `Atualizado em ${matchDataHora[1]} às ${matchDataHora[2]}`;
             } else {
-                carimboAtualizacao = textoA1.replace(/MODIF_REAL:\s*/i, "Atualizado em ");
+                // Fallback de segurança
+                carimboAtualizacao = textoPrimeiraLinha.split(',')[0].replace(/MODIF_REAL:\s*/i, "Atualizado em ");
             }
 
             // 2. Cabeçalho está na linha 2 (índice 1)
@@ -294,13 +297,17 @@
         }
 
         function renderizarTabela(dados) {
-            if (tabela) tabela.destroy();
+            if (tabela) {
+                tabela.destroy();
+                // Limpa a barra de controles antiga do card para evitar duplicações ao filtrar
+                $('#painel-visualizacao .dt-controles').remove(); 
+            }
 
             tabela = $('#tabela').DataTable({
                 data: dados,
                 pageLength: 10,
                 ordering: false, // Desativa ordenação automática p/ manter regra mista
-                dom: '<"dt-controles"l<"info-total">>rt<"dt-bottom-controls"ip>', // layout: exibe registros em vez da busca livre
+                dom: '<"dt-controles"l<"info-total">>rt<"dt-bottom-controls"ip>', // layout
                 language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
                 columns: [{
                     data: null,
@@ -338,7 +345,7 @@
                     }
                 }],
                 initComplete: function() {
-                    // Move a barra de controles ("Exibir X" e "Registros Encontrados") para dentro do novo card
+                    // Move a barra de controles para dentro do card
                     $('.dt-controles').appendTo('#painel-visualizacao');
                 },
                 drawCallback: function(settings) {
