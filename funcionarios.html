@@ -82,7 +82,12 @@
 
         /* Configurações de Impressão */
         @media print {
-            @page { size: portrait; margin: 15mm; }
+            @page { 
+                size: portrait; 
+                margin: 15mm; 
+                /* Tenta forçar a numeração em navegadores compatíveis (ex: Firefox) */
+                @bottom-right { content: "Página " counter(page); }
+            }
             body { background: white; }
             .topo, fieldset, .dt-controles, .dt-bottom-controls { display: none !important; }
             #cabecalho-impressao { 
@@ -91,7 +96,6 @@
             }
             .card-func { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; margin-bottom: 15px; }
             .container { display: block !important; margin: 0; }
-            .page-footer { position: fixed; bottom: 0; right: 0; font-size: 10px; color: #666; content: "Página " counter(page); }
         }
     </style>
 </head>
@@ -125,11 +129,13 @@
             <div id="badge-atualizacao" class="badge-atualizacao">Sincronizando...</div>
             <div class="toolbar-row">
                 <select id="filtroLotacao"><option value="">Lotação (Todas)</option></select>
+                
                 <select id="filtroSituacao">
                     <option value="">Situação (Todas)</option>
-                    <option value="Ativo">Ativo</option>
-                    <option value="Desligado">Desligado</option>
+                    <option value="Ativo" selected>Ativos</option>
+                    <option value="Desligado">Desligados</option>
                 </select>
+
                 <select id="filtroMesAdm">
                     <option value="">Mês Admissão</option>
                     <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
@@ -212,7 +218,6 @@
             if (matchDataHora) {
                 carimboAtualizacao = `Atualizado em ${matchDataHora[1]} às ${matchDataHora[2]}`;
             } else {
-                // Fallback de segurança
                 carimboAtualizacao = textoPrimeiraLinha.split(',')[0].replace(/MODIF_REAL:\s*/i, "Atualizado em ");
             }
 
@@ -259,11 +264,9 @@
                 const dataB_dem = parseDataBR(b.data_demissao) || 0;
 
                 if (a.situacao === "Ativo") {
-                    // Ativos: Mais antigos primeiro (ASC)
-                    return dataA_adm - dataB_adm;
+                    return dataA_adm - dataB_adm; // ASC
                 } else {
-                    // Desligados: Mais recentes primeiro (DESC)
-                    return dataB_dem - dataA_dem;
+                    return dataB_dem - dataA_dem; // DESC
                 }
             });
         }
@@ -279,7 +282,9 @@
                 dadosGlobais = ordenarFuncionarios(rawData);
 
                 popularFiltros();
-                renderizarTabela(dadosGlobais);
+                
+                // Alterado: Chama aplicarFiltros para respeitar a seleção "Ativos" já no carregamento
+                aplicarFiltros();
 
                 $('#badge-atualizacao').text(`🟢 ${carimboAtualizacao}`);
                 $('#loader').hide();
@@ -299,15 +304,14 @@
         function renderizarTabela(dados) {
             if (tabela) {
                 tabela.destroy();
-                // Limpa a barra de controles antiga do card para evitar duplicações ao filtrar
                 $('#painel-visualizacao .dt-controles').remove(); 
             }
 
             tabela = $('#tabela').DataTable({
                 data: dados,
                 pageLength: 10,
-                ordering: false, // Desativa ordenação automática p/ manter regra mista
-                dom: '<"dt-controles"l<"info-total">>rt<"dt-bottom-controls"ip>', // layout
+                ordering: false,
+                dom: '<"dt-controles"l<"info-total">>rt<"dt-bottom-controls"ip>',
                 language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
                 columns: [{
                     data: null,
@@ -345,18 +349,15 @@
                     }
                 }],
                 initComplete: function() {
-                    // Move a barra de controles para dentro do card
                     $('.dt-controles').appendTo('#painel-visualizacao');
                 },
                 drawCallback: function(settings) {
-                    // Atualiza dinamicamente o número de registros encontrados ao desenhar tabela
                     const total = this.api().rows({ filter: 'applied' }).count();
                     $('.info-total').html(`<b>${total}</b> registros encontrados`);
                 }
             });
         }
 
-        // Aplicação de Filtros Combinados com reordenação
         function aplicarFiltros() {
             const lot = $('#filtroLotacao').val();
             const sit = $('#filtroSituacao').val();
@@ -372,14 +373,15 @@
                 return matchLot && matchSit && matchMAdm && matchMDem;
             });
 
-            // Reordena sempre antes de atualizar a tabela para manter regra
             filtrados = ordenarFuncionarios(filtrados); 
             renderizarTabela(filtrados);
         }
 
         function limparFiltros() {
-            $('select').val('');
-            renderizarTabela(dadosGlobais);
+            // Alterado: Zera todos os selects, mas força o "Situação" a voltar para "Ativo"
+            $('#filtroLotacao, #filtroMesAdm, #filtroMesDem').val('');
+            $('#filtroSituacao').val('Ativo');
+            aplicarFiltros();
         }
 
         // Funções de Exportação
@@ -426,7 +428,6 @@
             a.click();
         }
 
-        // Gatilhos
         $('select').on('change', aplicarFiltros);
         window.onload = carregarDados;
 
