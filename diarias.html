@@ -173,4 +173,156 @@
 </div>
 
 <script>
-    const SHEET_ID_DIARIAS = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzas
+    const SHEET_ID_DIARIAS = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo";
+    const SHEET_ID_GABINETES = "1GwDig1yn9YIX8FSsHFPHL2iLCtwsZkNnquNjp5D7Oaw"; 
+
+    let tabela, dadosGlobais = [], listaGabinetes = [], carimboCompleto = "";
+
+    function enviarAlturaIframe() {
+        setTimeout(() => {
+            const h = document.getElementById('wrapper').offsetHeight + 40; 
+            window.parent.postMessage({ tipo: 'ajustarAltura', valor: h }, '*');
+        }, 200); 
+    }
+
+    function formatarMoeda(v) {
+        if (!v) return "R$ 0,00";
+        let n = v.replace(/R\$\s?/g, "").trim();
+        return n.includes(",") ? `R$ ${n}` : `R$ ${n},00`;
+    }
+
+    function removerAcentos(str) { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : ""; }
+
+    function getCsvUrl(id) { return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&t=${Date.now()}`; }
+
+    function csvParaArray(str, isDiarias = false) {
+        if (str.startsWith('\ufeff')) str = str.substring(1);
+        let linhas = str.trim().split("\n");
+        if (isDiarias) {
+            let match = str.match(/MODIF_REAL:\s*(\d{1,2}\/\d{1,2}\/\d{4}[^\d]+\d{1,2}:\d{2})/i);
+            if (match) carimboCompleto = match[1].replace(/\s+/, ' às ');
+        }
+        let cabLinha = linhas.shift();
+        const extrair = (l) => {
+            let res = [], d = false, v = "";
+            for (let c of l) { if (c === '"') d = !d; else if (c === ',' && !d) { res.push(v); v = ""; } else v += c; }
+            res.push(v); return res.map(x => x.replace(/^"|"$/g, '').trim());
+        };
+        const cab = extrair(cabLinha).map(c => c.toLowerCase());
+        return linhas.map(l => {
+            let val = extrair(l), o = {};
+            cab.forEach((c, i) => o[c] = val[i] || "");
+            if(o.servidor) o.servidor = o.servidor.toUpperCase();
+            return o;
+        }).filter(d => d.servidor);
+    }
+
+    async function iniciarCarregamento() {
+        $('#loader').show(); $('#main-container').hide();
+        try {
+            const [rD, rG] = await Promise.all([fetch(getCsvUrl(SHEET_ID_DIARIAS)), fetch(getCsvUrl(SHEET_ID_GABINETES))]);
+            dadosGlobais = csvParaArray(await rD.text(), true);
+            listaGabinetes = csvParaArray(await rG.text(), false);
+            preencherFiltros(); aplicarFiltros();
+            $('#badge-atualizacao').html(`🟢 Atualizado em ${carimboCompleto || 'hoje'}`);
+            $('#loader').hide(); $('#main-container').fadeIn(400, enviarAlturaIframe);
+        } catch (e) { console.error(e); }
+    }
+
+    function preencherFiltros(mudouGabinete = false) {
+        const valServ = $('#filtroServidor').val(), valGab = $('#filtroGabinete').val();
+        if (!mudouGabinete) {
+            const gabs = [...new Set(listaGabinetes.map(g => Object.values(g)[0].toUpperCase()))].sort();
+            $('#filtroGabinete').html('<option value="">Gabinete (Todos)</option>');
+            gabs.forEach(g => $('#filtroGabinete').append(new Option(g, g)));
+            $('#filtroGabinete').val(valGab);
+        }
+        let servs = valGab ? [...new Set(dadosGlobais.filter(d => removerAcentos(d.servidor).toLowerCase().includes(removerAcentos(valGab).toLowerCase())).map(d => d.servidor))].sort() : [...new Set(dadosGlobais.map(d => d.servidor))].sort();
+        $('#filtroServidor').html('<option value="">Servidor (Todos)</option>');
+        servs.forEach(s => $('#filtroServidor').append(new Option(s, s)));
+        $('#filtroServidor').val(valServ);
+        if (!mudouGabinete) {
+            const anos = [...new Set(dadosGlobais.map(d => (d.data_partida || "").split("/")[2]))].filter(a => a).sort((a,b)=>b-a);
+            $('#filtroAno').html('<option value="">Ano</option>');
+            anos.forEach(a => $('#filtroAno').append(new Option(a, a)));
+        }
+    }
+
+    function aplicarFiltros() {
+        const nome = removerAcentos($('#filtroNome').val().toLowerCase());
+        const serv = $('#filtroServidor').val(), mes = $('#filtroMes').val(), ano = $('#filtroAno').val(), gab = $('#filtroGabinete').val();
+        const res = dadosGlobais.filter(d => {
+            const p = (d.data_partida || "").split("/"), mD = p[1], aD = p[2];
+            return (!nome || removerAcentos(d.servidor).toLowerCase().includes(nome)) && (!serv || d.servidor === serv) && (!mes || mD === mes) && (!ano || aD === ano) && (!gab || removerAcentos(d.servidor).toLowerCase().includes(removerAcentos(gab).toLowerCase()));
+        });
+        renderizar(res);
+    }
+
+    function renderizar(dados) {
+        if (tabela) { tabela.destroy(); $('#comprimento-tabela').empty(); }
+        tabela = $('#tabela').DataTable({
+            data: dados, pageLength: 10, ordering: false,
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json', lengthMenu: "Exibir _MENU_ resultados" },
+            dom: 'lrt<"dt-bottom-controls"ip>',
+            columns: [{ 
+                data: null,
+                render: (d) => `
+                    <div class="card-info">
+                        <div class="card-header"><div class="card-header-texto"><span class="nome-principal">${d.servidor}</span><span class="subtitulo-card">${d.cargo || "-"}</span></div></div>
+                        <div class="card-body-row">
+                            <div class="info-col"><span class="info-label">Qtd. Diárias</span><span class="info-valor">${d.qtde_diarias || "0"}</span></div>
+                            <div class="info-col"><span class="info-label">Partida</span><span class="info-valor">${d.data_partida || "-"}</span></div>
+                            <div class="info-col"><span class="info-label">Retorno</span><span class="info-valor">${d.data_retorno || "-"}</span></div>
+                        </div>
+                        <div class="card-body-row border-top">
+                            <div class="info-col"><span class="info-label">Vlr. Diárias</span><span class="info-valor">${formatarMoeda(d.valor_diarias)}</span></div>
+                            <div class="info-col"><span class="info-label">Vlr. Adiantamento</span><span class="info-valor">${formatarMoeda(d.valor_adiantamento)}</span></div>
+                            <div class="info-col"><span class="info-label">Dotação</span><span class="info-valor">${d.dotacao || d["dotação"] || "-"}</span></div>
+                        </div>
+                        <div class="card-footer-quadro">
+                            <div class="quadro-col"><span class="quadro-label">Destino</span><span class="quadro-texto">${d.cidade_destino}</span></div>
+                            <div class="quadro-col quadro-col-full"><span class="quadro-label">Motivação</span><span class="quadro-texto">${d.motivacao_viagem}</span></div>
+                        </div>
+                    </div>`
+            }],
+            initComplete: function() { $('.dataTables_length').appendTo('#comprimento-tabela'); },
+            drawCallback: function() {
+                let api = this.api(), tD = 0, tA = 0;
+                const parseNum = (v) => parseFloat((v || "0").replace(/R\$\s?|[.]/g, '').replace(',', '.')) || 0;
+                api.rows({ filter: 'applied' }).data().each(d => { tD += parseNum(d.valor_diarias); tA += parseNum(d.valor_adiantamento); });
+                $('#total-diarias').text(new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'}).format(tD)); 
+                $('#total-adiantamentos').text(new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'}).format(tA));
+                $('#contagem-registros').html(`<b>${api.rows({ filter: 'applied' }).count()}</b> registros encontrados`);
+                enviarAlturaIframe();
+            }
+        });
+    }
+
+    function exportarCSV() {
+        const data = tabela.rows({ filter: 'applied' }).data().toArray();
+        let csv = "\ufeff" + Object.keys(data[0]).join(",") + "\n";
+        data.forEach(r => csv += Object.values(r).map(v => `"${v}"`).join(",") + "\n");
+        baixar(csv, "diarias.csv", "text/csv");
+    }
+
+    function exportarXLSX() {
+        const data = tabela.rows({ filter: 'applied' }).data().toArray();
+        const ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Diarias"); XLSX.writeFile(wb, "diarias.xlsx");
+    }
+
+    function baixar(c, n, t) {
+        const b = new Blob([c], { type: t }), u = URL.createObjectURL(b), a = document.createElement("a");
+        a.href = u; a.download = n; a.click();
+    }
+
+    function imprimirSeguro() { tabela.page.len(-1).draw(); setTimeout(() => { window.print(); tabela.page.len(10).draw(); }, 500); }
+    function limparFiltros() { $('#filtroNome, #filtroServidor, #filtroMes, #filtroAno, #filtroGabinete').val(''); preencherFiltros(); aplicarFiltros(); }
+
+    $('#filtroNome').on('input', aplicarFiltros);
+    $('#filtroGabinete').on('change', () => { preencherFiltros(true); aplicarFiltros(); });
+    $('#filtroServidor, #filtroMes, #filtroAno').on('change', aplicarFiltros);
+    window.onload = iniciarCarregamento;
+</script>
+</body>
+</html>
