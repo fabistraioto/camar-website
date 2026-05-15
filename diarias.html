@@ -18,12 +18,16 @@
         .painel-titulo { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 0 10px; }
         .badge-sinc { position: absolute; top: -10px; right: 20px; font-size: 10px; background: #d1fae5; color: #065f46; padding: 3px 10px; border-radius: 20px; font-weight: 700; border: 1px solid #a7f3d0; }
         
-        /* A SOLUÇÃO BRUTA: TABELAS PARA FORÇAR O LAYOUT NO IFRAME */
-        .layout-fixo { width: 100%; border-collapse: separate; border-spacing: 8px; table-layout: fixed; }
+        .layout-fixo { width: 100%; border-collapse: separate; border-spacing: 6px; table-layout: fixed; }
         .layout-fixo td { padding: 0; vertical-align: middle; }
         
         select, input, button { height: 38px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 0 8px; font-size: 13px; box-sizing: border-box; width: 100%; }
-        button { background: #003b75; color: white; font-weight: 600; cursor: pointer; border: none; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        
+        /* Ajuste específico para os botões de exportação caberem em uma linha */
+        .btn-export { font-size: 11px !important; padding: 0 4px !important; letter-spacing: -0.2px; }
+        
+        button { background: #003b75; color: white; font-weight: 600; cursor: pointer; border: none; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; }
+        button:hover { background: #00274d; }
         .btn-acao { background: #0284c7; }
 
         .totais-container { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -31,14 +35,12 @@
         .total-box label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; }
         .total-box span { font-size: 18px; font-weight: 800; }
 
-        /* HEADER DA VISUALIZAÇÃO CORRIGIDO */
         .dt-header-flex { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
         .badge-count { background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; border: 1px solid #bae6fd; }
 
         #tabela-base thead { display: none !important; }
         table.dataTable { border: none !important; }
         
-        /* CARD ORIGINAL */
         .card-diaria { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .card-header { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; background: #fff; }
         .card-nome { font-size: 16px; font-weight: 800; color: #003b75; text-transform: uppercase; }
@@ -87,14 +89,12 @@
             <legend class="painel-titulo">Exportação</legend>
             <table class="layout-fixo">
                 <tr>
-                    <td><button onclick="exportarCSV()">CSV</button></td>
-                    <td><button onclick="exportarExcel()">Excel</button></td>
-                    <td><button onclick="exportarJSON()">JSON</button></td>
-                </tr>
-                <tr>
-                    <td><button onclick="exportarXML()">XML</button></td>
-                    <td><button class="btn-acao" onclick="window.print()">Imprimir</button></td>
-                    <td><button class="btn-acao" onclick="carregarDados()">Atualizar</button></td>
+                    <td><button class="btn-export" onclick="exportarCSV()">CSV</button></td>
+                    <td><button class="btn-export" onclick="exportarExcel()">Excel</button></td>
+                    <td><button class="btn-export" onclick="exportarJSON()">JSON</button></td>
+                    <td><button class="btn-export" onclick="exportarXML()">XML</button></td>
+                    <td><button class="btn-export btn-acao" onclick="window.print()">Imprimir</button></td>
+                    <td><button class="btn-export btn-acao" onclick="carregarDados()">Atualizar</button></td>
                 </tr>
             </table>
         </fieldset>
