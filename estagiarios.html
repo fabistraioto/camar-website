@@ -59,36 +59,64 @@
         .info-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; }
         .info-valor { font-size: 14px; font-weight: 700; color: #1e293b; }
 
-        /* Paginação - CENTRALIZADA E CORRIGIDA */
-        .dt-bottom-container {
+        /* PAGINAÇÃO IDÊNTICA AO CÓDIGO DE FUNCIONÁRIOS */
+        .dt-bottom-controls { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
             background: white; 
-            padding: 25px; 
-            border-radius: 15px; 
-            border: 1px solid #e2e8f0;
-            margin-top: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            /* Aqui está a mágica para centralizar em qualquer tela */
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            justify-content: center !important;
-            text-align: center !important;
-            gap: 15px;
+            padding: 15px 20px; 
+            border-radius: 12px; 
+            border: 1px solid #e2e8f0; 
+            margin-top: 10px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+            flex-wrap: wrap; 
+            gap: 15px; 
+            box-sizing: border-box; 
+            width: 100%; 
         }
+        .dataTables_wrapper .dataTables_info { padding-top: 0 !important; font-size: 13px; color: #475569; font-weight: 500; }
         
-        .dataTables_info { width: 100% !important; margin: 0 !important; padding: 0 !important; float: none !important; }
-        .dataTables_paginate { width: 100% !important; margin: 0 !important; padding: 0 !important; float: none !important; display: flex !important; justify-content: center !important; }
-        
-        .dataTables_paginate .paginate_button { border: none !important; background: transparent !important; color: #1e293b !important; padding: 8px 15px !important; border-radius: 8px !important; }
-        .dataTables_paginate .paginate_button.current { background: #003b75 !important; color: white !important; font-weight: 700 !important; }
+        .dataTables_wrapper .dataTables_paginate { 
+            padding-top: 0 !important; 
+            margin-top: 0 !important; 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 4px; 
+        }
+        .dataTables_wrapper .dataTables_paginate span {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button { 
+            border-radius: 6px !important; 
+            padding: 6px 12px !important; 
+            border: 1px solid transparent !important; 
+            font-size: 13px; 
+            font-weight: 600; 
+            color: #475569 !important; 
+            margin: 0 !important; 
+            background: transparent !important; 
+            height: auto; /* Evita que herde o height:42px dos botões globais */
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #003b75 !important; color: white !important; border: 1px solid #003b75 !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; }
 
         @media (max-width: 850px) {
             .card-body { grid-template-columns: 1fr 1fr; }
             .painel-exportacao .toolbar-row { grid-template-columns: repeat(3, 1fr); }
+            .dt-bottom-controls { flex-direction: column; justify-content: center; text-align: center; padding: 15px 10px; }
+            .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 4px 8px !important; font-size: 12px; }
         }
 
         @media print {
-            .topo, fieldset, .dt-bottom-container { display: none !important; }
+            .topo, fieldset, .dt-bottom-controls { display: none !important; }
             .card-estagiario { break-inside: avoid; border: 1px solid #cbd5e1 !important; }
         }
     </style>
@@ -231,10 +259,11 @@
             pageLength: 10,
             ordering: false,
             language: { 
-                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json',
-                lengthMenu: "Exibir _MENU_ resultados por página"
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json',
+                lengthMenu: "Exibir _MENU_ resultados"
             },
-            dom: 'rt<"dt-bottom-container"ip>',
+            // DOM ATUALIZADO PARA A CLASSE NOVA
+            dom: 'rt<"dt-bottom-controls"ip>',
             columns: [{
                 data: null,
                 render: function(data) {
