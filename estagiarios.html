@@ -14,73 +14,71 @@
         body { font-family: 'Inter', Arial, sans-serif; margin: 0; background: #f1f5f9; color: #1e293b; overflow-x: hidden;}
         #wrapper { padding-bottom: 40px; } 
 
-        /* Topo */
+        /* Cabeçalho */
         .topo { background: #003b75; color: white; padding: 20px 35px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; margin: 15px; gap: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .topo h1 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; }
         .logo-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .brasao { height: 60px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        .brasao { height: 60px; width: auto; }
         .texto-camara { font-size: 10px; color: #cbd5e1; letter-spacing: 3px; font-weight: 500; text-transform: uppercase; white-space: nowrap; }
 
         /* Loader */
-        #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #003b75; font-size: 16px; font-weight: bold; }
+        #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #003b75; font-weight: bold; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #003b75; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Painéis e Filtros */
+        /* Containers Principais */
         .container { margin: 0 15px 15px 15px; display: none; }
         fieldset.painel-grupo { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; }
         legend.titulo-painel { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 0 10px; letter-spacing: 1px; }
         .badge-atualizacao { position: absolute; top: -12px; right: 20px; font-size: 11px; color: #065f46; background: #d1fae5; padding: 5px 12px; border-radius: 20px; font-weight: 700; border: 1px solid #a7f3d0; }
 
+        /* Grades de Layout */
         .toolbar-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; align-items: center; }
         .painel-exportacao .toolbar-row { grid-template-columns: repeat(6, 1fr); }
 
         select, input, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; box-sizing: border-box; width: 100%; height: 42px;}
-        button { background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; }
-        .btn-acao { background: #0284c7; }
+        button { background: #003b75; color: white; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-acao { background: #0284c7 !important; }
 
-        /* Seção de Visualização (Igual à imagem) */
-        .dt-custom-header { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 5px 0; }
-        .dataTables_length { font-size: 14px; color: #475569; font-weight: 500; }
-        .dataTables_length select { width: 70px !important; margin: 0 10px; display: inline-block; height: 38px; }
-        .badge-contagem { background: #e0f2fe; color: #0369a1; padding: 10px 25px; border-radius: 10px; font-weight: 700; font-size: 14px; border: 1px solid #bae6fd; }
+        /* Visualização - Seletor e Badge */
+        .dt-custom-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .dataTables_length { display: inline-block; font-size: 14px; color: #475569; font-weight: 500; }
+        .dataTables_length select { width: 70px !important; margin: 0 10px; height: 38px; display: inline-block; }
+        .badge-contagem { background: #e0f2fe; color: #0369a1; padding: 10px 25px; border-radius: 10px; font-weight: 700; border: 1px solid #bae6fd; }
 
-        /* Estilo dos Cards de Dados (Conforme imagem enviada) */
+        /* Cards de Dados */
         #tabela thead { display: none; }
-        table.dataTable { border: none !important; border-collapse: collapse; }
-        table.dataTable tbody tr { background: transparent !important; }
-        table.dataTable tbody td { padding: 0 !important; border: none !important; }
-
-        .card-estagiario { 
-            background: white; border: 1px solid #e2e8f0; border-radius: 12px; 
-            margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
-            overflow: hidden; 
-        }
-        .card-header { padding: 20px 25px 10px 25px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .bloco-nome { display: flex; flex-direction: column; gap: 4px; }
+        table.dataTable { border: none !important; }
+        .card-estagiario { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .card-header { padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
         .nome-estagiario { font-size: 18px; font-weight: 800; color: #003b75; text-transform: uppercase; }
-        .subtitulo-estagiario { font-size: 13px; color: #64748b; font-weight: 500; text-transform: uppercase; }
-        
-        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-        .status-ativo { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;}
-        .status-desligado { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;}
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .status-ativo { background: #d1fae5; color: #065f46; }
+        .status-desligado { background: #fee2e2; color: #991b1b; }
+        .card-body { display: grid; grid-template-columns: repeat(4, 1fr); padding: 20px 25px; gap: 15px; }
+        .info-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .info-valor { font-size: 14px; font-weight: 700; color: #1e293b; }
 
-        .card-body { 
-            display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; 
-            padding: 15px 25px 25px 25px; gap: 20px; 
-            border-top: 1px solid #f1f5f9; margin-top: 10px;
-        }
-        .info-col { display: flex; flex-direction: column; }
-        .info-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 6px;}
-        .info-valor { font-size: 14px; font-weight: 700; color: #1e293b;}
-
-        /* Paginação (Igual à imagem) */
+        /* Paginação - CENTRALIZADA E CORRIGIDA */
         .dt-bottom-container {
-            background: white; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0;
-            display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px;
+            background: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            border: 1px solid #e2e8f0;
+            margin-top: 20px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            /* Aqui está a mágica para centralizar em qualquer tela */
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            gap: 15px;
         }
-        .dataTables_info { font-size: 14px !important; color: #64748b !important; font-weight: 500 !important; }
+        
+        .dataTables_info { width: 100% !important; margin: 0 !important; padding: 0 !important; float: none !important; }
+        .dataTables_paginate { width: 100% !important; margin: 0 !important; padding: 0 !important; float: none !important; display: flex !important; justify-content: center !important; }
+        
         .dataTables_paginate .paginate_button { border: none !important; background: transparent !important; color: #1e293b !important; padding: 8px 15px !important; border-radius: 8px !important; }
         .dataTables_paginate .paginate_button.current { background: #003b75 !important; color: white !important; font-weight: 700 !important; }
 
@@ -91,7 +89,7 @@
 
         @media print {
             .topo, fieldset, .dt-bottom-container { display: none !important; }
-            .card-estagiario { break-inside: avoid; border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
+            .card-estagiario { break-inside: avoid; border: 1px solid #cbd5e1 !important; }
         }
     </style>
 </head>
@@ -149,7 +147,8 @@
         <fieldset class="painel-grupo">
             <legend class="titulo-painel">Visualização</legend>
             <div class="dt-custom-header">
-                <div id="comprimento-tabela"></div> <div id="contagem-registros" class="badge-contagem">0 registros encontrados</div>
+                <div id="comprimento-tabela"></div> 
+                <div id="contagem-registros" class="badge-contagem">0 registros encontrados</div>
             </div>
         </fieldset>
 
@@ -177,20 +176,15 @@
         try {
             const response = await fetch(`${SHEET_URL}&t=${Date.now()}`);
             const csvText = await response.text();
-            
             const metaLinha = csvText.split("\n")[0];
             const match = metaLinha.match(/(\d{2}\/\d{2}\/\d{4},?\s*\d{2}:\d{2})/);
             if(match) $('#badge-atualizacao').html(`🟢 Dados atualizados em ${match[1].replace(',', '')}`);
-
             dadosGlobais = processarCSV(csvText);
             popularFiltroAno(dadosGlobais);
             aplicarFiltros();
-
             $('#loader').hide();
             $('#main-container').fadeIn(400, () => enviarAltura());
-        } catch (e) {
-            $('#loader').html('<span style="color:red">Erro ao carregar dados.</span>');
-        }
+        } catch (e) { console.error(e); }
     }
 
     function processarCSV(str) {
@@ -204,7 +198,6 @@
                 if (h.includes("nome")) obj.nome = val;
                 if (h.includes("admissao")) obj.admissao = val;
                 if (h.includes("desligamento")) obj.desligamento = val;
-                if (h.includes("lotacao") || h.includes("cargo")) obj.subtitulo = val || "Estagiário";
             });
             obj.situacao = (!obj.desligamento || obj.desligamento === "-") ? "Ativo" : "Desligado";
             return obj;
@@ -222,13 +215,9 @@
         const sit = $('#filtroStatus').val();
         const mes = $('#filtroMes').val();
         const ano = $('#filtroAno').val();
-
-        let res = dadosGlobais.filter(d => {
+        const res = dadosGlobais.filter(d => {
             const p = d.admissao.split("/");
-            return (!txt || d.nome.toLowerCase().includes(txt)) &&
-                   (!sit || d.situacao === sit) &&
-                   (!mes || p[1] === mes) &&
-                   (!ano || p[2] === ano);
+            return (!txt || d.nome.toLowerCase().includes(txt)) && (!sit || d.situacao === sit) && (!mes || p[1] === mes) && (!ano || p[2] === ano);
         });
         render(res);
     }
@@ -253,16 +242,13 @@
                     return `
                         <div class="card-estagiario">
                             <div class="card-header">
-                                <div class="bloco-nome">
-                                    <span class="nome-estagiario">${data.nome}</span>
-                                    <span class="subtitulo-estagiario">${data.subtitulo || 'Estagiário'}</span>
-                                </div>
+                                <span class="nome-estagiario">${data.nome}</span>
                                 <span class="status-badge ${statusClass}">${data.situacao}</span>
                             </div>
                             <div class="card-body">
                                 <div class="info-col"><span class="info-label">Lotação</span><span class="info-valor">Câmara Municipal</span></div>
-                                <div class="info-col"><span class="info-label">Jornada</span><span class="info-valor">30h / Semanais</span></div>
-                                <div class="info-col"><span class="info-label">Admissão</span><span class="info-valor">${data.admissao || '-'}</span></div>
+                                <div class="info-col"><span class="info-label">Jornada</span><span class="info-valor">30h</span></div>
+                                <div class="info-col"><span class="info-label">Admissão</span><span class="info-valor">${data.admissao}</span></div>
                                 <div class="info-col"><span class="info-label">Desligamento</span><span class="info-valor">${data.desligamento || '-'}</span></div>
                             </div>
                         </div>
@@ -270,7 +256,8 @@
                 }
             }],
             initComplete: function() {
-                // Move o seletor de "Exibir X resultados" para o painel de Visualização
+                // Força o movimento do seletor para o topo
+                $('#comprimento-tabela').empty();
                 $('.dataTables_length').appendTo('#comprimento-tabela');
                 enviarAltura();
             },
@@ -283,7 +270,7 @@
         if(formato === 'xlsx') {
             const ws = XLSX.utils.json_to_sheet(filtrados);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Estagiários");
+            XLSX.utils.book_append_sheet(wb, ws, "Dados");
             XLSX.writeFile(wb, `relatorio_estagiarios.xlsx`);
         } else {
             let conteudo = JSON.stringify(filtrados, null, 2);
@@ -300,7 +287,6 @@
     }
 
     function limparFiltros() { $('#filtroNome').val(''); $('select').val(''); aplicarFiltros(); }
-
     $('#filtroNome').on('input', aplicarFiltros);
     $('select').on('change', aplicarFiltros);
     window.onload = iniciarCarregamento;
