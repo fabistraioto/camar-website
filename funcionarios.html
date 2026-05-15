@@ -116,6 +116,7 @@
             
             <div class="toolbar-row">
                 <input type="text" id="filtroNome" placeholder="Pesquisar por nome...">
+                <select id="filtroCargo"><option value="">Cargo (Todos)</option></select>
                 <select id="filtroLotacao"><option value="">Lotação (Todas)</option></select>
                 <select id="filtroSituacao">
                     <option value="">Situação (Todas)</option>
@@ -187,14 +188,22 @@
             let partes = [];
             const nome = $('#filtroNome').val().trim();
             if (nome) partes.push(removerAcentos(nome).replace(/\s+/g, '_'));
+            
+            const cargo = $('#filtroCargo').val();
+            if (cargo) partes.push(removerAcentos(cargo).replace(/\s+/g, '_'));
+            
             const lotacao = $('#filtroLotacao').val();
             if (lotacao) partes.push(removerAcentos(lotacao).replace(/\s+/g, '_'));
+            
             const situacao = $('#filtroSituacao').val();
             if (situacao) partes.push(situacao); 
+            
             const mesStr = $('#filtroMes').val() ? removerAcentos($('#filtroMes option:selected').text()) : '';
             if (mesStr) partes.push(mesStr);
+            
             const ano = $('#filtroAno').val();
             if (ano) partes.push(ano);
+            
             if (partes.length === 0) return "relatorio_completo";
             return "relatorio_" + partes.join('_').replace(/[^a-zA-Z0-9_]/g, '');
         }
@@ -263,10 +272,17 @@
         }
 
         function popularFiltros() {
-            const lotacoes = [...new Set(dadosGlobais.map(d => d.lotacao))].sort();
+            // Lotações Dinâmicas
+            const lotacoes = [...new Set(dadosGlobais.map(d => d.lotacao))].filter(Boolean).sort();
             $('#filtroLotacao').html('<option value="">Lotação (Todas)</option>');
             lotacoes.forEach(l => $('#filtroLotacao').append(`<option value="${l}">${l}</option>`));
 
+            // Cargos Dinâmicos
+            const cargos = [...new Set(dadosGlobais.map(d => d.cargo))].filter(Boolean).sort();
+            $('#filtroCargo').html('<option value="">Cargo (Todos)</option>');
+            cargos.forEach(c => $('#filtroCargo').append(`<option value="${c}">${c}</option>`));
+
+            // Anos Dinâmicos
             let anos = new Set();
             dadosGlobais.forEach(d => {
                 if (d.data_admissao) anos.add(d.data_admissao.split('/')[2]);
@@ -320,6 +336,7 @@
 
         function aplicarFiltros() {
             const nomeDigitado = removerAcentos($('#filtroNome').val().toLowerCase());
+            const cargo = $('#filtroCargo').val();
             const lot = $('#filtroLotacao').val();
             const sit = $('#filtroSituacao').val();
             const tipoData = $('#filtroTipoData').val();
@@ -329,6 +346,7 @@
             let filtrados = dadosGlobais.filter(d => {
                 const nomeFunc = removerAcentos((d.nome_func || "").toLowerCase());
                 const matchNome = !nomeDigitado || nomeFunc.includes(nomeDigitado);
+                const matchCargo = !cargo || d.cargo === cargo;
                 const matchLot = !lot || d.lotacao === lot;
                 const matchSit = !sit || d.situacao === sit;
 
@@ -340,14 +358,14 @@
                     else if (tipoData === 'demissao') matchData = !!d.data_demissao && mDem;
                     else matchData = (!!d.data_admissao && mAdm) || (!!d.data_demissao && mDem);
                 }
-                return matchNome && matchLot && matchSit && matchData;
+                return matchNome && matchCargo && matchLot && matchSit && matchData;
             });
 
             renderizarTabela(ordenarFuncionarios(filtrados));
         }
 
         function limparFiltros() {
-            $('#filtroNome, #filtroLotacao, #filtroTipoData, #filtroMes, #filtroAno').val('');
+            $('#filtroNome, #filtroCargo, #filtroLotacao, #filtroTipoData, #filtroMes, #filtroAno').val('');
             $('#filtroSituacao').val('Ativo');
             aplicarFiltros();
         }
