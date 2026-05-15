@@ -41,9 +41,8 @@
         .badge-atualizacao { position: absolute; top: -12px; right: 20px; font-size: 11px; color: #065f46; background: #d1fae5; padding: 5px 12px; border-radius: 20px; font-weight: 700; border: 1px solid #a7f3d0; }
 
         /* Grid de Filtros */
-        .toolbar-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; align-items: center; }
+        .toolbar-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; align-items: center; }
         
-        /* Ajuste: Incluído input[type="text"] no estilo base */
         select, button, input[type="text"] { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; transition: 0.2s; box-sizing: border-box; width: 100%; font-family: inherit; }
         button { background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; }
         button:hover { background: #00274d; transform: translateY(-1px); }
@@ -70,8 +69,6 @@
 
         /* Controles DataTables (Topo) */
         .dt-controles { display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 0; padding: 0; }
-        
-        /* Correção do visual "Exibir X resultados" */
         .dataTables_length label { display: flex !important; align-items: center; font-size: 13px; font-weight: 600; color: #475569; white-space: nowrap; margin-bottom: 0; }
         .dataTables_length select { width: auto !important; margin: 0 8px !important; padding: 6px 30px 6px 12px !important; border-radius: 6px; }
 
@@ -83,17 +80,10 @@
 
         /* Configurações de Impressão */
         @media print {
-            @page { 
-                size: portrait; 
-                margin: 15mm; 
-                @bottom-right { content: "Página " counter(page); }
-            }
+            @page { size: portrait; margin: 15mm; @bottom-right { content: "Página " counter(page); } }
             body { background: white; }
             .topo, fieldset, .dt-controles, .dt-bottom-controls { display: none !important; }
-            #cabecalho-impressao { 
-                display: flex !important; align-items: center; gap: 20px; 
-                border-bottom: 2px solid #003b75; padding-bottom: 10px; margin-bottom: 20px;
-            }
+            #cabecalho-impressao { display: flex !important; align-items: center; gap: 20px; border-bottom: 2px solid #003b75; padding-bottom: 10px; margin-bottom: 20px; }
             .card-func { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; margin-bottom: 15px; }
             .container { display: block !important; margin: 0; }
         }
@@ -127,32 +117,32 @@
         <fieldset class="painel-grupo">
             <legend class="titulo-painel">Filtros de Pesquisa</legend>
             <div id="badge-atualizacao" class="badge-atualizacao">Sincronizando...</div>
+            
             <div class="toolbar-row">
                 <input type="text" id="filtroNome" placeholder="Pesquisar por nome...">
-
                 <select id="filtroLotacao"><option value="">Lotação (Todas)</option></select>
-                
                 <select id="filtroSituacao">
                     <option value="">Situação (Todas)</option>
                     <option value="Ativo" selected>Ativos</option>
                     <option value="Desligado">Desligados</option>
                 </select>
 
-                <select id="filtroMesAdm">
-                    <option value="">Mês Admissão</option>
+                <select id="filtroTipoData">
+                    <option value="">Filtro de Data...</option>
+                    <option value="admissao">Por Admissão</option>
+                    <option value="demissao">Por Demissão</option>
+                </select>
+                <select id="filtroMes">
+                    <option value="">Mês</option>
                     <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
                     <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
                     <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
                     <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                 </select>
-                <select id="filtroMesDem">
-                    <option value="">Mês Demissão</option>
-                    <option value="01">Janeiro</option><option value="02">Fevereiro</option>
-                    <option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option>
-                    <option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option>
-                    <option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option>
-                    <option value="12">Dezembro</option>
-                </select>
+                <select id="filtroAno">
+                    <option value="">Ano</option>
+                    </select>
+
                 <button onclick="limparFiltros()">Limpar Filtros</button>
             </div>
         </fieldset>
@@ -189,37 +179,25 @@
         let dadosGlobais = [];
         let carimboAtualizacao = "";
 
-        // Função para remover acentos de uma string (útil para a pesquisa)
-        function removerAcentos(str) {
-            return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
-        }
+        function removerAcentos(str) { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : ""; }
 
-        // Função para converter Data BR (DD/MM/YYYY) para Objeto Date (para ordenação)
         function parseDataBR(str) {
             if (!str) return null;
             const p = str.split('/');
             return new Date(p[2], p[1] - 1, p[0]);
         }
 
-        // Função de Impressão
         function imprimirRelatorio() {
             if(!tabela) return;
             const len = tabela.page.len();
             tabela.page.len(-1).draw(); 
-            setTimeout(() => { 
-                window.print(); 
-                tabela.page.len(len).draw(); 
-            }, 500);
+            setTimeout(() => { window.print(); tabela.page.len(len).draw(); }, 500);
         }
 
-        // Processamento do CSV
         function processarCSV(csvText) {
             const linhas = csvText.split(/\r?\n/);
             
-            // 1. Pega a linha 1 inteira e tira aspas
             let textoPrimeiraLinha = linhas[0].replace(/"/g, '');
-            
-            // Busca o padrão de Data (DD/MM/YYYY) e Hora (HH:MM) ignorando os segundos
             let matchDataHora = textoPrimeiraLinha.match(/(\d{1,2}\/\d{1,2}\/\d{4})[^\d]*(\d{1,2}:\d{2})/);
             
             if (matchDataHora) {
@@ -228,51 +206,32 @@
                 carimboAtualizacao = textoPrimeiraLinha.split(',')[0].replace(/MODIF_REAL:\s*/i, "Atualizado em ");
             }
 
-            // 2. Cabeçalho está na linha 2 (índice 1)
             const headers = linhas[1].split(',').map(h => h.trim().toLowerCase());
-
-            // 3. Dados começam na linha 3
             const lista = [];
             for (let i = 2; i < linhas.length; i++) {
                 if (!linhas[i].trim()) continue;
-                
-                // Trata aspas dentro do CSV
                 const colunas = linhas[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 let obj = {};
-                
                 headers.forEach((h, idx) => {
-                    let val = colunas[idx] ? colunas[idx].replace(/"/g, '').trim() : "";
-                    obj[h] = val;
+                    obj[h] = colunas[idx] ? colunas[idx].replace(/"/g, '').trim() : "";
                 });
-
-                // Lógica de Situação baseada na demissão
                 obj.situacao = obj.data_demissao === "" ? "Ativo" : "Desligado";
-                
-                // Lógica de Jornada
                 if (obj.jornada && obj.jornada.toLowerCase() === "padrão") obj.jornada = "40h/semana";
-
                 lista.push(obj);
             }
             return lista;
         }
 
-        // Regra de Ordenação: Ativos (Antigos 1º) e Desligados (Recentes 1º)
         function ordenarFuncionarios(lista) {
             return lista.sort((a, b) => {
-                if (a.situacao !== b.situacao) {
-                    return a.situacao === "Ativo" ? -1 : 1;
-                }
+                if (a.situacao !== b.situacao) return a.situacao === "Ativo" ? -1 : 1;
                 
                 const dataA_adm = parseDataBR(a.data_admissao) || 0;
                 const dataB_adm = parseDataBR(b.data_admissao) || 0;
                 const dataA_dem = parseDataBR(a.data_demissao) || 0;
                 const dataB_dem = parseDataBR(b.data_demissao) || 0;
 
-                if (a.situacao === "Ativo") {
-                    return dataA_adm - dataB_adm; // ASC
-                } else {
-                    return dataB_dem - dataA_dem; // DESC
-                }
+                return a.situacao === "Ativo" ? dataA_adm - dataB_adm : dataB_dem - dataA_dem;
             });
         }
 
@@ -283,12 +242,9 @@
             try {
                 const response = await fetch(`${CSV_URL}&cache=${Date.now()}`);
                 const text = await response.text();
-                const rawData = processarCSV(text);
-                dadosGlobais = ordenarFuncionarios(rawData);
+                dadosGlobais = ordenarFuncionarios(processarCSV(text));
 
                 popularFiltros();
-                
-                // Inicia filtrando de acordo com os padrões (ex: Situação "Ativo")
                 aplicarFiltros();
 
                 $('#badge-atualizacao').text(`🟢 ${carimboAtualizacao}`);
@@ -301,9 +257,22 @@
         }
 
         function popularFiltros() {
+            // Lotação
             const lotacoes = [...new Set(dadosGlobais.map(d => d.lotacao))].sort();
             $('#filtroLotacao').html('<option value="">Lotação (Todas)</option>');
             lotacoes.forEach(l => $('#filtroLotacao').append(`<option value="${l}">${l}</option>`));
+
+            // Anos Dinâmicos (Admissão + Demissão)
+            let anos = new Set();
+            dadosGlobais.forEach(d => {
+                if (d.data_admissao) anos.add(d.data_admissao.split('/')[2]);
+                if (d.data_demissao) anos.add(d.data_demissao.split('/')[2]);
+            });
+            // Filtra os anos válidos e ordena de forma decrescente (mais recente primeiro)
+            anos = [...anos].filter(a => a && a.length === 4).sort((a, b) => b - a);
+            
+            $('#filtroAno').html('<option value="">Ano</option>');
+            anos.forEach(a => $('#filtroAno').append(`<option value="${a}">${a}</option>`));
         }
 
         function renderizarTabela(dados) {
@@ -364,27 +333,41 @@
         }
 
         function aplicarFiltros() {
-            // Pega o valor digitado no campo de nome, converte pra minúsculo e tira os acentos
             const nomeDigitado = removerAcentos($('#filtroNome').val().toLowerCase());
-            
             const lot = $('#filtroLotacao').val();
             const sit = $('#filtroSituacao').val();
-            const mAdm = $('#filtroMesAdm').val();
-            const mDem = $('#filtroMesDem').val();
+            
+            // Novos filtros de data combinados
+            const tipoData = $('#filtroTipoData').val();
+            const mes = $('#filtroMes').val();
+            const ano = $('#filtroAno').val();
 
             let filtrados = dadosGlobais.filter(d => {
-                // Prepara o nome do funcionário da base para a comparação limpa
+                // Filtros de Texto
                 const nomeFunc = removerAcentos((d.nome_func || "").toLowerCase());
-                
-                // Validação: Se não digitou nada ou se o trecho existe no nome do funcionário
                 const matchNome = !nomeDigitado || nomeFunc.includes(nomeDigitado);
-
                 const matchLot = !lot || d.lotacao === lot;
                 const matchSit = !sit || d.situacao === sit;
-                const matchMAdm = !mAdm || (d.data_admissao && d.data_admissao.split('/')[1] === mAdm);
-                const matchMDem = !mDem || (d.data_demissao && d.data_demissao.split('/')[1] === mDem);
+
+                // Filtro Avançado de Data
+                let matchData = true;
+                if (tipoData || mes || ano) {
+                    // Verifica se a data de admissão/demissão bate com o mês/ano selecionado (se aplicável)
+                    const mAdm = d.data_admissao ? (!mes || d.data_admissao.split('/')[1] === mes) && (!ano || d.data_admissao.split('/')[2] === ano) : false;
+                    const mDem = d.data_demissao ? (!mes || d.data_demissao.split('/')[1] === mes) && (!ano || d.data_demissao.split('/')[2] === ano) : false;
+
+                    if (tipoData === 'admissao') {
+                        matchData = !!d.data_admissao && mAdm;
+                    } else if (tipoData === 'demissao') {
+                        matchData = !!d.data_demissao && mDem;
+                    } else {
+                        // Se o usuário selecionou mês/ano mas NÃO especificou admissão ou demissão
+                        // Traz qualquer um que tenha ocorrido naquele mês/ano (seja entrada ou saída)
+                        matchData = (!!d.data_admissao && mAdm) || (!!d.data_demissao && mDem);
+                    }
+                }
                 
-                return matchNome && matchLot && matchSit && matchMAdm && matchMDem;
+                return matchNome && matchLot && matchSit && matchData;
             });
 
             filtrados = ordenarFuncionarios(filtrados); 
@@ -392,20 +375,15 @@
         }
 
         function limparFiltros() {
-            // Zera todos os inputs e selects, forçando o "Situação" a voltar para "Ativo"
-            $('#filtroNome').val('');
-            $('#filtroLotacao, #filtroMesAdm, #filtroMesDem').val('');
+            $('#filtroNome, #filtroLotacao, #filtroTipoData, #filtroMes, #filtroAno').val('');
             $('#filtroSituacao').val('Ativo');
             aplicarFiltros();
         }
 
-        // Funções de Exportação
         function exportarCSV() {
             const data = tabela.rows({ filter: 'applied' }).data().toArray();
             let csv = "\ufeffNome,Cargo,Lotacao,Admissao,Demissao,Jornada,Situacao\n";
-            data.forEach(d => {
-                csv += `"${d.nome_func}","${d.cargo}","${d.lotacao}","${d.data_admissao}","${d.data_demissao}","${d.jornada}","${d.situacao}"\n`;
-            });
+            data.forEach(d => { csv += `"${d.nome_func}","${d.cargo}","${d.lotacao}","${d.data_admissao}","${d.data_demissao}","${d.jornada}","${d.situacao}"\n`; });
             downloadFile(csv, "funcionarios.csv", "text/csv");
         }
 
@@ -443,12 +421,9 @@
             a.click();
         }
 
-        // Eventos que disparam a filtragem
+        // Gatilhos
         $('select').on('change', aplicarFiltros);
-        
-        // Dispara o filtro toda vez que uma tecla é digitada (ou texto apagado/colado) no campo de Nome
         $('#filtroNome').on('input', aplicarFiltros); 
-
         window.onload = carregarDados;
 
     </script>
