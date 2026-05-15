@@ -6,487 +6,464 @@
     <title>Relatório de Funcionários - CMC</title>
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        /* Estilos Globais */
-        body { font-family: 'Inter', Arial, sans-serif; margin: 0; background: #f1f5f9; color: #1e293b; overflow-x: hidden; }
-        
-        /* Cabeçalho do Site */
-        .topo { 
-            background: #003b75; color: white; padding: 20px 35px; display: flex; 
-            justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
-            border-radius: 12px; margin: 15px 15px 20px 15px; gap: 20px;
-        }
-        .topo h1 { margin: 0; font-size: 1.6rem; font-weight: 800; letter-spacing: 0.5px; }
+        /* BASE IDÊNTICA AO ESTAGIÁRIOS */
+        body { font-family: 'Inter', Arial, sans-serif; margin: 0; background: #f1f5f9; color: #1e293b; overflow-x: hidden;}
+        #wrapper { padding-bottom: 40px; } 
+
+        /* Cabeçalho */
+        .topo { background: #003b75; color: white; padding: 20px 35px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; margin: 15px; gap: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .topo h1 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; }
         .logo-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .brasao { height: 55px; width: auto; }
-        .texto-camara { font-size: 9px; color: #cbd5e1; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+        .brasao { height: 60px; width: auto; }
+        .texto-camara { font-size: 10px; color: #cbd5e1; letter-spacing: 3px; font-weight: 500; text-transform: uppercase; white-space: nowrap; }
 
-        #cabecalho-impressao { display: none; }
-
-        #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; font-weight: bold; color: #003b75; }
+        /* Loader */
+        #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #003b75; font-weight: bold; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #003b75; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* Containers Principais */
         .container { margin: 0 15px 15px 15px; display: none; }
-        
-        fieldset.painel-grupo { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; }
+        fieldset.painel-grupo { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; }
         legend.titulo-painel { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 0 10px; letter-spacing: 1px; }
-
         .badge-atualizacao { position: absolute; top: -12px; right: 20px; font-size: 11px; color: #065f46; background: #d1fae5; padding: 5px 12px; border-radius: 20px; font-weight: 700; border: 1px solid #a7f3d0; }
 
-        /* Grade de Filtros Fixa */
+        /* Grades de Layout - Ajustado para Funcionários */
         .filtro-linha-1 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
         .filtro-linha-2 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-        
-        /* Exportação */
-        .export-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; align-items: center; margin-top: 5px; }
-        
-        select, input[type="text"] { padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; transition: 0.2s; box-sizing: border-box; width: 100%; font-family: inherit; }
-        button { padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; box-sizing: border-box; width: 100%; background: #003b75; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; height: 35px; white-space: nowrap; }
+        .painel-exportacao .toolbar-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+
+        select, input, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; box-sizing: border-box; width: 100%; height: 42px;}
+        button { background: #003b75; color: white; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
         button:hover { background: #00274d; transform: translateY(-1px); }
-        .btn-acao { background: #0284c7; }
+        .btn-acao { background: #0284c7 !important; }
 
+        /* Exportação */
+        .painel-exportacao .toolbar-row button { font-size: 16px; padding: 10px 8px; }
+
+        /* Visualização (Idêntico ao Estagiários) */
+        .dt-custom-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .dataTables_length { display: flex !important; align-items: center; font-size: 14px; color: #475569; font-weight: 500; margin-bottom: 0; }
+        .dataTables_length label { display: flex; align-items: center; gap: 8px; margin: 0; }
+        .dataTables_length select { width: auto !important; padding: 5px 10px !important; border-radius: 6px; height: auto; }
+        .badge-contagem { background: #e0f2fe; color: #0369a1; padding: 10px 25px; border-radius: 10px; font-weight: 700; border: 1px solid #bae6fd; }
+
+        /* Cards de Dados */
         #tabela thead { display: none; }
-        table.dataTable { border: none !important; background: transparent !important; margin-top: 10px !important;}
-        .card-func { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); overflow: hidden; }
+        table.dataTable { border: none !important; }
+        .card-info { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         
-        .card-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        /* Ajuste do Header do Card para comportar Nome e Cargo */
+        .card-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
         .card-header-texto { display: flex; flex-direction: column; gap: 2px; }
-        .card-nome { font-size: 17px; font-weight: 800; color: #003b75; text-transform: uppercase; }
-        .card-cargo { font-size: 13px; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-        
-        .status-tag { font-size: 10px; padding: 4px 10px; border-radius: 20px; font-weight: 800; text-transform: uppercase; }
-        .tag-ativo { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .tag-desligado { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .nome-principal { font-size: 17px; font-weight: 800; color: #003b75; text-transform: uppercase; }
+        .subtitulo-card { font-size: 13px; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .card-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); padding: 15px 20px; gap: 15px; }
-        .info-bloco { display: flex; flex-direction: column; }
-        .info-label { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
-        .info-valor { font-size: 14px; font-weight: 700; color: #334155; }
-
-        .dt-controles { display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 0; padding: 0; }
-        .dataTables_length label { display: flex !important; align-items: center; font-size: 13px; font-weight: 600; color: #475569; white-space: nowrap; margin-bottom: 0; }
-        .dataTables_length select { width: auto !important; margin: 0 8px !important; padding: 6px 30px 6px 12px !important; border-radius: 6px; }
-        .info-total { font-size: 14px; font-weight: 600; color: #003b75; background: #e0f2fe; padding: 8px 16px; border-radius: 8px; border: 1px solid #bae6fd; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .status-ativo { background: #d1fae5; color: #065f46; }
+        .status-desligado { background: #fee2e2; color: #991b1b; }
         
+        .card-body { display: grid; grid-template-columns: repeat(4, 1fr); padding: 20px 25px; gap: 15px; }
+        .info-col { display: flex; flex-direction: column; }
+        .info-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .info-valor { font-size: 14px; font-weight: 700; color: #1e293b; }
+
+        /* Paginação Responsiva (Idêntico ao Estagiários) */
         .dt-bottom-controls { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: white; 
-            padding: 15px 20px; 
-            border-radius: 12px; 
-            border: 1px solid #e2e8f0; 
-            margin-top: 10px; 
-            margin-bottom: 25px; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
-            flex-wrap: wrap; 
-            gap: 15px; 
-            box-sizing: border-box; 
-            width: 100%; 
+            display: flex; justify-content: space-between; align-items: center; background: white; 
+            padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 10px; 
+            margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); flex-wrap: wrap; 
+            gap: 15px; box-sizing: border-box; width: 100%; 
         }
-        .dataTables_wrapper .dataTables_info { padding-top: 0 !important; font-size: 13px; color: #475569; font-weight: 500; }
+        .dataTables_wrapper .dataTables_info { padding-top: 0 !important; font-size: 15px; color: #475569; font-weight: 500; }
         
-        .dataTables_wrapper .dataTables_paginate { 
-            padding-top: 0 !important; 
-            margin-top: 0 !important; 
-            display: flex; 
-            flex-wrap: wrap; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 4px; 
-        }
-        .dataTables_wrapper .dataTables_paginate span {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 4px;
-        }
-
+        .dataTables_wrapper .dataTables_paginate { padding-top: 0 !important; margin-top: 0 !important; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px; }
+        .dataTables_wrapper .dataTables_paginate span { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+        
         .dataTables_wrapper .dataTables_paginate .paginate_button { 
-            border-radius: 6px !important; 
-            padding: 6px 12px !important; 
-            border: 1px solid transparent !important; 
-            font-size: 13px; 
-            font-weight: 600; 
-            color: #475569 !important; 
-            margin: 0 !important; 
-            background: transparent !important; 
+            border-radius: 6px !important; padding: 6px 12px !important; border: 1px solid transparent !important; 
+            font-size: 15px; font-weight: 600; color: #475569 !important; margin: 0 !important; background: transparent !important; height: auto; 
         }
         .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #003b75 !important; color: white !important; border: 1px solid #003b75 !important; }
         .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; }
 
+        /* Cabeçalho Impressão */
+        #cabecalho-impressao { display: none; }
+
+        /* Responsividade */
         @media (max-width: 850px) {
+            .card-body { grid-template-columns: 1fr 1fr; }
+            .painel-exportacao .toolbar-row button { font-size: 13px; padding: 10px 4px; gap: 4px; }
             .dt-bottom-controls { flex-direction: column; justify-content: center; text-align: center; padding: 15px 10px; }
-            .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 4px 8px !important; font-size: 12px; }
+            .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 4px 8px !important; font-size: 13px; }
+            .filtro-linha-2 { grid-template-columns: repeat(2, 1fr); }
+            #filtroSituacao { grid-column: span 2; }
+            .filtro-linha-1 { grid-template-columns: 1fr; }
         }
 
         @media print {
             @page { size: portrait; margin: 15mm; @bottom-right { content: "Página " counter(page); } }
             body { background: white; }
-            .topo, fieldset, .dt-controles, .dt-bottom-controls { display: none !important; }
+            .topo, fieldset, .dt-bottom-controls { display: none !important; }
             #cabecalho-impressao { display: flex !important; align-items: center; gap: 20px; border-bottom: 2px solid #003b75; padding-bottom: 10px; margin-bottom: 20px; }
-            .card-func { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; margin-bottom: 15px; }
+            .card-info { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; margin-bottom: 15px; }
             .container { display: block !important; margin: 0; }
         }
     </style>
 </head>
-
 <body>
-    <div id="wrapper">
-        <header class="topo">
-            <h1>Relatório de Funcionários</h1>
-            <div class="logo-container">
-                <img src="Brasão_de_Marília.png" alt="Brasão de Marília" class="brasao">
-                <span class="texto-camara">Câmara Municipal de Marília</span>
-            </div>
-        </header>
 
-        <div id="cabecalho-impressao">
-            <img src="Brasão_de_Marília.png" height="70">
-            <div>
-                <h1 style="margin:0; color:#003b75;">Relatório de Funcionários</h1>
-                <p style="margin:0; font-weight:bold;">Câmara Municipal de Marília</p>
-            </div>
+<div id="wrapper">
+    <header class="topo">
+        <h1>Relatório de Funcionários</h1>
+        <div class="logo-container">
+            <img src="Brasão_de_Marília.png" alt="Brasão de Marília" class="brasao">
+            <span class="texto-camara">Câmara Municipal de Marília</span>
         </div>
+    </header>
 
-        <div id="loader">
-            <div class="spinner"></div>
-            <span>Carregando base de funcionários...</span>
+    <div id="cabecalho-impressao">
+        <img src="Brasão_de_Marília.png" height="70">
+        <div>
+            <h1 style="margin:0; color:#003b75;">Relatório de Funcionários</h1>
+            <p style="margin:0; font-weight:bold;">Câmara Municipal de Marília</p>
         </div>
-
-        <main class="container" id="main-container">
-            
-            <fieldset class="painel-grupo">
-                <legend class="titulo-painel">Filtros de Pesquisa</legend>
-                <div id="badge-atualizacao" class="badge-atualizacao">Sincronizando...</div>
-                
-                <div class="filtro-linha-1">
-                    <input type="text" id="filtroNome" placeholder="Pesquisar por nome...">
-                    <select id="filtroCargo"><option value="">Cargo (Todos)</option></select>
-                    <select id="filtroLotacao"><option value="">Lotação (Todas)</option></select>
-                </div>
-
-                <div class="filtro-linha-2">
-                    <select id="filtroSituacao">
-                        <option value="">Situação (Todas)</option>
-                        <option value="Ativo" selected>Ativos</option>
-                        <option value="Desligado">Desligados</option>
-                    </select>
-                    
-                    <select id="filtroTipoData">
-                        <option value="">Filtro de Data...</option>
-                        <option value="admissao">Por Admissão</option>
-                        <option value="demissao">Por Demissão</option>
-                    </select>
-                    
-                    <select id="filtroMes">
-                        <option value="">Mês</option>
-                        <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
-                        <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
-                        <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
-                        <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
-                    </select>
-                    
-                    <select id="filtroAno">
-                        <option value="">Ano</option>
-                    </select>
-
-                    <button onclick="limparFiltros()">Limpar Filtros</button>
-                </div>
-            </fieldset>
-
-            <fieldset class="painel-grupo">
-                <legend class="titulo-painel">Exportação e Impressão</legend>
-                <div class="export-row">
-                    <button onclick="exportarCSV()">⬇️ CSV</button>
-                    <button onclick="exportarXLSX()">⬇️ Excel</button>
-                    <button onclick="exportarJSON()">⬇️ JSON</button>
-                    <button onclick="exportarXML()">⬇️ XML</button>
-                    <button class="btn-acao" onclick="imprimirRelatorio()">🖨️ Imprimir</button>
-                    <button class="btn-acao" onclick="carregarDados()">🔄 Atualizar</button>
-                </div>
-            </fieldset>
-
-            <fieldset class="painel-grupo" id="painel-visualizacao">
-                <legend class="titulo-painel">Visualização</legend>
-            </fieldset>
-
-            <table id="tabela" style="width:100%">
-                <thead><tr><th>Dados</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </main>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <div id="loader">
+        <div class="spinner"></div>
+        <span>Carregando base de dados...</span>
+    </div>
 
-    <script>
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vREQz2WgS7eshAd2iP8ln0Wz716a6crFuPkwbyYs5jtEq8Ifv1XynH4ou0xv--TQFm8UPm8Nvro5JNt/pub?output=csv";
-
-        let tabela;
-        let dadosGlobais = [];
-        let carimboAtualizacao = "";
-
-        // FUNÇÃO CENTRALIZADA DE AJUSTE DE IFRAME
-        function enviarAlturaIframe() {
-            setTimeout(() => {
-                const wrapper = document.getElementById('wrapper');
-                if (wrapper) {
-                    // offsetHeight mede apenas o conteúdo real (ignora se o iframe já estiver esticado)
-                    const h = wrapper.offsetHeight + 40; // 40px de respiro para garantir a sombra final
-                    window.parent.postMessage({ tipo: 'ajustarAltura', valor: h }, '*');
-                }
-            }, 200); // 200ms garante que os cards do DataTables já terminaram de renderizar
-        }
-
-        function removerAcentos(str) { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : ""; }
-
-        function parseDataBR(str) {
-            if (!str) return null;
-            const p = str.split('/');
-            return new Date(p[2], p[1] - 1, p[0]);
-        }
-
-        function gerarNomeArquivoBase() {
-            let partes = [];
+    <main class="container" id="main-container">
+        
+        <fieldset class="painel-grupo">
+            <legend class="titulo-painel">Filtros de Pesquisa</legend>
+            <div id="badge-atualizacao" class="badge-atualizacao">⏳ Sincronizando...</div>
             
-            const nome = $('#filtroNome').val().trim();
-            if (nome) partes.push(nome.replace(/\s+/g, '_'));
+            <div class="filtro-linha-1">
+                <input type="text" id="filtroNome" placeholder="Pesquisar por nome..." autocomplete="off">
+                <select id="filtroCargo"><option value="">Cargo (Todos)</option></select>
+                <select id="filtroLotacao"><option value="">Lotação (Todas)</option></select>
+            </div>
             
-            if ($('#filtroCargo').val()) partes.push($('#filtroCargo option:selected').text().replace(/\s+/g, '_'));
-            if ($('#filtroLotacao').val()) partes.push($('#filtroLotacao option:selected').text().replace(/\s+/g, '_'));
-            if ($('#filtroSituacao').val()) partes.push($('#filtroSituacao option:selected').text().replace(/\s+/g, '_'));
-            if ($('#filtroTipoData').val()) partes.push($('#filtroTipoData option:selected').text().replace(/\s+/g, '_'));
-            if ($('#filtroMes').val()) partes.push($('#filtroMes option:selected').text().replace(/\s+/g, '_'));
-            if ($('#filtroAno').val()) partes.push($('#filtroAno option:selected').text().replace(/\s+/g, '_'));
-            
-            if (partes.length === 0) return "funcionarios_completo";
-            
-            let nomeFinal = "funcionarios_" + partes.join('_');
-            return removerAcentos(nomeFinal).replace(/[^a-zA-Z0-9_]/g, '');
-        }
+            <div class="filtro-linha-2">
+                <select id="filtroSituacao">
+                    <option value="">Situação (Todas)</option>
+                    <option value="Ativo" selected>Ativos</option>
+                    <option value="Desligado">Desligados</option>
+                </select>
+                <select id="filtroTipoData">
+                    <option value="">Filtro de Data...</option>
+                    <option value="admissao">Por Admissão</option>
+                    <option value="demissao">Por Demissão</option>
+                </select>
+                <select id="filtroMes">
+                    <option value="">Mês</option>
+                    <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
+                    <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
+                    <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
+                    <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+                </select>
+                <select id="filtroAno"><option value="">Ano</option></select>
+                <button onclick="limparFiltros()">Limpar filtros</button>
+            </div>
+        </fieldset>
 
-        function imprimirRelatorio() {
-            if(!tabela) return;
-            const len = tabela.page.len();
-            tabela.page.len(-1).draw(); 
-            setTimeout(() => { window.print(); tabela.page.len(len).draw(); }, 500);
-        }
+        <fieldset class="painel-grupo painel-exportacao">
+            <legend class="titulo-painel">Exportação e Impressão</legend>
+            <div class="toolbar-row">
+                <button onclick="exportarCSV()">⬇️ CSV</button>
+                <button onclick="exportarXLSX()">⬇️ Excel</button>
+                <button onclick="exportarJSON()">⬇️ JSON</button>
+                <button onclick="exportarXML()">⬇️ XML</button>
+                <button class="btn-acao" onclick="imprimirSeguro()">🖨️ Imprimir</button>
+                <button class="btn-acao" onclick="carregarDados()">🔄 Atualizar</button>
+            </div>
+        </fieldset>
 
-        function processarCSV(csvText) {
-            const linhas = csvText.split(/\r?\n/);
-            let textoPrimeiraLinha = linhas[0].replace(/"/g, '');
-            let matchDataHora = textoPrimeiraLinha.match(/(\d{1,2}\/\d{1,2}\/\d{4})[^\d]*(\d{1,2}:\d{2})/);
-            
-            if (matchDataHora) {
-                carimboAtualizacao = `Atualizado em ${matchDataHora[1]} às ${matchDataHora[2]}`;
-            } else {
-                carimboAtualizacao = textoPrimeiraLinha.split(',')[0].replace(/MODIF_REAL:\s*/i, "Atualizado em ");
+        <fieldset class="painel-grupo">
+            <legend class="titulo-painel">Visualização</legend>
+            <div class="dt-custom-header">
+                <div id="comprimento-tabela"></div> 
+                <div id="contagem-registros" class="badge-contagem">0 registros encontrados</div>
+            </div>
+        </fieldset>
+
+        <table id="tabela" style="width:100%">
+            <thead><tr><th>Dados</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </main>
+</div>
+
+<script>
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vREQz2WgS7eshAd2iP8ln0Wz716a6crFuPkwbyYs5jtEq8Ifv1XynH4ou0xv--TQFm8UPm8Nvro5JNt/pub?output=csv";
+    
+    let tabela;
+    let dadosGlobais = [];
+    let carimboAtualizacao = "";
+
+    function enviarAlturaIframe() {
+        setTimeout(() => {
+            const wrapper = document.getElementById('wrapper');
+            if (wrapper) {
+                const h = wrapper.offsetHeight + 40; 
+                window.parent.postMessage({ tipo: 'ajustarAltura', valor: h }, '*');
             }
+        }, 200); 
+    }
 
-            const headers = linhas[1].split(',').map(h => h.trim().toLowerCase());
-            const lista = [];
-            for (let i = 2; i < linhas.length; i++) {
-                if (!linhas[i].trim()) continue;
-                const colunas = linhas[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                let obj = {};
-                headers.forEach((h, idx) => {
-                    obj[h] = colunas[idx] ? colunas[idx].replace(/"/g, '').trim() : "";
-                });
-                obj.situacao = obj.data_demissao === "" ? "Ativo" : "Desligado";
-                if (obj.jornada && obj.jornada.toLowerCase() === "padrão") obj.jornada = "40h/semana";
-                lista.push(obj);
-            }
-            return lista;
+    function removerAcentos(str) { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : ""; }
+
+    function parseDataBR(str) {
+        if (!str) return null;
+        const p = str.split('/');
+        return new Date(p[2], p[1] - 1, p[0]);
+    }
+
+    function gerarNomeArquivoBase() {
+        let partes = [];
+        const nome = $('#filtroNome').val().trim();
+        if (nome) partes.push(nome.replace(/\s+/g, '_'));
+        if ($('#filtroCargo').val()) partes.push($('#filtroCargo option:selected').text().replace(/\s+/g, '_'));
+        if ($('#filtroLotacao').val()) partes.push($('#filtroLotacao option:selected').text().replace(/\s+/g, '_'));
+        if ($('#filtroSituacao').val()) partes.push($('#filtroSituacao option:selected').text().replace(/\s+/g, '_'));
+        if ($('#filtroTipoData').val()) partes.push($('#filtroTipoData option:selected').text().replace(/\s+/g, '_'));
+        if ($('#filtroMes').val()) partes.push($('#filtroMes option:selected').text().replace(/\s+/g, '_'));
+        if ($('#filtroAno').val()) partes.push($('#filtroAno option:selected').text().replace(/\s+/g, '_'));
+        if (partes.length === 0) return "funcionarios_completo";
+        let nomeFinal = "funcionarios_" + partes.join('_');
+        return removerAcentos(nomeFinal).replace(/[^a-zA-Z0-9_]/g, '');
+    }
+
+    function imprimirSeguro() {
+        if(!tabela) return;
+        const len = tabela.page.len();
+        tabela.page.len(-1).draw('page'); 
+        setTimeout(() => { window.print(); tabela.page.len(len).draw('page'); }, 500);
+    }
+
+    function processarCSV(csvText) {
+        const linhas = csvText.split(/\r?\n/);
+        let textoPrimeiraLinha = linhas[0].replace(/"/g, '');
+        let matchDataHora = textoPrimeiraLinha.match(/(\d{1,2}\/\d{1,2}\/\d{4})[^\d]*(\d{1,2}:\d{2})/);
+        
+        if (matchDataHora) {
+            carimboAtualizacao = `Atualizado em ${matchDataHora[1]} às ${matchDataHora[2]}`;
+        } else {
+            carimboAtualizacao = textoPrimeiraLinha.split(',')[0].replace(/MODIF_REAL:\s*/i, "Atualizado em ");
         }
 
-        function ordenarFuncionarios(lista) {
-            return lista.sort((a, b) => {
-                if (a.situacao !== b.situacao) return a.situacao === "Ativo" ? -1 : 1;
-                const dataA_adm = parseDataBR(a.data_admissao) || 0;
-                const dataB_adm = parseDataBR(b.data_admissao) || 0;
-                const dataA_dem = parseDataBR(a.data_demissao) || 0;
-                const dataB_dem = parseDataBR(b.data_demissao) || 0;
-                return a.situacao === "Ativo" ? dataA_adm - dataB_adm : dataB_dem - dataA_dem;
+        const headers = linhas[1].split(',').map(h => h.trim().toLowerCase());
+        const lista = [];
+        for (let i = 2; i < linhas.length; i++) {
+            if (!linhas[i].trim()) continue;
+            const colunas = linhas[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            let obj = {};
+            headers.forEach((h, idx) => {
+                obj[h] = colunas[idx] ? colunas[idx].replace(/"/g, '').trim() : "";
             });
+            obj.situacao = obj.data_demissao === "" ? "Ativo" : "Desligado";
+            if (obj.jornada && obj.jornada.toLowerCase() === "padrão") obj.jornada = "40h/semana";
+            lista.push(obj);
         }
+        return lista;
+    }
 
-        async function carregarDados() {
-            $('#loader').show();
-            $('#main-container').hide();
-            try {
-                const response = await fetch(`${CSV_URL}&cache=${Date.now()}`);
-                const text = await response.text();
-                dadosGlobais = processarCSV(text);
-                popularFiltrosDynamic();
-                aplicarFiltros();
-                $('#badge-atualizacao').text(`🟢 ${carimboAtualizacao}`);
-                $('#loader').hide();
-                
-                $('#main-container').fadeIn(400, () => {
-                    enviarAlturaIframe();
-                });
-            } catch (error) {
-                console.error(error);
-                $('#loader').html('<b style="color:red">Erro ao carregar dados.</b>');
-            }
-        }
+    function ordenarFuncionarios(lista) {
+        return lista.sort((a, b) => {
+            if (a.situacao !== b.situacao) return a.situacao === "Ativo" ? -1 : 1;
+            const dataA_adm = parseDataBR(a.data_admissao) || 0;
+            const dataB_adm = parseDataBR(b.data_admissao) || 0;
+            const dataA_dem = parseDataBR(a.data_demissao) || 0;
+            const dataB_dem = parseDataBR(b.data_demissao) || 0;
+            return a.situacao === "Ativo" ? dataA_adm - dataB_adm : dataB_dem - dataA_dem;
+        });
+    }
 
-        function popularFiltrosDynamic() {
-            const lotacoes = [...new Set(dadosGlobais.map(d => d.lotacao))].filter(Boolean).sort();
-            $('#filtroLotacao').html('<option value="">Lotação (Todas)</option>');
-            lotacoes.forEach(l => $('#filtroLotacao').append(`<option value="${l}">${l}</option>`));
-
-            const cargos = [...new Set(dadosGlobais.map(d => d.cargo))].filter(Boolean).sort();
-            $('#filtroCargo').html('<option value="">Cargo (Todos)</option>');
-            cargos.forEach(c => $('#filtroCargo').append(`<option value="${c}">${c}</option>`));
-
-            let anos = new Set();
-            dadosGlobais.forEach(d => {
-                if (d.data_admissao) anos.add(d.data_admissao.split('/')[2]);
-                if (d.data_demissao) anos.add(d.data_demissao.split('/')[2]);
-            });
-            anos = [...anos].filter(a => a && a.length === 4).sort((a, b) => b - a);
-            $('#filtroAno').html('<option value="">Ano</option>');
-            anos.forEach(a => $('#filtroAno').append(`<option value="${a}">${a}</option>`));
-        }
-
-        function renderizarTabela(dados) {
-            if (tabela) {
-                tabela.destroy();
-                $('#painel-visualizacao .dt-controles').remove(); 
-            }
-            tabela = $('#tabela').DataTable({
-                data: dados,
-                pageLength: 10,
-                ordering: false,
-                dom: '<"dt-controles"l<"info-total">>rt<"dt-bottom-controls"ip>',
-                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
-                columns: [{
-                    data: null,
-                    render: function(d) {
-                        const statusClass = d.situacao === 'Ativo' ? 'tag-ativo' : 'tag-desligado';
-                        return `
-                            <div class="card-func">
-                                <div class="card-header">
-                                    <div class="card-header-texto">
-                                        <span class="card-nome">${d.nome_func}</span>
-                                        <span class="card-cargo">${d.cargo || "-"}</span>
-                                    </div>
-                                    <span class="status-tag ${statusClass}">${d.situacao}</span>
-                                </div>
-                                <div class="card-body">
-                                    <div class="info-bloco"><span class="info-label">Lotação</span><span class="info-valor">${d.lotacao}</span></div>
-                                    <div class="info-bloco"><span class="info-label">Jornada</span><span class="info-valor">${d.jornada}</span></div>
-                                    <div class="info-bloco"><span class="info-label">Admissão</span><span class="info-valor">${d.data_admissao}</span></div>
-                                    <div class="info-bloco"><span class="info-label">Demissão</span><span class="info-valor">${d.data_demissao || "—"}</span></div>
-                                </div>
-                            </div>`;
-                    }
-                }],
-                initComplete: function() { 
-                    $('.dt-controles').appendTo('#painel-visualizacao'); 
-                },
-                drawCallback: function() {
-                    const total = this.api().rows({ filter: 'applied' }).count();
-                    $('.info-total').html(`<b>${total}</b> registros encontrados`);
-                    
-                    enviarAlturaIframe();
-                }
-            });
-        }
-
-        function aplicarFiltros() {
-            const nomeDigitado = removerAcentos($('#filtroNome').val().toLowerCase());
-            const cargo = $('#filtroCargo').val();
-            const lot = $('#filtroLotacao').val();
-            const sit = $('#filtroSituacao').val();
-            
-            const tipoData = $('#filtroTipoData').val();
-            const mes = $('#filtroMes').val();
-            const ano = $('#filtroAno').val();
-
-            let filtrados = dadosGlobais.filter(d => {
-                const nomeFunc = removerAcentos((d.nome_func || "").toLowerCase());
-                const matchNome = !nomeDigitado || nomeFunc.includes(nomeDigitado);
-                const matchCargo = !cargo || d.cargo === cargo;
-                const matchLot = !lot || d.lotacao === lot;
-                const matchSit = !sit || d.situacao === sit;
-
-                let matchData = true;
-                if (tipoData || mes || ano) {
-                    const mAdm = d.data_admissao ? (!mes || d.data_admissao.split('/')[1] === mes) && (!ano || d.data_admissao.split('/')[2] === ano) : false;
-                    const mDem = d.data_demissao ? (!mes || d.data_demissao.split('/')[1] === mes) && (!ano || d.data_demissao.split('/')[2] === ano) : false;
-                    
-                    if (tipoData === 'admissao') {
-                        matchData = !!d.data_admissao && mAdm;
-                    } else if (tipoData === 'demissao') {
-                        matchData = !!d.data_demissao && mDem;
-                    } else {
-                        matchData = (!!d.data_admissao && mAdm) || (!!d.data_demissao && mDem);
-                    }
-                }
-
-                return matchNome && matchCargo && matchLot && matchSit && matchData;
-            });
-
-            renderizarTabela(ordenarFuncionarios(filtrados));
-        }
-
-        function limparFiltros() {
-            $('#filtroNome, #filtroCargo, #filtroLotacao, #filtroTipoData, #filtroMes, #filtroAno').val('');
-            $('#filtroSituacao').val('Ativo');
+    async function carregarDados() {
+        $('#loader').show();
+        $('#main-container').hide();
+        try {
+            const response = await fetch(`${CSV_URL}&cache=${Date.now()}`);
+            const text = await response.text();
+            dadosGlobais = processarCSV(text);
+            popularFiltrosDynamic();
             aplicarFiltros();
-        }
-
-        function exportarCSV() {
-            const data = tabela.rows({ filter: 'applied' }).data().toArray();
-            let csv = "\ufeffNome,Cargo,Lotacao,Admissao,Demissao,Jornada,Situacao\n";
-            data.forEach(d => { csv += `"${d.nome_func}","${d.cargo}","${d.lotacao}","${d.data_admissao}","${d.data_demissao}","${d.jornada}","${d.situacao}"\n`; });
-            downloadFile(csv, gerarNomeArquivoBase() + ".csv", "text/csv");
-        }
-
-        function exportarXLSX() {
-            const data = tabela.rows({ filter: 'applied' }).data().toArray();
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Dados");
-            XLSX.writeFile(wb, gerarNomeArquivoBase() + ".xlsx");
-        }
-
-        function exportarJSON() {
-            const data = tabela.rows({ filter: 'applied' }).data().toArray();
-            downloadFile(JSON.stringify(data, null, 2), gerarNomeArquivoBase() + ".json", "application/json");
-        }
-
-        function exportarXML() {
-            const data = tabela.rows({ filter: 'applied' }).data().toArray();
-            let xml = '<?xml version="1.0" encoding="UTF-8"?><dados>';
-            data.forEach(d => {
-                xml += '<registro>';
-                for (let k in d) xml += `<${k}>${d[k]}</${k}>`;
-                xml += '</registro>';
+            $('#badge-atualizacao').text(`🟢 ${carimboAtualizacao}`);
+            $('#loader').hide();
+            
+            $('#main-container').fadeIn(400, () => {
+                enviarAlturaIframe();
             });
-            xml += '</dados>';
-            downloadFile(xml, gerarNomeArquivoBase() + ".xml", "application/xml");
+        } catch (error) {
+            console.error(error);
+            $('#loader').html('<b style="color:red">Erro ao carregar dados.</b>');
+        }
+    }
+
+    function popularFiltrosDynamic() {
+        const lotacoes = [...new Set(dadosGlobais.map(d => d.lotacao))].filter(Boolean).sort();
+        $('#filtroLotacao').html('<option value="">Lotação (Todas)</option>');
+        lotacoes.forEach(l => $('#filtroLotacao').append(`<option value="${l}">${l}</option>`));
+
+        const cargos = [...new Set(dadosGlobais.map(d => d.cargo))].filter(Boolean).sort();
+        $('#filtroCargo').html('<option value="">Cargo (Todos)</option>');
+        cargos.forEach(c => $('#filtroCargo').append(`<option value="${c}">${c}</option>`));
+
+        let anos = new Set();
+        dadosGlobais.forEach(d => {
+            if (d.data_admissao) anos.add(d.data_admissao.split('/')[2]);
+            if (d.data_demissao) anos.add(d.data_demissao.split('/')[2]);
+        });
+        anos = [...anos].filter(a => a && a.length === 4).sort((a, b) => b - a);
+        $('#filtroAno').html('<option value="">Ano</option>');
+        anos.forEach(a => $('#filtroAno').append(`<option value="${a}">${a}</option>`));
+    }
+
+    function aplicarFiltros() {
+        const nomeDigitado = removerAcentos($('#filtroNome').val().toLowerCase());
+        const cargo = $('#filtroCargo').val();
+        const lot = $('#filtroLotacao').val();
+        const sit = $('#filtroSituacao').val();
+        
+        const tipoData = $('#filtroTipoData').val();
+        const mes = $('#filtroMes').val();
+        const ano = $('#filtroAno').val();
+
+        let filtrados = dadosGlobais.filter(d => {
+            const nomeFunc = removerAcentos((d.nome_func || "").toLowerCase());
+            const matchNome = !nomeDigitado || nomeFunc.includes(nomeDigitado);
+            const matchCargo = !cargo || d.cargo === cargo;
+            const matchLot = !lot || d.lotacao === lot;
+            const matchSit = !sit || d.situacao === sit;
+
+            let matchData = true;
+            if (tipoData || mes || ano) {
+                const mAdm = d.data_admissao ? (!mes || d.data_admissao.split('/')[1] === mes) && (!ano || d.data_admissao.split('/')[2] === ano) : false;
+                const mDem = d.data_demissao ? (!mes || d.data_demissao.split('/')[1] === mes) && (!ano || d.data_demissao.split('/')[2] === ano) : false;
+                
+                if (tipoData === 'admissao') {
+                    matchData = !!d.data_admissao && mAdm;
+                } else if (tipoData === 'demissao') {
+                    matchData = !!d.data_demissao && mDem;
+                } else {
+                    matchData = (!!d.data_admissao && mAdm) || (!!d.data_demissao && mDem);
+                }
+            }
+
+            return matchNome && matchCargo && matchLot && matchSit && matchData;
+        });
+
+        renderizarTabela(ordenarFuncionarios(filtrados));
+    }
+
+    function renderizarTabela(dados) {
+        if (tabela) {
+            tabela.destroy();
+            $('#comprimento-tabela').empty();
         }
 
-        function downloadFile(content, fileName, mime) {
-            const blob = new Blob([content], { type: mime });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = fileName;
-            a.click();
-        }
+        tabela = $('#tabela').DataTable({
+            data: dados,
+            pageLength: 10,
+            ordering: false,
+            language: { 
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json',
+                lengthMenu: "Exibir _MENU_ resultados por página"
+            },
+            dom: 'lrt<"dt-bottom-controls"ip>',
+            columns: [{
+                data: null,
+                render: function(d) {
+                    const statusClass = d.situacao === 'Ativo' ? 'status-ativo' : 'status-desligado';
+                    return `
+                        <div class="card-info">
+                            <div class="card-header">
+                                <div class="card-header-texto">
+                                    <span class="nome-principal">${d.nome_func}</span>
+                                    <span class="subtitulo-card">${d.cargo || "-"}</span>
+                                </div>
+                                <span class="status-badge ${statusClass}">${d.situacao}</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="info-col"><span class="info-label">Lotação</span><span class="info-valor">${d.lotacao}</span></div>
+                                <div class="info-col"><span class="info-label">Jornada</span><span class="info-valor">${d.jornada}</span></div>
+                                <div class="info-col"><span class="info-label">Admissão</span><span class="info-valor">${d.data_admissao}</span></div>
+                                <div class="info-col"><span class="info-label">Demissão</span><span class="info-valor">${d.data_demissao || "—"}</span></div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }],
+            initComplete: function() {
+                $('.dataTables_length').appendTo('#comprimento-tabela');
+                enviarAlturaIframe();
+            },
+            drawCallback: function() {
+                const totalFiltrado = this.api().rows({ filter: 'applied' }).count();
+                $('#contagem-registros').html(`<b>${totalFiltrado}</b> registros encontrados`);
+                enviarAlturaIframe();
+            }
+        });
+    }
 
-        $('select').on('change', aplicarFiltros);
-        $('#filtroNome').on('input', aplicarFiltros); 
-        window.onload = carregarDados;
-    </script>
+    function limparFiltros() {
+        $('#filtroNome, #filtroCargo, #filtroLotacao, #filtroTipoData, #filtroMes, #filtroAno').val('');
+        $('#filtroSituacao').val('Ativo');
+        aplicarFiltros();
+    }
+
+    function exportarCSV() {
+        const data = tabela.rows({ filter: 'applied' }).data().toArray();
+        let csv = "\ufeffNome,Cargo,Lotacao,Admissao,Demissao,Jornada,Situacao\n";
+        data.forEach(d => { csv += `"${d.nome_func}","${d.cargo}","${d.lotacao}","${d.data_admissao}","${d.data_demissao}","${d.jornada}","${d.situacao}"\n`; });
+        downloadFile(csv, gerarNomeArquivoBase() + ".csv", "text/csv");
+    }
+
+    function exportarXLSX() {
+        const data = tabela.rows({ filter: 'applied' }).data().toArray();
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Dados");
+        XLSX.writeFile(wb, gerarNomeArquivoBase() + ".xlsx");
+    }
+
+    function exportarJSON() {
+        const data = tabela.rows({ filter: 'applied' }).data().toArray();
+        downloadFile(JSON.stringify(data, null, 2), gerarNomeArquivoBase() + ".json", "application/json");
+    }
+
+    function exportarXML() {
+        const data = tabela.rows({ filter: 'applied' }).data().toArray();
+        let xml = '<?xml version="1.0" encoding="UTF-8"?><dados>';
+        data.forEach(d => {
+            xml += '<registro>';
+            for (let k in d) xml += `<${k}>${d[k]}</${k}>`;
+            xml += '</registro>';
+        });
+        xml += '</dados>';
+        downloadFile(xml, gerarNomeArquivoBase() + ".xml", "application/xml");
+    }
+
+    function downloadFile(content, fileName, mime) {
+        const blob = new Blob([content], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.click();
+    }
+
+    $('select').on('change', aplicarFiltros);
+    $('#filtroNome').on('input', aplicarFiltros); 
+    window.onload = carregarDados;
+</script>
 </body>
 </html>
