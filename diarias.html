@@ -27,55 +27,66 @@
         .container { margin: 0 15px 15px 15px; display: none; }
         fieldset.painel-grupo { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; }
         legend.titulo-painel { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 0 10px; letter-spacing: 1px; }
+        
         .badge-atualizacao { position: absolute; top: -12px; right: 20px; font-size: 11px; color: #065f46; background: #d1fae5; padding: 5px 12px; border-radius: 20px; font-weight: 700; border: 1px solid #a7f3d0; }
 
-        /* AJUSTE ESTRUTURAL DOS GRIDS */
-        .filtro-linha-1, .filtro-linha-2, .grade-botoes { 
+        /* FILTROS IGUAIS ÀS OUTRAS TABELAS */
+        .filtro-linha-1, .filtro-linha-2 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+
+        /* BOTÕES DE EXPORTAÇÃO EM LINHA ÚNICA */
+        .grade-botoes { 
             display: flex !important; 
-            flex-wrap: wrap !important; 
-            gap: 10px !important; 
-            margin-bottom: 10px; 
+            flex-direction: row !important;
+            flex-wrap: nowrap !important; 
+            gap: 8px !important; 
+            overflow-x: auto; 
+            padding-bottom: 5px;
         }
         
-        .filtro-linha-1 > *, .filtro-linha-2 > *, .grade-botoes > button { 
-            flex: 1 1 calc(33.333% - 10px) !important; /* Força 3 por linha no flexbox */
-            min-width: 150px !important; 
-            box-sizing: border-box;
+        .grade-botoes button { 
+            flex: 1; 
+            min-width: 100px; 
+            font-size: 12px !important; 
+            padding: 8px 5px !important; 
         }
 
-        select, input, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; height: 42px; width: 100%; }
-        button { background: #003b75; color: white; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
+        select, input, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; height: 42px; width: 100%; box-sizing: border-box; }
+        button { background: #003b75; color: white; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; transition: 0.2s; }
+        button:hover { opacity: 0.9; }
         .btn-acao { background: #0284c7 !important; }
 
+        /* PAINEL DE TOTAIS */
         .painel-totais { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .total-bloco { background: white; border: 1px solid #e2e8f0; border-left: 5px solid #003b75; border-radius: 12px; padding: 16px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .total-label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
         .total-valor { font-size: 24px; font-weight: 800; color: #1e293b; }
 
-        .dt-custom-header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;}
-        .badge-contagem { background: #e0f2fe; color: #0369a1; padding: 10px 25px; border-radius: 10px; font-weight: 700; border: 1px solid #bae6fd; }
+        /* CARD DE VISUALIZAÇÃO CORRIGIDO */
+        .card-info { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; }
+        .card-header { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; background: #fff; }
+        .nome-principal { font-size: 16px; font-weight: 800; color: #003b75; text-transform: uppercase; display: block; }
+        .subtitulo-card { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; margin-top: 2px; }
+        
+        .card-body-row { display: grid; grid-template-columns: repeat(3, 1fr); padding: 12px 20px; gap: 10px; }
+        .card-body-row.border-top { border-top: 1px dashed #f1f5f9; }
+        
+        .info-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; }
+        .info-valor { font-size: 13px; font-weight: 700; color: #334155; }
+        
+        .card-footer-quadro { background: #f8fafc; padding: 12px 20px; display: grid; grid-template-columns: 1fr; gap: 10px; border-top: 1px solid #edf2f7; }
+        .quadro-col-full { border-top: 1px dashed #e2e8f0; padding-top: 8px; }
+
+        /* CONTROLES DATATABLE */
+        .dt-custom-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;}
+        .badge-contagem { background: #e0f2fe; color: #0369a1; padding: 8px 15px; border-radius: 8px; font-weight: 700; border: 1px solid #bae6fd; font-size: 13px; }
+        .dt-bottom-controls { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 10px; margin-bottom: 25px; }
 
         #tabela thead { display: none; }
-        table.dataTable { border: none !important; margin-top: 10px !important; }
-        
-        /* CARD RESTAURADO */
-        .card-info { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden;}
-        .card-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; background: #fff;}
-        .nome-principal { font-size: 17px; font-weight: 800; color: #003b75; text-transform: uppercase; }
-        .subtitulo-card { font-size: 13px; color: #64748b; font-weight: 500; text-transform: uppercase; display: block; margin-top: 4px; }
-        .card-body-row { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 15px 20px; gap: 15px; }
-        .card-body-row.border-top { border-top: 1px dashed #f1f5f9; }
-        .info-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; }
-        .info-valor { font-size: 14px; font-weight: 700; color: #1e293b; }
-        .card-footer-quadro { background: #f8fafc; padding: 15px 20px; border-top: 1px solid #edf2f7; display: grid; grid-template-columns: 1fr 1fr; gap: 15px 20px; margin: 0 15px 15px 15px; border-radius: 10px; border: 1px solid #edf2f7;}
-        .quadro-col-full { grid-column: 1 / -1; border-top: 1px dashed #e2e8f0; padding-top: 10px; }
+        table.dataTable { border: none !important; }
 
-        .dt-bottom-controls { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 10px; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); flex-wrap: wrap; gap: 15px; }
-
-        @media (max-width: 600px) {
-            .filtro-linha-1 > *, .filtro-linha-2 > *, .grade-botoes > button { flex: 1 1 100% !important; }
+        @media (max-width: 768px) {
+            .filtro-linha-1, .filtro-linha-2, .painel-totais { grid-template-columns: 1fr; }
             .card-body-row { grid-template-columns: 1fr 1fr; }
-            .painel-totais { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -101,21 +112,21 @@
                 <select id="filtroServidor"><option value="">Servidor (Todos)</option></select>
             </div>
             <div class="filtro-linha-2">
-                <select id="filtroMes"><option value="">Mês</option><option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select>
-                <select id="filtroAno"><option value="">Ano</option></select>
-                <button onclick="limparFiltros()">Limpar filtros</button>
+                <select id="filtroMes"><option value="">Mês (Todos)</option><option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select>
+                <select id="filtroAno"><option value="">Ano (Todos)</option></select>
+                <button onclick="limparFiltros()">Limpar Filtros</button>
             </div>
         </fieldset>
 
         <fieldset class="painel-grupo">
-            <legend class="titulo-painel">Exportação e Impressão</legend>
+            <legend class="titulo-painel">Exportação e Ações</legend>
             <div class="grade-botoes">
-                <button onclick="exportarCSV()">⬇️ CSV</button>
-                <button onclick="exportarXLSX()">⬇️ Excel</button>
-                <button onclick="exportarJSON()">⬇️ JSON</button>
-                <button onclick="exportarXML()">⬇️ XML</button>
-                <button class="btn-acao" onclick="window.print()">🖨️ Imprimir</button>
-                <button class="btn-acao" onclick="iniciarCarregamento()">🔄 Atualizar</button>
+                <button onclick="exportarCSV()">CSV</button>
+                <button onclick="exportarXLSX()">Excel</button>
+                <button onclick="exportarJSON()">JSON</button>
+                <button onclick="exportarXML()">XML</button>
+                <button class="btn-acao" onclick="window.print()">Imprimir</button>
+                <button class="btn-acao" onclick="iniciarCarregamento()">Atualizar</button>
             </div>
         </fieldset>
 
@@ -124,13 +135,10 @@
             <div class="total-bloco" style="border-left-color:#0284c7;"><div class="total-label">Soma dos Adiantamentos</div><div class="total-valor" id="total-adiantamentos">R$ 0,00</div></div>
         </div>
 
-        <fieldset class="painel-grupo">
-            <legend class="titulo-painel">Visualização</legend>
-            <div class="dt-custom-header">
-                <div id="comprimento-tabela"></div> 
-                <div id="contagem-registros" class="badge-contagem">0 registros</div>
-            </div>
-        </fieldset>
+        <div class="dt-custom-header">
+            <div id="comprimento-tabela"></div> 
+            <div id="contagem-registros" class="badge-contagem">0 registros</div>
+        </div>
 
         <table id="tabela" style="width:100%"><thead><tr><th>Dados</th></tr></thead><tbody></tbody></table>
     </main>
@@ -144,13 +152,13 @@
     function enviarAlturaIframe() {
         const wrapper = document.getElementById('wrapper');
         if (wrapper) {
-            const h = wrapper.offsetHeight + 40; 
+            const h = wrapper.offsetHeight + 50; 
             window.parent.postMessage({ tipo: 'ajustarAltura', valor: h }, '*');
         }
     }
 
     function formatarMoeda(v) {
-        if (!v) return "R$ 0,00";
+        if (!v || v === "0") return "R$ 0,00";
         let n = v.replace(/R\$\s?/g, "").trim();
         return n.includes(",") ? `R$ ${n}` : `R$ ${n},00`;
     }
@@ -188,10 +196,15 @@
 
     function preencherFiltros() {
         const gabs = [...new Set(listaGabinetes.map(g => Object.values(g)[0].toUpperCase()))].sort();
+        $('#filtroGabinete').html('<option value="">Gabinete (Todos)</option>');
         gabs.forEach(g => $('#filtroGabinete').append(new Option(g, g)));
+        
         const servs = [...new Set(dadosGlobais.map(d => d.servidor))].sort();
+        $('#filtroServidor').html('<option value="">Servidor (Todos)</option>');
         servs.forEach(s => $('#filtroServidor').append(new Option(s, s)));
+        
         const anos = [...new Set(dadosGlobais.map(d => d.data_partida.split("/")[2]))].filter(a => a).sort((a,b)=>b-a);
+        $('#filtroAno').html('<option value="">Ano (Todos)</option>');
         anos.forEach(a => $('#filtroAno').append(new Option(a, a)));
     }
 
@@ -214,20 +227,23 @@
                 data: null,
                 render: (d) => `
                     <div class="card-info">
-                        <div class="card-header"><span class="nome-principal">${d.servidor}</span><span class="subtitulo-card">${d.cargo || "-"}</span></div>
+                        <div class="card-header">
+                            <span class="nome-principal">${d.servidor}</span>
+                            <span class="subtitulo-card">${d.cargo || "Não Informado"}</span>
+                        </div>
                         <div class="card-body-row">
                             <div class="info-col"><div class="info-label">Qtd. Diárias</div><div class="info-valor">${d.qtde_diarias}</div></div>
                             <div class="info-col"><div class="info-label">Partida</div><div class="info-valor">${d.data_partida}</div></div>
                             <div class="info-col"><div class="info-label">Retorno</div><div class="info-valor">${d.data_retorno}</div></div>
                         </div>
                         <div class="card-body-row border-top">
-                            <div class="info-col"><div class="info-label">Valor Diárias</div><div class="info-valor">${formatarMoeda(d.valor_diarias)}</div></div>
-                            <div class="info-col"><div class="info-label">Valor Adiantamento</div><div class="info-valor">${formatarMoeda(d.valor_adiantamento)}</div></div>
+                            <div class="info-col"><div class="info-label">Vlr. Diárias</div><div class="info-valor">${formatarMoeda(d.valor_diarias)}</div></div>
+                            <div class="info-col"><div class="info-label">Vlr. Adiant.</div><div class="info-valor">${formatarMoeda(d.valor_adiantamento)}</div></div>
                             <div class="info-col"><div class="info-label">Dotação</div><div class="info-valor">${d.dotacao || "-"}</div></div>
                         </div>
                         <div class="card-footer-quadro">
                             <div class="quadro-col"><div class="info-label">Destino</div><div class="info-valor">${d.cidade_destino}</div></div>
-                            <div class="quadro-col-full"><div class="info-label">Motivação</div><div class="info-valor">${d.motivacao_viagem}</div></div>
+                            <div class="quadro-col-full"><div class="info-label">Motivação da Viagem</div><div class="info-valor">${d.motivacao_viagem}</div></div>
                         </div>
                     </div>`
             }],
@@ -238,7 +254,7 @@
                 api.rows({ filter: 'applied' }).data().each(d => { tD += parseNum(d.valor_diarias); tA += parseNum(d.valor_adiantamento); });
                 $('#total-diarias').text(new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'}).format(tD));
                 $('#total-adiantamentos').text(new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'}).format(tA));
-                $('#contagem-registros').html(`<b>${api.rows({ filter: 'applied' }).count()}</b> registros encontrados`);
+                $('#contagem-registros').html(`<b>${api.rows({ filter: 'applied' }).count()}</b> registros`);
                 enviarAlturaIframe();
             }
         });
@@ -248,6 +264,49 @@
     $('#filtroNome').on('input', aplicarFiltros);
     $('select').on('change', aplicarFiltros);
     window.onload = iniciarCarregamento;
+
+    // Funções de Exportação (Mantidas do original)
+    function exportarCSV() {
+        let csv = "Servidor,Cargo,Qtd Diarias,Partida,Retorno,Valor Diarias,Valor Adiantamento,Destino\n";
+        tabela.rows({filter:'applied'}).data().each(d => {
+            csv += `"${d.servidor}","${d.cargo}","${d.qtde_diarias}","${d.data_partida}","${d.data_retorno}","${d.valor_diarias}","${d.valor_adiantamento}","${d.cidade_destino}"\n`;
+        });
+        const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", "diarias_marilia.csv");
+        link.click();
+    }
+
+    function exportarXLSX() {
+        const data = tabela.rows({filter:'applied'}).data().toArray();
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Diárias");
+        XLSX.writeFile(wb, "diarias_marilia.xlsx");
+    }
+
+    function exportarJSON() {
+        const data = tabela.rows({filter:'applied'}).data().toArray();
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "diarias_marilia.json";
+        link.click();
+    }
+
+    function exportarXML() {
+        let xml = '<?xml version="1.0" encoding="UTF-8"?><relatorio>';
+        tabela.rows({filter:'applied'}).data().each(d => {
+            xml += `<registro><servidor>${d.servidor}</servidor><valor>${d.valor_diarias}</valor></registro>`;
+        });
+        xml += '</relatorio>';
+        const blob = new Blob([xml], {type: 'application/xml'});
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "diarias_marilia.xml";
+        link.click();
+    }
 </script>
 </body>
 </html>
