@@ -32,7 +32,7 @@
         legend.titulo-painel { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 0 10px; letter-spacing: 1px; }
         .badge-atualizacao { position: absolute; top: -12px; right: 20px; font-size: 11px; color: #065f46; background: #d1fae5; padding: 5px 12px; border-radius: 20px; font-weight: 700; border: 1px solid #a7f3d0; }
 
-        /* Grades de Layout - ORGANIZAÇÃO DOS FILTROS E EXPORTAÇÃO */
+        /* Grades de Layout */
         .filtro-linha-1 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
         .filtro-linha-2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .painel-exportacao .toolbar-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
@@ -40,6 +40,12 @@
         select, input, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; box-sizing: border-box; width: 100%; height: 42px;}
         button { background: #003b75; color: white; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
         .btn-acao { background: #0284c7 !important; }
+
+        /* --- NOVO: AUMENTANDO A FONTE DOS BOTÕES DE EXPORTAÇÃO --- */
+        .painel-exportacao .toolbar-row button {
+            font-size: 16px; /* Fonte maior */
+            padding: 10px 8px; /* Padding ligeiramente menor para garantir que não quebre a linha */
+        }
 
         /* Visualização */
         .dt-custom-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
@@ -57,64 +63,29 @@
         .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         .status-ativo { background: #d1fae5; color: #065f46; }
         .status-desligado { background: #fee2e2; color: #991b1b; }
-        
-        /* ATUALIZADO: Removida a jornada, alterado para 3 colunas em vez de 4 */
         .card-body { display: grid; grid-template-columns: repeat(3, 1fr); padding: 20px 25px; gap: 15px; }
         .info-label { font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; }
         .info-valor { font-size: 14px; font-weight: 700; color: #1e293b; }
 
         /* Paginação Responsiva */
         .dt-bottom-controls { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: white; 
-            padding: 15px 20px; 
-            border-radius: 12px; 
-            border: 1px solid #e2e8f0; 
-            margin-top: 10px; 
-            margin-bottom: 25px; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
-            flex-wrap: wrap; 
-            gap: 15px; 
-            box-sizing: border-box; 
-            width: 100%; 
+            display: flex; justify-content: space-between; align-items: center; background: white; 
+            padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 10px; 
+            margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); flex-wrap: wrap; 
+            gap: 15px; box-sizing: border-box; width: 100%; 
         }
         .dataTables_wrapper .dataTables_info { padding-top: 0 !important; font-size: 13px; color: #475569; font-weight: 500; }
-        
-        .dataTables_wrapper .dataTables_paginate { 
-            padding-top: 0 !important; 
-            margin-top: 0 !important; 
-            display: flex; 
-            flex-wrap: wrap; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 4px; 
-        }
-        .dataTables_wrapper .dataTables_paginate span {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 4px;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button { 
-            border-radius: 6px !important; 
-            padding: 6px 12px !important; 
-            border: 1px solid transparent !important; 
-            font-size: 13px; 
-            font-weight: 600; 
-            color: #475569 !important; 
-            margin: 0 !important; 
-            background: transparent !important; 
-            height: auto; 
-        }
+        .dataTables_wrapper .dataTables_paginate { padding-top: 0 !important; margin-top: 0 !important; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px; }
+        .dataTables_wrapper .dataTables_paginate span { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button { border-radius: 6px !important; padding: 6px 12px !important; border: 1px solid transparent !important; font-size: 13px; font-weight: 600; color: #475569 !important; margin: 0 !important; background: transparent !important; height: auto; }
         .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #003b75 !important; color: white !important; border: 1px solid #003b75 !important; }
         .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; }
 
+        /* Responsividade */
         @media (max-width: 850px) {
             .card-body { grid-template-columns: 1fr 1fr; }
-            .painel-exportacao .toolbar-row button { font-size: 11px; padding: 10px 4px; gap: 4px; }
+            /* Fonte otimizada para mobile para garantir os botões na mesma linha */
+            .painel-exportacao .toolbar-row button { font-size: 13px; padding: 10px 4px; gap: 4px; }
             .dt-bottom-controls { flex-direction: column; justify-content: center; text-align: center; padding: 15px 10px; }
             .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 4px 8px !important; font-size: 12px; }
         }
@@ -311,7 +282,6 @@
                 data: null,
                 render: function(data) {
                     const statusClass = data.situacao === 'Ativo' ? 'status-ativo' : 'status-desligado';
-                    // ATUALIZADO: HTML do card sem a jornada
                     return `
                         <div class="card-estagiario">
                             <div class="card-header">
@@ -345,7 +315,6 @@
             const ws = XLSX.utils.json_to_sheet(filtrados);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Dados");
-            // Se certifique de ter a função removerAcentos e gerarNomeArquivoBase disponíveis no código ou altere o nome aqui
             let nomeFinal = "relatorio_estagiarios";
             XLSX.writeFile(wb, `${nomeFinal}.xlsx`);
         } else {
