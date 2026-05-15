@@ -11,7 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        /* CSS PADRONIZADO - IDÊNTICO AO DE FUNCIONÁRIOS/ESTAGIÁRIOS */
+        /* CSS PADRONIZADO E AJUSTADO PARA LAYOUT DE DIÁRIAS */
         body { font-family: 'Inter', Arial, sans-serif; margin: 0; background: #f1f5f9; color: #1e293b; overflow-x: hidden;}
         #wrapper { padding-bottom: 40px; } 
 
@@ -30,6 +30,7 @@
         legend.titulo-painel { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 0 10px; letter-spacing: 1px; }
         .badge-atualizacao { position: absolute; top: -12px; right: 20px; font-size: 11px; color: #065f46; background: #d1fae5; padding: 5px 12px; border-radius: 20px; font-weight: 700; border: 1px solid #a7f3d0; }
 
+        /* AJUSTE DO GRID PARA 3 COLUNAS (RESOLVE O PROBLEMA DO IFRAME) */
         .filtro-linha-1 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
         .filtro-linha-2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .toolbar-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
@@ -39,7 +40,6 @@
         button:hover { background: #00274d; transform: translateY(-1px); }
         .btn-acao { background: #0284c7 !important; }
 
-        /* Painel Totais (Exclusivo Diárias) */
         .painel-totais { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .total-bloco { background: white; border: 1px solid #e2e8f0; border-left: 5px solid #003b75; border-radius: 12px; padding: 16px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; }
         .total-bloco.destaque { border-left: 5px solid #0284c7; }
@@ -196,7 +196,7 @@
     let listaGabinetes = [];
     let carimboCompleto = "";
 
-    // INFRAESTRUTURA
+    // FUNÇÕES DE INFRAESTRUTURA
     function enviarAlturaIframe() {
         setTimeout(() => {
             const wrapper = document.getElementById('wrapper');
@@ -219,13 +219,10 @@
         let partes = ["diarias"];
         const serv = $('#filtroServidor').val();
         const gab = $('#filtroGabinete').val();
-        
         if (serv) partes.push(serv.replace(/\s+/g, '_'));
         else if (gab) partes.push(gab.replace(/\s+/g, '_'));
-        
         if ($('#filtroMes').val()) partes.push($('#filtroMes option:selected').text());
         if ($('#filtroAno').val()) partes.push($('#filtroAno').val());
-        
         return removerAcentos(partes.join('_')).replace(/[^a-zA-Z0-9_]/g, '');
     }
 
@@ -315,22 +312,19 @@
             const mS = !serv || d.servidor === serv;
             const mM = !mes || mD === mes;
             const mA = !ano || aD === ano;
-            
             let mG = true;
             if (gab) {
                 const gN = removerAcentos(gab).toLowerCase();
                 mG = removerAcentos(d.servidor).toLowerCase().includes(gN) || removerAcentos(d.cargo).toLowerCase().includes(gN);
             }
-
             let mNome = true;
             if (nomeDigitado) {
                 mNome = removerAcentos(d.servidor).toLowerCase().includes(nomeDigitado);
             }
-
             return mS && mM && mA && mG && mNome;
         });
 
-        // Ordenar os resultados (Data da Partida mais recente primeiro)
+        // Ordenar: Mais recente primeiro
         res.sort((a, b) => {
             const dataA = (a.data_partida || "").split("/");
             const dataB = (b.data_partida || "").split("/");
@@ -343,10 +337,7 @@
     }
 
     function renderizar(dados) {
-        if (tabela) { 
-            tabela.destroy(); 
-            $('#comprimento-tabela').empty(); 
-        }
+        if (tabela) { tabela.destroy(); $('#comprimento-tabela').empty(); }
 
         tabela = $('#tabela').DataTable({
             data: dados,
@@ -383,32 +374,27 @@
                         </div>`;
                 }
             }],
-            initComplete: function() { 
-                $('.dataTables_length').appendTo('#comprimento-tabela');
-            },
+            initComplete: function() { $('.dataTables_length').appendTo('#comprimento-tabela'); },
             drawCallback: function() {
-                // Cálculo de Totais (Diárias e Adiantamentos)
+                // Cálculo de Totais
                 let api = this.api(), tD = 0, tA = 0;
                 const parseNum = (v) => parseFloat((v || "0").replace(/R\$\s?|[.]/g, '').replace(',', '.')) || 0;
-                
                 api.rows({ filter: 'applied' }).data().each(d => { 
                     tD += parseNum(d.valor_diarias); 
                     tA += parseNum(d.valor_adiantamento); 
                 });
-                
                 const fmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
                 $('#total-diarias').text(fmt.format(tD)); 
                 $('#total-adiantamentos').text(fmt.format(tA));
 
                 const totalRegistros = api.rows({ filter: 'applied' }).count();
                 $('#contagem-registros').html(`<b>${totalRegistros}</b> registros encontrados`);
-
                 enviarAlturaIframe();
             }
         });
     }
 
-    // EXPORTAÇÃO (VERSÃO MELHORADA)
+    // EXPORTAÇÃO
     function exportarCSV() {
         const data = tabela.rows({ filter: 'applied' }).data().toArray(); if(!data.length) return;
         let csv = "\ufeff" + Object.keys(data[0]).join(",") + "\n";
@@ -461,6 +447,7 @@
         aplicarFiltros(); 
     }
 
+    // EVENTOS
     $('#filtroNome').on('input', aplicarFiltros);
     $('#filtroGabinete').on('change', () => { preencherFiltros(true); aplicarFiltros(); });
     $('#filtroServidor, #filtroMes, #filtroAno').on('change', aplicarFiltros);
