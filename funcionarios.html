@@ -33,17 +33,14 @@
         button.btn-filtro:hover { background: #00274d; }
 
         /* FILTROS RESPONSIVOS */
-        .linha-1 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
-        .linha-2 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .painel-filtros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
+        .painel-filtros:last-child { margin-bottom: 0; }
         
         @media (max-width: 850px) {
-            .linha-1 { grid-template-columns: 1fr; }
-            .linha-2 { grid-template-columns: repeat(2, 1fr); }
-            .linha-2 button { grid-column: span 2; }
+            .painel-filtros { grid-template-columns: repeat(2, 1fr); } /* Vira 2 colunas se apertar muito */
         }
-        @media (max-width: 600px) {
-            .linha-2 { grid-template-columns: 1fr; }
-            .linha-2 button { grid-column: auto; }
+        @media (max-width: 500px) {
+            .painel-filtros { grid-template-columns: 1fr; } /* Vira 1 coluna no celular */
         }
 
         /* EXPORTAÇÃO RESPONSIVA E CARROSSEL */
@@ -144,18 +141,18 @@
             <legend class="titulo-painel">Filtros de Pesquisa</legend>
             <div id="badge-atualizacao" class="badge-atualizacao">⏳ Sincronizando...</div>
             
-            <div class="linha-1">
+            <div class="painel-filtros">
                 <input type="text" id="filtroNome" placeholder="Pesquisar por nome..." autocomplete="off">
                 <select id="filtroCargo"><option value="">Cargo (Todos)</option></select>
                 <select id="filtroLotacao"><option value="">Lotação (Todas)</option></select>
-            </div>
-            
-            <div class="linha-2">
                 <select id="filtroSituacao">
                     <option value="">Situação</option>
                     <option value="Ativo" selected>Ativos</option>
                     <option value="Desligado">Desligados</option>
                 </select>
+            </div>
+            
+            <div class="painel-filtros">
                 <select id="filtroTipoData">
                     <option value="">Filtrar período por...</option>
                     <option value="admissao">Por Admissão</option>
