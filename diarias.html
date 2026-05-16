@@ -15,11 +15,14 @@
            1. ESTILOS GERAIS E BASE
            ========================================= */
         body { font-family: 'Inter', sans-serif; margin: 0; background: #f1f5f9; color: #1e293b; }
-        #wrapper { padding: 15px; }
+        #wrapper { padding: 15px; padding-bottom: 40px; }
         
-        .topo { background: #003b75; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .topo h1 { margin: 0; font-size: 1.5rem; font-weight: 800; }
-        .brasao { height: 50px; }
+        /* CABEÇALHO PADRONIZADO */
+        .topo { background: #003b75; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); gap: 20px; }
+        .topo h1 { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; }
+        .logo-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .brasao { height: 50px; width: auto; }
+        .texto-camara { font-size: 9px; color: #cbd5e1; letter-spacing: 2px; font-weight: 500; text-transform: uppercase; white-space: nowrap; margin-top: 2px; }
         
         .painel { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 15px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .painel-titulo { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 0 10px; }
@@ -81,16 +84,29 @@
         .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #003b75 !important; color: white !important; border-color: #003b75 !important; }
         .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current):not(.disabled) { background: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #003b75 !important; }
         
-        #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; }
-        .spinner { border: 4px solid #e2e8f0; border-top: 4px solid #003b75; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: #003b75; font-weight: bold; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #003b75; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* CABEÇALHO IMPRESSÃO */
+        #cabecalho-impressao { display: none; }
+
+        /* =========================================
+           RESPONSIVIDADE CELULAR E IFRAME
+           ========================================= */
         @media (max-width: 600px) {
             .topo { flex-direction: column; gap: 10px; text-align: center; }
             .card-body { grid-template-columns: 1fr 1fr; }
             .card-footer { grid-template-columns: 1fr; }
             .dt-header-flex, .controles-datatable { flex-direction: column; text-align: center; }
             .dataTables_wrapper .dataTables_paginate { flex-wrap: wrap; justify-content: center; margin-top: 10px !important;}
+        }
+
+        @media print {
+            .topo, fieldset, .dt-bottom-controls, .totais-container { display: none !important; }
+            #cabecalho-impressao { display: flex !important; align-items: center; gap: 20px; border-bottom: 2px solid #003b75; padding-bottom: 10px; margin-bottom: 20px; }
+            .card-diaria { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; margin-bottom: 15px; }
+            #main-content { display: block !important; margin: 0; }
         }
     </style>
 </head>
@@ -100,9 +116,17 @@
         <h1>Diárias e Adiantamentos</h1>
         <div class="logo-container">
             <img src="Brasão_de_Marília.png" alt="Brasão de Marília" class="brasao">
-            <span class="texto-camara">Câmara Municipal de Marília</span>
+            <span class="texto-camara">Câmara Municipal</span>
         </div>
     </header>
+
+    <div id="cabecalho-impressao">
+        <img src="Brasão_de_Marília.png" height="70" alt="Brasão Câmara">
+        <div>
+            <h1 style="margin:0; color:#003b75;">Diárias e Adiantamentos</h1>
+            <p style="margin:0; font-weight:bold;">Câmara Municipal de Marília</p>
+        </div>
+    </div>
 
     <div id="loader"><div class="spinner"></div><span>Sincronizando dados...</span></div>
 
@@ -110,10 +134,12 @@
         <fieldset class="painel">
             <legend class="painel-titulo">Filtros de Pesquisa</legend>
             <div id="sync-info" class="badge-sinc">Aguardando...</div>
-            <div class="painel-filtros">
+            <div class="painel-filtros" style="margin-bottom: 10px;">
                 <input type="text" id="buscaNome" placeholder="Pesquisar por nome...">
                 <select id="selGabinete"><option value="">Gabinete (Todos)</option></select>
                 <select id="selServidor"><option value="">Servidor (Todos)</option></select>
+            </div>
+            <div class="painel-filtros">
                 <select id="selMes">
                     <option value="">Mês (Todos)</option>
                     <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
@@ -133,7 +159,7 @@
                 <button onclick="exportarExcel()">⬇️ Excel</button>
                 <button onclick="exportarJSON()">⬇️ JSON</button>
                 <button onclick="exportarXML()">⬇️ XML</button>
-                <button class="btn-acao" onclick="window.print()">🖨️ Imprimir</button>
+                <button class="btn-acao" onclick="imprimirSeguro()">🖨️ Imprimir</button>
                 <button class="btn-acao" onclick="carregarDados()">🔄 Atualizar</button>
             </div>
         </fieldset>
@@ -263,13 +289,14 @@
     }
 
     function formatarMoeda(v) { return (!v || v === "0") ? "R$ 0,00" : (v.includes("R$") ? v : `R$ ${v}`); }
+    
     function ajustarIframe() { window.parent.postMessage({ tipo: 'ajustarAltura', valor: document.getElementById('wrapper').offsetHeight + 40 }, '*'); }
     
     function resetarFiltros() { 
         $('#buscaNome').val(''); 
         $('select').not('#selAno').val(''); 
         
-        // Mantém o ano mais recente após a limpeza em vez de jogar para "Todos"
+        // Mantém o ano mais recente fixado após a limpeza
         const anoMaisRecente = $('#selAno option:eq(1)').val();
         $('#selAno').val(anoMaisRecente || '');
         
@@ -290,4 +317,21 @@
         return partes.join('_').normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
     }
     
-    function exportarExcel() { const ws =
+    function exportarExcel() { const ws = XLSX.utils.json_to_sheet(grid.rows({filter:'applied'}).data().toArray()); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Diarias"); XLSX.writeFile(wb, gerarNomeArquivoBase() + ".xlsx"); }
+    function exportarCSV() { let csv = "\ufeffServidor,Cargo,Diarias,Partida,Retorno,Valor,Adiantamento\n"; grid.rows({filter:'applied'}).data().each(d => { csv += `"${d.servidor}","${d.cargo}","${d.qtde_diarias}","${d.data_partida}","${d.data_retorno}","${d.valor_diarias}","${d.valor_adiantamento}"\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = gerarNomeArquivoBase() + ".csv"; link.click(); }
+    function exportarJSON() { const blob = new Blob([JSON.stringify(grid.rows({filter:'applied'}).data().toArray(), null, 2)], {type: 'application/json'}); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = gerarNomeArquivoBase() + ".json"; link.click(); }
+    function exportarXML() { let xml = '<?xml version="1.0" encoding="UTF-8"?><relatorio>'; grid.rows({filter:'applied'}).data().each(d => { xml += `<registro><servidor>${d.servidor}</servidor><valor>${d.valor_diarias}</valor></registro>`; }); xml += '</relatorio>'; const blob = new Blob([xml], { type: 'application/xml' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = gerarNomeArquivoBase() + ".xml"; link.click(); }
+
+    function imprimirSeguro() {
+        if(!grid) return;
+        const len = grid.page.len();
+        grid.page.len(-1).draw('page'); 
+        setTimeout(() => { window.print(); grid.page.len(len).draw('page'); }, 500);
+    }
+
+    $('#buscaNome').on('input', filtrar);
+    $('select').on('change', filtrar);
+    window.onload = carregarDados;
+</script>
+</body>
+</html>
