@@ -73,7 +73,7 @@
         .item-valor { font-size: 13px; font-weight: 700; color: #1e293b;}
         
         /* RODAPÉ DO CARD */
-        .card-footer { background: #f8fafc; padding: 12px 15px; border-top: 1px solid #edf2f7; font-size: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;}
+        .card-footer { background: #f8fafc; padding: 12px 15px; border-top: 1px solid #edf2f7; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;}
         .quadro-full { grid-column: 1 / -1; border-top: 1px dashed #e2e8f0; padding-top: 10px; margin-top: 2px;}
 
         /* PAGINAÇÃO */
@@ -92,7 +92,7 @@
         #cabecalho-impressao { display: none; }
 
         /* =========================================
-           RESPONSIVIDADE CELULAR E IFRAME
+           RESPONSIVIDADE CELULAR E IMPRESSÃO
            ========================================= */
         @media (max-width: 600px) {
             .topo { flex-direction: column; gap: 10px; text-align: center; }
@@ -103,8 +103,17 @@
         }
 
         @media print {
-            .topo, fieldset, .dt-bottom-controls, .totais-container { display: none !important; }
+            /* Oculta filtros, botões e paginação, mas MANTÉM os totais visíveis */
+            .topo, fieldset, .dt-bottom-controls { display: none !important; }
+            
+            /* Ativa o cabeçalho limpo oficial para o papel */
             #cabecalho-impressao { display: flex !important; align-items: center; gap: 20px; border-bottom: 2px solid #003b75; padding-bottom: 10px; margin-bottom: 20px; }
+            
+            /* Força as duas caixas de soma a aparecerem na impressão */
+            .totais-container { display: flex !important; flex-direction: row !important; gap: 10px !important; margin-bottom: 20px !important; page-break-inside: avoid; }
+            .total-box { border: 1px solid #cbd5e1 !important; border-left: 4px solid #003b75 !important; background: #ffffff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            
+            /* Evita que um card quebre no meio da folha */
             .card-diaria { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; margin-bottom: 15px; }
             #main-content { display: block !important; margin: 0; }
         }
@@ -116,7 +125,7 @@
         <h1>Diárias e Adiantamentos</h1>
         <div class="logo-container">
             <img src="Brasão_de_Marília.png" alt="Brasão de Marília" class="brasao">
-            <span class="texto-camara">Câmara Municipal de Marília</span>
+            <span class="texto-camara">Câmara Municipal</span>
         </div>
     </header>
 
@@ -136,18 +145,18 @@
             <div id="sync-info" class="badge-sinc">Aguardando...</div>
             <div class="painel-filtros" style="margin-bottom: 10px;">
                 <input type="text" id="buscaNome" placeholder="Pesquisar por nome...">
-                <select id="selGabinete"><option value="">Gabinete</option></select>
-                <select id="selServidor"><option value="">Servidor</option></select>
+                <select id="selGabinete"><option value="">Gabinete (Todos)</option></select>
+                <select id="selServidor"><option value="">Servidor (Todos)</option></select>
             </div>
             <div class="painel-filtros">
                 <select id="selMes">
-                    <option value="">Mês</option>
+                    <option value="">Mês (Todos)</option>
                     <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
                     <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
                     <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
                     <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                 </select>
-                <select id="selAno"><option value="">Ano</option></select>
+                <select id="selAno"><option value="">Ano (Todos)</option></select>
                 <button class="btn-filtro" onclick="resetarFiltros()">Limpar Filtros</button>
             </div>
         </fieldset>
@@ -165,8 +174,8 @@
         </fieldset>
 
         <div class="totais-container">
-            <div class="total-box"><label>Soma das Diárias Filtradas</label><span id="txt-total-diarias">R$ 0,00</span></div>
-            <div class="total-box" style="border-left-color:#0284c7;"><label>Soma dos Adiantamentos Filtrados</label><span id="txt-total-adiantamentos">R$ 0,00</span></div>
+            <div class="total-box"><label>Soma das Diárias</label><span id="txt-total-diarias">R$ 0,00</span></div>
+            <div class="total-box" style="border-left-color:#0284c7;"><label>Soma dos Adiantamentos</label><span id="txt-total-adiantamentos">R$ 0,00</span></div>
         </div>
 
         <fieldset class="painel" id="painel-visualizacao" style="padding: 10px 15px;">
@@ -211,17 +220,16 @@
     }
 
     function popularSelects() {
-        $('#selGabinete').html('<option value="">Gabinete</option>');
+        $('#selGabinete').html('<option value="">Gabinete (Todos)</option>');
         [...new Set(listaGabinetes)].sort().forEach(g => $('#selGabinete').append(new Option(g, g)));
         
-        $('#selServidor').html('<option value="">Servidor</option>');
+        $('#selServidor').html('<option value="">Servidor (Todos)</option>');
         [...new Set(dadosBrutos.map(d => d.servidor))].sort().forEach(s => $('#selServidor').append(new Option(s, s)));
         
         const anos = [...new Set(dadosBrutos.map(d => d.data_partida.split('/')[2]))].filter(a => a).sort((a,b)=>b-a);
-        $('#selAno').html('<option value="">Ano</option>');
+        $('#selAno').html('<option value="">Ano (Todos)</option>');
         anos.forEach(a => $('#selAno').append(new Option(a, a)));
 
-        // MÁGICA: Seleciona o ano mais recente por padrão
         if(anos.length > 0) {
             $('#selAno').val(anos[0]);
         }
@@ -289,17 +297,13 @@
     }
 
     function formatarMoeda(v) { return (!v || v === "0") ? "R$ 0,00" : (v.includes("R$") ? v : `R$ ${v}`); }
-    
     function ajustarIframe() { window.parent.postMessage({ tipo: 'ajustarAltura', valor: document.getElementById('wrapper').offsetHeight + 40 }, '*'); }
     
     function resetarFiltros() { 
         $('#buscaNome').val(''); 
         $('select').not('#selAno').val(''); 
-        
-        // Mantém o ano mais recente fixado após a limpeza
         const anoMaisRecente = $('#selAno option:eq(1)').val();
         $('#selAno').val(anoMaisRecente || '');
-        
         filtrar(); 
     }
     
@@ -307,20 +311,17 @@
         let partes = ["diarias"];
         const serv = $('#selServidor').val();
         const gab = $('#selGabinete').val();
-        
         if (serv) partes.push(serv.replace(/\s+/g, '_'));
         else if (gab) partes.push(gab.replace(/\s+/g, '_'));
-        
         if ($('#selMes').val()) partes.push($('#selMes option:selected').text());
         if ($('#selAno').val()) partes.push($('#selAno').val());
-        
         return partes.join('_').normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
     }
     
     function exportarExcel() { const ws = XLSX.utils.json_to_sheet(grid.rows({filter:'applied'}).data().toArray()); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Diarias"); XLSX.writeFile(wb, gerarNomeArquivoBase() + ".xlsx"); }
     function exportarCSV() { let csv = "\ufeffServidor,Cargo,Diarias,Partida,Retorno,Valor,Adiantamento\n"; grid.rows({filter:'applied'}).data().each(d => { csv += `"${d.servidor}","${d.cargo}","${d.qtde_diarias}","${d.data_partida}","${d.data_retorno}","${d.valor_diarias}","${d.valor_adiantamento}"\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = gerarNomeArquivoBase() + ".csv"; link.click(); }
     function exportarJSON() { const blob = new Blob([JSON.stringify(grid.rows({filter:'applied'}).data().toArray(), null, 2)], {type: 'application/json'}); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = gerarNomeArquivoBase() + ".json"; link.click(); }
-    function exportarXML() { let xml = '<?xml version="1.0" encoding="UTF-8"?><relatorio>'; grid.rows({filter:'applied'}).data().each(d => { xml += `<registro><servidor>${d.servidor}</servidor><valor>${d.valor_diarias}</valor></registro>`; }); xml += '</relatorio>'; const blob = new Blob([xml], { type: 'application/xml' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = gerarNomeArquivoBase() + ".xml"; link.click(); }
+    function exportarXML() { let xml = '<?xml version="1.0" encoding="UTF-8"?><relatorio>'; grid.rows({filter:'applied'}).data().each(d => { xml += `<registro><servidor>${d.servidor}</servidor><valor>${d.valor_diarias}</valor></registro>`; }); xml += '</relatorio>'; const blob = new Blob([xml], { type: 'application/xml' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = GEAR_NAME_BASE() + ".xml"; link.click(); }
 
     function imprimirSeguro() {
         if(!grid) return;
