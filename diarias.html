@@ -237,12 +237,27 @@
 
     function filtrar() {
         const n = $('#buscaNome').val().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const g = $('#selGabinete').val(), s = $('#selServidor').val(), m = $('#selMes').val(), a = $('#selAno').val();
+        
+        // Removemos acentos e forçamos maiúsculas no filtro do gabinete selecionado
+        const g = $('#selGabinete').val() ? $('#selGabinete').val().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
+        
+        const s = $('#selServidor').val(), m = $('#selMes').val(), a = $('#selAno').val();
+        
         const res = dadosBrutos.filter(d => {
             const dp = d.data_partida.split('/');
             const sn = d.servidor.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            return (!n || sn.includes(n)) && (!g || d.servidor.includes(g) || (d.cargo && d.cargo.includes(g))) && (!s || d.servidor === s) && (!m || dp[1] === m) && (!a || dp[2] === a);
+            
+            // Tratamos o cargo e o servidor da tabela para a mesma regra (sem acentos e maiúsculas)
+            const cargoTratado = d.cargo ? d.cargo.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
+            const servidorTratado = d.servidor ? d.servidor.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
+
+            return (!n || sn.includes(n)) && 
+                   (!g || servidorTratado.includes(g) || cargoTratado.includes(g)) && 
+                   (!s || d.servidor === s) && 
+                   (!m || dp[1] === m) && 
+                   (!a || dp[2] === a);
         });
+        
         renderizarGrid(res);
     }
 
