@@ -33,8 +33,18 @@
         button.btn-filtro:hover { background: #00274d; }
 
         /* FILTROS RESPONSIVOS */
-        .painel-filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 10px; }
-        .painel-filtros:last-child { margin-bottom: 0; }
+        .linha-1 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+        .linha-2 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        
+        @media (max-width: 850px) {
+            .linha-1 { grid-template-columns: 1fr; }
+            .linha-2 { grid-template-columns: repeat(2, 1fr); }
+            .linha-2 button { grid-column: span 2; }
+        }
+        @media (max-width: 600px) {
+            .linha-2 { grid-template-columns: 1fr; }
+            .linha-2 button { grid-column: auto; }
+        }
 
         /* EXPORTAÇÃO RESPONSIVA E CARROSSEL */
         .painel-exportacao { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
@@ -134,13 +144,13 @@
             <legend class="titulo-painel">Filtros de Pesquisa</legend>
             <div id="badge-atualizacao" class="badge-atualizacao">⏳ Sincronizando...</div>
             
-            <div class="painel-filtros">
+            <div class="linha-1">
                 <input type="text" id="filtroNome" placeholder="Pesquisar por nome..." autocomplete="off">
                 <select id="filtroCargo"><option value="">Cargo (Todos)</option></select>
                 <select id="filtroLotacao"><option value="">Lotação (Todas)</option></select>
             </div>
             
-            <div class="painel-filtros">
+            <div class="linha-2">
                 <select id="filtroSituacao">
                     <option value="">Situação</option>
                     <option value="Ativo" selected>Ativos</option>
