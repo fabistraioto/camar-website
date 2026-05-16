@@ -37,8 +37,12 @@
         .total-box label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; }
         .total-box span { font-size: 18px; font-weight: 800; }
 
-        .dt-header-flex { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
+        .dt-header-flex { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; gap: 15px; flex-wrap: wrap;}
         .badge-count { background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; border: 1px solid #bae6fd; }
+
+        /* CORREÇÃO DO MENU "EXIBIR X RESULTADOS" */
+        .dataTables_length label { display: flex !important; align-items: center; gap: 8px; font-size: 13px; color: #475569; font-weight: 500; margin: 0; white-space: nowrap; }
+        .dataTables_length select { width: auto !important; height: auto !important; padding: 4px 10px !important; display: inline-block; }
 
         /* TABELA BASE E CARDS */
         #tabela-base thead { display: none !important; }
@@ -71,7 +75,6 @@
            3. TELA MÉDIA (IFRAME / TABLET)
            ========================================= */
         @media (max-width: 950px) {
-            /* Mantém os filtros em 3 colunas, mas divide os botões em 2 linhas de 3 */
             .grid-botoes { grid-template-columns: repeat(3, 1fr); }
         }
 
@@ -80,20 +83,12 @@
            ========================================= */
         @media (max-width: 600px) {
             .topo { flex-direction: column; text-align: center; gap: 10px; }
-            
-            /* Filtros um embaixo do outro */
             .grid-filtros { grid-template-columns: 1fr; }
-            
-            /* Botões em 2 colunas parecendo controle remoto */
             .grid-botoes { grid-template-columns: repeat(2, 1fr); }
-            
-            /* Empilha os totais financeiros */
             .totais-container { flex-direction: column; }
-            
-            /* Ajusta os cards e cabeçalhos para não quebrar no celular */
             .card-body { grid-template-columns: 1fr 1fr; }
             .card-footer { grid-template-columns: 1fr; }
-            .dt-header-flex, .controles-datatable { flex-direction: column; gap: 10px; text-align: center; }
+            .dt-header-flex, .controles-datatable { flex-direction: column; text-align: center; }
         }
     </style>
 </head>
