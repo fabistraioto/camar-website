@@ -28,8 +28,12 @@
             font-size: 14px;
         }
 
+        /* AQUI: Botões padronizados com o mesmo tamanho */
         .filtro-grupo select {
-            padding: 8px 16px;
+            width: 200px;         /* Largura fixa para todos */
+            height: 40px;         /* Altura fixa para todos */
+            padding: 0 12px;
+            box-sizing: border-box; /* Garante que o tamanho não passe dos 200px */
             border: 1px solid #d1d5db;
             border-radius: 6px;
             font-size: 14px;
@@ -198,10 +202,7 @@
 
                 dadosOriginais = dadosLimpos.filter(linha => linha['mes'] && linha['ano']);
                 
-                // Cria os botões e já define o ano atual selecionado por padrão
                 popularFiltros(dadosOriginais);
-                
-                // Manda aplicar o filtro inicial automático baseado no ano selecionado acima
                 aplicarFiltros();
             }
         });
@@ -227,12 +228,10 @@
                 selectMes.appendChild(option);
             });
 
-            // AQUI ESTÁ A NOVIDADE: Força o seletor a marcar o ano atual automaticamente ao carregar
             const anoAtualDoSistema = new Date().getFullYear().toString();
             if (anosUnicos.includes(anoAtualDoSistema)) {
                 selectAno.value = anoAtualDoSistema;
             } else if (anosUnicos.length > 0) {
-                // Caso o ano atual não esteja na planilha (ex: virada de ano), pega o mais recente da lista
                 selectAno.value = anosUnicos[0]; 
             }
 
