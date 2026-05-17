@@ -10,7 +10,6 @@
     <style>
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f3f4f6; color: #1f2937; }
         
-        /* Barra superior de filtros */
         .painel-filtros {
             background: #ffffff;
             padding: 15px 20px;
@@ -47,7 +46,6 @@
 
         .filtro-grupo select:focus { border-color: #5470C6; }
 
-        /* NOVA BARRA: Botões de Exportação */
         .painel-exportacao {
             max-width: 1200px;
             margin: 15px auto 0 auto;
@@ -84,11 +82,9 @@
             border-color: #9ca3af;
         }
         
-        /* Destaque para o Excel e CSV, que são os mais usados */
         .btn-export.excel:hover { border-color: #16a34a; color: #16a34a; }
         .btn-export.csv:hover { border-color: #2563eb; color: #2563eb; }
 
-        /* CSS Grid para manter 5 colunas iguais */
         .container-cards {
             max-width: 1200px;
             margin: 15px auto 10px auto;
@@ -149,7 +145,6 @@
         .perc-pago      { background-color: rgba(250, 200, 88, 0.25); color: #92400e; } 
         .perc-resultado { background-color: rgba(238, 102, 102, 0.15); color: #991b1b; }
 
-        /* Área do Gráfico */
         .container-grafico {
             max-width: 1200px;
             margin: 10px auto 20px auto;
@@ -245,7 +240,7 @@
         const myChart = echarts.init(document.getElementById('meuGrafico'));
         
         let dadosOriginais = [];
-        let dadosVisiveis = []; // Nova variável: guarda os dados atualmente filtrados na tela
+        let dadosVisiveis = [];
 
         Papa.parse(csvUrl, {
             download: true,
@@ -324,7 +319,7 @@
                 dadosFiltrados = dadosFiltrados.filter(linha => linha.mes.toUpperCase() === mesSelecionado.toUpperCase());
             }
 
-            dadosVisiveis = dadosFiltrados; // Salva o que está na tela para o download usar
+            dadosVisiveis = dadosFiltrados; 
             atualizarPainel(dadosFiltrados, anoSelecionado, mesSelecionado);
         }
 
@@ -422,7 +417,25 @@
            SISTEMA DE EXPORTAÇÃO DE DADOS ABERTOS (OPEN DATA)
            ========================================================================= */
 
-        // Função que prepara os dados visualmente bonitos (números puros para análise)
+        // Função que gera o nome do arquivo de forma inteligente e dinâmica
+        function gerarNomeArquivoBase() {
+            const ano = document.getElementById('filtroAno').value;
+            const mes = document.getElementById('filtroMes').value;
+            let nome = 'orcamento_cmm'; // Começa com cmm (Câmara Municipal de Marília)
+
+            if (ano !== 'Todos') {
+                nome += '_' + ano;
+            } else {
+                nome += '_todos_anos';
+            }
+
+            if (mes !== 'Todos') {
+                nome += '_' + mes.toLowerCase();
+            }
+
+            return nome;
+        }
+
         function prepararDadosExportacao() {
             return dadosVisiveis.map(linha => ({
                 "Ano": linha.ano,
@@ -435,7 +448,6 @@
             }));
         }
 
-        // Helper para baixar os arquivos dinamicamente
         function criarDownload(conteudo, nomeArquivo, tipoMime) {
             const blob = new Blob([conteudo], { type: tipoMime });
             const url = URL.createObjectURL(blob);
@@ -450,8 +462,9 @@
 
         function exportarCSV() {
             const dadosTratados = prepararDadosExportacao();
-            const csv = Papa.unparse(dadosTratados, { delimiter: ";" }); // Padrão Brasil
-            criarDownload("\uFEFF" + csv, "orcamento_marilia.csv", "text/csv;charset=utf-8;");
+            const csv = Papa.unparse(dadosTratados, { delimiter: ";" });
+            const nomeArquivo = gerarNomeArquivoBase() + ".csv";
+            criarDownload("\uFEFF" + csv, nomeArquivo, "text/csv;charset=utf-8;");
         }
 
         function exportarXLSX() {
@@ -459,13 +472,15 @@
             const ws = XLSX.utils.json_to_sheet(dadosTratados);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Orçamento");
-            XLSX.writeFile(wb, "orcamento_marilia.xlsx");
+            const nomeArquivo = gerarNomeArquivoBase() + ".xlsx";
+            XLSX.writeFile(wb, nomeArquivo);
         }
 
         function exportarJSON() {
             const dadosTratados = prepararDadosExportacao();
             const json = JSON.stringify(dadosTratados, null, 2);
-            criarDownload(json, "orcamento_marilia.json", "application/json");
+            const nomeArquivo = gerarNomeArquivoBase() + ".json";
+            criarDownload(json, nomeArquivo, "application/json");
         }
 
         function exportarXML() {
@@ -474,14 +489,14 @@
             dadosTratados.forEach(linha => {
                 xml += '  <registro>\n';
                 for (let key in linha) {
-                    // Remove espaços e parênteses do nome das chaves XML
                     let chaveXml = key.replace(/[\s\(\)\$]/g, "").toLowerCase();
                     xml += `    <${chaveXml}>${linha[key]}</${chaveXml}>\n`;
                 }
                 xml += '  </registro>\n';
             });
             xml += '</orcamento>';
-            criarDownload(xml, "orcamento_marilia.xml", "application/xml");
+            const nomeArquivo = gerarNomeArquivoBase() + ".xml";
+            criarDownload(xml, nomeArquivo, "application/xml");
         }
     </script>
 </body>
