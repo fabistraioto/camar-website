@@ -208,7 +208,7 @@
             <span class="card-perc perc-pago" id="percPago">0%</span>
         </div>
         <div class="card resultado">
-            <div class="card-titulo">Saldo Orçamentário</div>
+            <div class="card-titulo">Saldo Orçamentário Disponível</div>
             <div class="card-valor" id="kpiResultado">R$ 0,00</div>
             <span class="card-perc perc-resultado" id="percResultado">0%</span>
         </div>
@@ -398,7 +398,7 @@
                 grid: { top: '12%', left: '3%', right: '4%', bottom: '15%', containLabel: true },
                 xAxis: { type: 'category', data: eixoX, axisLabel: { rotate: 45 } },
                 yAxis: { type: 'value', axisLabel: { formatter: (value) => { if (value >= 1000000) return (value / 1000000) + 'M'; if (value >= 1000) return (value / 1000) + 'k'; return value; } } },
-                dataZoom: [{ type: 'slider', show: eixoX.length > 6, start: 0, end: 100, bottom: 30, height: 20 }],
+                dataZoom: [{ type: 'slider', show: eixoX.length > 1, start: 0, end: 100, bottom: 30, height: 20 }],
                 series: [
                     { name: 'Duodécimo', type: 'line', smooth: true, data: serieDuodecimo, itemStyle: { color: '#000000' } },
                     { name: 'Empenhado', type: 'bar', data: serieEmpenhado, itemStyle: { color: '#5470C6' } },
