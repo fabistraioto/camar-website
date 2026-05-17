@@ -24,16 +24,15 @@
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
         };
 
-        // Função BLINDADA para limpar números no formato brasileiro e ignorar símbolos como "R$"
+        // Função para limpar números no formato brasileiro e ignorar símbolos como "R$"
         const limparNumeroBR = (valor) => {
             if (!valor) return 0;
             if (typeof valor === 'number') return valor;
             
-            // Remove TUDO que não for dígito numérico, vírgula ou sinal de menos
-            // Isso tira o "R$", espaços em branco e pontos de milhar
+            // Remove tudo que não for dígito numérico, vírgula ou sinal de menos
             let textoLimpo = String(valor).replace(/[^\d,-]/g, '');
             
-            // Troca a vírgula dos centavos por ponto (padrão que o JavaScript entende) e converte
+            // Troca a vírgula dos centavos por ponto e converte para número
             return parseFloat(textoLimpo.replace(',', '.')) || 0;
         };
 
@@ -42,14 +41,14 @@
             download: true,
             header: true,
             complete: function(results) {
-                // Filtra possíveis linhas vazias no final da planilha
-                const dados = results.data.filter(linha => linha['Mês'] && linha['Ano']);
+                // Filtra possíveis linhas vazias no final da planilha utilizando as colunas sem acento
+                const dados = results.data.filter(linha => linha['Mes'] && linha['Ano']);
 
-                // Extraindo os eixos e as séries (corrigido para aceitar "Líquidado" com acento)
-                const eixoX = dados.map(linha => linha['Mês'] + '/' + linha['Ano']);
-                const serieDuodecimo = dados.map(linha => limparNumeroBR(linha['Duodécimo']));
+                // Extraindo os eixos e as séries mapeados para os cabeçalhos sem acento
+                const eixoX = dados.map(linha => linha['Mes'] + '/' + linha['Ano']);
+                const serieDuodecimo = dados.map(linha => limparNumeroBR(linha['Duodecimo']));
                 const serieEmpenhado = dados.map(linha => limparNumeroBR(linha['Empenhado']));
-                const serieLiquidado = dados.map(linha => limparNumeroBR(linha['Líquidado'] || linha['Liquidado'])); 
+                const serieLiquidado = dados.map(linha => limparNumeroBR(linha['Liquidado'])); 
                 const seriePago = dados.map(linha => limparNumeroBR(linha['Pago']));
                 const serieResultado = dados.map(linha => limparNumeroBR(linha['Resultado']));
 
@@ -66,6 +65,7 @@
                         valueFormatter: (value) => formatarMoeda(value)
                     },
                     legend: {
+                        // Mantive os nomes legíveis com acento na legenda que o público final vê no gráfico
                         data: ['Duodécimo', 'Empenhado', 'Liquidado', 'Pago', 'Resultado'],
                         bottom: 0
                     },
