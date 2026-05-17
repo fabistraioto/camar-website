@@ -3,49 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Financeiro Interativo</title>
+    <title>Painel Orçamentário - Câmara Municipal de Marília</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f9fafb; }
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f3f4f6; color: #1f2937; }
         
-        /* Estilo da barra de filtros */
+        /* Estilo da barra superior de filtros */
         .painel-filtros {
             background: #ffffff;
             padding: 15px 20px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #e5e7eb;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            gap: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #e5e7eb;
         }
 
         .filtro-grupo label {
             font-weight: bold;
-            color: #374151;
+            color: #4b5563;
             margin-right: 8px;
             font-size: 14px;
         }
 
         .filtro-grupo select {
-            padding: 6px 12px;
+            padding: 8px 16px;
             border: 1px solid #d1d5db;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 14px;
             color: #1f2937;
             background-color: #fff;
             cursor: pointer;
             outline: none;
+            transition: border-color 0.2s;
         }
 
         .filtro-grupo select:focus {
             border-color: #5470C6;
-            box-shadow: 0 0 0 2px rgba(84, 112, 198, 0.2);
         }
 
-        #meuGrafico { width: 100%; height: 550px; background: #ffffff; }
+        /* Container dos Cards de Resumo */
+        .container-cards {
+            max-width: 1200px;
+            margin: 20px auto 10px auto;
+            padding: 0 15px;
+            display: table;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .card-coluna {
+            display: table-cell;
+            width: 20%;
+            padding: 0 8px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            border-left: 4px solid #9ca3af;
+        }
+
+        .card.duodecimo { border-left-color: #000000; }
+        .card.empenhado { border-left-color: #5470C6; }
+        .card.liquidado { border-left-color: #91CC75; }
+        .card.pago      { border-left-color: #FAC858; }
+        .card.resultado { border-left-color: #EE6666; }
+
+        .card-titulo {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #6b7280;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card-valor {
+            font-size: 15px;
+            font-weight: bold;
+            color: #111827;
+            white-space: nowrap;
+        }
+
+        /* Área do Gráfico */
+        .container-grafico {
+            max-width: 1200px;
+            margin: 10px auto 20px auto;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+
+        #meuGrafico { 
+            width: 100%; 
+            height: 520px; 
+            background: #ffffff; 
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            padding: 15px 0;
+        }
     </style>
 </head>
 <body>
@@ -65,7 +126,42 @@
         </div>
     </div>
 
-    <div id="meuGrafico"></div>
+    <div class="container-cards">
+        <div class="card-coluna">
+            <div class="card duodecimo">
+                <div class="card-titulo">Total Duodécimo</div>
+                <div class="card-valor" id="kpiDuodecimo">R$ 0,00</div>
+            </div>
+        </div>
+        <div class="card-coluna">
+            <div class="card empenhado">
+                <div class="card-titulo">Total Empenhado</div>
+                <div class="card-valor" id="kpiEmpenhado">R$ 0,00</div>
+            </div>
+        </div>
+        <div class="card-coluna">
+            <div class="card liquidado">
+                <div class="card-titulo">Total Liquidado</div>
+                <div class="card-valor" id="kpiLiquidado">R$ 0,00</div>
+            </div>
+        </div>
+        <div class="card-coluna">
+            <div class="card pago">
+                <div class="card-titulo">Total Pago</div>
+                <div class="card-valor" id="kpiPago">R$ 0,00</div>
+            </div>
+        </div>
+        <div class="card-coluna">
+            <div class="card resultado">
+                <div class="card-titulo">Saldo / Resultado</div>
+                <div class="card-valor" id="kpiResultado">R$ 0,00</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-grafico">
+        <div id="meuGrafico"></div>
+    </div>
 
     <script>
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSeiEl6tsmsHfu5qECIgTNFJtSLOHJWPUD334BxUtITfI-YKaWwH-vvVM5IBTO5WDypR_r3p_AjcxZL/pub?output=csv&t=' + new Date().getTime();
@@ -101,8 +197,12 @@
                 });
 
                 dadosOriginais = dadosLimpos.filter(linha => linha['mes'] && linha['ano']);
+                
+                // Cria os botões e já define o ano atual selecionado por padrão
                 popularFiltros(dadosOriginais);
-                renderizarGrafico(dadosOriginais);
+                
+                // Manda aplicar o filtro inicial automático baseado no ano selecionado acima
+                aplicarFiltros();
             }
         });
 
@@ -110,7 +210,6 @@
             const selectAno = document.getElementById('filtroAno');
             const selectMes = document.getElementById('filtroMes');
 
-            // AQUI ESTÁ A MÁGICA: Adicionamos o ".sort((a, b) => b - a)" para inverter a ordem dos anos!
             const anosUnicos = [...new Set(dados.map(item => item.ano))].sort((a, b) => b - a);
             const mesesUnicos = [...new Set(dados.map(item => item.mes.toUpperCase()))];
 
@@ -127,6 +226,15 @@
                 option.textContent = mes;
                 selectMes.appendChild(option);
             });
+
+            // AQUI ESTÁ A NOVIDADE: Força o seletor a marcar o ano atual automaticamente ao carregar
+            const anoAtualDoSistema = new Date().getFullYear().toString();
+            if (anosUnicos.includes(anoAtualDoSistema)) {
+                selectAno.value = anoAtualDoSistema;
+            } else if (anosUnicos.length > 0) {
+                // Caso o ano atual não esteja na planilha (ex: virada de ano), pega o mais recente da lista
+                selectAno.value = anosUnicos[0]; 
+            }
 
             selectAno.addEventListener('change', aplicarFiltros);
             selectMes.addEventListener('change', aplicarFiltros);
@@ -146,10 +254,39 @@
                 dadosFiltrados = dadosFiltrados.filter(linha => linha.mes.toUpperCase() === mesSelecionado.toUpperCase());
             }
 
-            renderizarGrafico(dadosFiltrados);
+            atualizarPainel(dadosFiltrados, anoSelecionado, mesSelecionado);
         }
 
-        function renderizarGrafico(dados) {
+        function atualizarPainel(dados, ano = 'Todos', mes = 'Todos') {
+            let totalDuodecimo = 0, totalEmpenhado = 0, totalLiquidado = 0, totalPago = 0, totalResultado = 0;
+
+            dados.forEach(linha => {
+                totalDuodecimo += limparNumeroBR(linha['duodecimo']);
+                totalEmpenhado += limparNumeroBR(linha['empenhado']);
+                totalLiquidado += limparNumeroBR(linha['liquidado']);
+                totalPago += limparNumeroBR(linha['pago']);
+                totalResultado += limparNumeroBR(linha['resultado']);
+            });
+
+            document.getElementById('kpiDuodecimo').textContent = formatarMoeda(totalDuodecimo);
+            document.getElementById('kpiEmpenhado').textContent = formatarMoeda(totalEmpenhado);
+            document.getElementById('kpiLiquidado').textContent = formatarMoeda(totalLiquidado);
+            document.getElementById('kpiPago').textContent = formatarMoeda(totalPago);
+            document.getElementById('kpiResultado').textContent = formatarMoeda(totalResultado);
+
+            let tituloDinamico = 'Acompanhamento Orçamentário';
+            if (ano !== 'Todos' && mes !== 'Todos') {
+                tituloDinamico += ` - Período: ${mes}/${ano}`;
+            } else if (ano !== 'Todos') {
+                tituloDinamico += ` - Exercício ${ano}`;
+            } else if (mes !== 'Todos') {
+                tituloDinamico += ` - Meses de ${mes}`;
+            }
+
+            renderizarGrafico(dados, tituloDinamico);
+        }
+
+        function renderizarGrafico(dados, titulo) {
             const eixoX = dados.map(linha => linha['mes'].toUpperCase() + '/' + linha['ano']);
             const serieDuodecimo = dados.map(linha => limparNumeroBR(linha['duodecimo']));
             const serieEmpenhado = dados.map(linha => limparNumeroBR(linha['empenhado']));
@@ -158,6 +295,19 @@
             const serieResultado = dados.map(linha => limparNumeroBR(linha['resultado']));
 
             const option = {
+                title: {
+                    text: titulo,
+                    left: 'center',
+                    textStyle: { fontSize: 16, color: '#111827' }
+                },
+                toolbox: {
+                    feature: {
+                        dataView: { show: true, readOnly: true, title: 'Ver Tabela', lang: ['Tabela de Dados', 'Fechar', 'Atualizar'] },
+                        saveAsImage: { show: true, title: 'Baixar Imagem' }
+                    },
+                    right: 20,
+                    top: 0
+                },
                 tooltip: {
                     trigger: 'axis',
                     valueFormatter: (value) => formatarMoeda(value)
@@ -167,10 +317,10 @@
                     bottom: 0
                 },
                 grid: {
-                    top: '8%',
+                    top: '12%',
                     left: '3%',
                     right: '4%',
-                    bottom: '10%',
+                    bottom: '15%',
                     containLabel: true
                 },
                 xAxis: {
@@ -188,6 +338,16 @@
                         }
                     }
                 },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        show: eixoX.length > 6, 
+                        start: 0,
+                        end: 100,
+                        bottom: 30,
+                        height: 20
+                    }
+                ],
                 series: [
                     { name: 'Duodécimo', type: 'line', smooth: true, data: serieDuodecimo, itemStyle: { color: '#000000' } },
                     { name: 'Empenhado', type: 'bar', data: serieEmpenhado, itemStyle: { color: '#5470C6' } },
