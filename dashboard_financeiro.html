@@ -16,35 +16,31 @@
     <div id="meuGrafico"></div>
 
     <script>
-        // Link público do seu Google Sheets em formato CSV
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSeiEl6tsmsHfu5qECIgTNFJtSLOHJWPUD334BxUtITfI-YKaWwH-vvVM5IBTO5WDypR_r3p_AjcxZL/pub?output=csv';
 
-        // Função para formatar os valores para R$ no tooltip (caixa ao passar o mouse)
         const formatarMoeda = (valor) => {
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
         };
 
-        // Função para limpar números no formato brasileiro e ignorar símbolos como "R$"
         const limparNumeroBR = (valor) => {
             if (!valor) return 0;
             if (typeof valor === 'number') return valor;
-            
-            // Remove tudo que não for dígito numérico, vírgula ou sinal de menos
             let textoLimpo = String(valor).replace(/[^\d,-]/g, '');
-            
-            // Troca a vírgula dos centavos por ponto e converte para número
             return parseFloat(textoLimpo.replace(',', '.')) || 0;
         };
 
-        // Lendo os dados do Google Sheets
         Papa.parse(csvUrl, {
             download: true,
             header: true,
+            // MÁGICA AQUI: Limpa os cabeçalhos do CSV automaticamente (tira acentos e espaços)
+            transformHeader: function(header) {
+                return header.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+            },
             complete: function(results) {
-                // Filtra possíveis linhas vazias no final da planilha utilizando as colunas sem acento
+                // Filtra as linhas vazias usando as chaves limpas
                 const dados = results.data.filter(linha => linha['Mes'] && linha['Ano']);
 
-                // Extraindo os eixos e as séries mapeados para os cabeçalhos sem acento
+                // Monta os dados do gráfico
                 const eixoX = dados.map(linha => linha['Mes'] + '/' + linha['Ano']);
                 const serieDuodecimo = dados.map(linha => limparNumeroBR(linha['Duodecimo']));
                 const serieEmpenhado = dados.map(linha => limparNumeroBR(linha['Empenhado']));
@@ -52,7 +48,6 @@
                 const seriePago = dados.map(linha => limparNumeroBR(linha['Pago']));
                 const serieResultado = dados.map(linha => limparNumeroBR(linha['Resultado']));
 
-                // Configurando e renderizando o gráfico ECharts
                 const myChart = echarts.init(document.getElementById('meuGrafico'));
                 
                 const option = {
@@ -65,7 +60,6 @@
                         valueFormatter: (value) => formatarMoeda(value)
                     },
                     legend: {
-                        // Mantive os nomes legíveis com acento na legenda que o público final vê no gráfico
                         data: ['Duodécimo', 'Empenhado', 'Liquidado', 'Pago', 'Resultado'],
                         bottom: 0
                     },
@@ -96,39 +90,38 @@
                             type: 'line',
                             smooth: true,
                             data: serieDuodecimo,
-                            itemStyle: { color: '#000000' } // Linha preta
+                            itemStyle: { color: '#000000' } 
                         },
                         {
                             name: 'Empenhado',
                             type: 'bar',
                             data: serieEmpenhado,
-                            itemStyle: { color: '#5470C6' } // Azul
+                            itemStyle: { color: '#5470C6' } 
                         },
                         {
                             name: 'Liquidado',
                             type: 'bar',
                             data: serieLiquidado,
-                            itemStyle: { color: '#91CC75' } // Verde
+                            itemStyle: { color: '#91CC75' } 
                         },
                         {
                             name: 'Pago',
                             type: 'bar',
                             data: seriePago,
-                            itemStyle: { color: '#FAC858' } // Amarelo
+                            itemStyle: { color: '#FAC858' } 
                         },
                         {
                             name: 'Resultado',
                             type: 'line',
                             smooth: true,
                             data: serieResultado,
-                            itemStyle: { color: '#EE6666' } // Linha vermelha
+                            itemStyle: { color: '#EE6666' } 
                         }
                     ]
                 };
 
                 myChart.setOption(option);
 
-                // Torna o gráfico responsivo
                 window.addEventListener('resize', function() {
                     myChart.resize();
                 });
