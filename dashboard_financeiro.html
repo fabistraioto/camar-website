@@ -19,16 +19,22 @@
         // Link público do seu Google Sheets em formato CSV
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSeiEl6tsmsHfu5qECIgTNFJtSLOHJWPUD334BxUtITfI-YKaWwH-vvVM5IBTO5WDypR_r3p_AjcxZL/pub?output=csv';
 
-        // Função para formatar os valores para R$ no tooltip (caixa que aparece ao passar o mouse)
+        // Função para formatar os valores para R$ no tooltip (caixa ao passar o mouse)
         const formatarMoeda = (valor) => {
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
         };
 
-        // Função para limpar números no formato brasileiro (ex: 1.000,50 -> 1000.50)
+        // Função BLINDADA para limpar números no formato brasileiro e ignorar símbolos como "R$"
         const limparNumeroBR = (valor) => {
             if (!valor) return 0;
             if (typeof valor === 'number') return valor;
-            return parseFloat(valor.replace(/\./g, '').replace(',', '.')) || 0;
+            
+            // Remove TUDO que não for dígito numérico, vírgula ou sinal de menos
+            // Isso tira o "R$", espaços em branco e pontos de milhar
+            let textoLimpo = String(valor).replace(/[^\d,-]/g, '');
+            
+            // Troca a vírgula dos centavos por ponto (padrão que o JavaScript entende) e converte
+            return parseFloat(textoLimpo.replace(',', '.')) || 0;
         };
 
         // Lendo os dados do Google Sheets
@@ -39,11 +45,11 @@
                 // Filtra possíveis linhas vazias no final da planilha
                 const dados = results.data.filter(linha => linha['Mês'] && linha['Ano']);
 
-                // Extraindo os eixos e as séries
+                // Extraindo os eixos e as séries (corrigido para aceitar "Líquidado" com acento)
                 const eixoX = dados.map(linha => linha['Mês'] + '/' + linha['Ano']);
                 const serieDuodecimo = dados.map(linha => limparNumeroBR(linha['Duodécimo']));
                 const serieEmpenhado = dados.map(linha => limparNumeroBR(linha['Empenhado']));
-                const serieLiquidado = dados.map(linha => limparNumeroBR(linha['Liquidado']));
+                const serieLiquidado = dados.map(linha => limparNumeroBR(linha['Líquidado'] || linha['Liquidado'])); 
                 const seriePago = dados.map(linha => limparNumeroBR(linha['Pago']));
                 const serieResultado = dados.map(linha => limparNumeroBR(linha['Resultado']));
 
@@ -72,13 +78,12 @@
                     xAxis: {
                         type: 'category',
                         data: eixoX,
-                        axisLabel: { rotate: 45 } // Rotaciona os meses para não encavalar
+                        axisLabel: { rotate: 45 }
                     },
                     yAxis: {
                         type: 'value',
                         axisLabel: {
                             formatter: (value) => {
-                                // Mostra os valores no eixo Y de forma abreviada (ex: 1M, 500k)
                                 if (value >= 1000000) return (value / 1000000) + 'M';
                                 if (value >= 1000) return (value / 1000) + 'k';
                                 return value;
