@@ -248,7 +248,7 @@
                 grid: { top: '15%', bottom: '15%', containLabel: true },
                 xAxis: { type: 'category', data: eixoX, axisLabel: { rotate: 45 } },
                 yAxis: { type: 'value', axisLabel: { formatter: (v) => v >= 1000000 ? (v/1000000)+'M' : v >= 1000 ? (v/1000)+'k' : v } },
-                dataZoom: [{ type: 'slider', show: eixoX.length > 6, bottom: 30, height: 20 }],
+                dataZoom: [{ type: 'slider', show: eixoX.length > 1, bottom: 30, height: 20 }],
                 series: [
                     { 
                         name: 'Previsto', 
