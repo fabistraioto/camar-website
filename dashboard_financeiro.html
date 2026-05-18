@@ -98,7 +98,7 @@
             <span class="card-perc perc-previsto">Orçamento Inicial</span>
         </div>
         <div class="card duodecimo">
-            <div class="card-titulo">Duodécimo Recebido</div>
+            <div class="card-titulo">Recebido</div>
             <div class="card-valor" id="kpiDuodecimo">R$ 0,00</div>
             <span class="card-perc perc-resultado" id="percRealizado">0% do Previsto</span>
         </div>
@@ -173,7 +173,7 @@
             const atual = new Date().getFullYear().toString();
             sAno.value = anos.includes(atual) ? atual : anos[0];
 
-            // AQUI ESTAVA O ERRO: Restaurei as duas linhas que escutam as mudanças nos filtros!
+            // CORREÇÃO: Adicionando os event listeners para reativar os filtros
             sAno.addEventListener('change', aplicarFiltros);
             sMes.addEventListener('change', aplicarFiltros);
         }
@@ -252,17 +252,28 @@
 
         window.addEventListener('resize', () => myChart.resize());
 
+        // Função utilitária para gerar o nome do arquivo dinâmico nos downloads
+        function gerarNomeArquivoBase() {
+            const ano = document.getElementById('filtroAno').value;
+            const mes = document.getElementById('filtroMes').value;
+            let nome = 'orcamento_cmm'; 
+            if (ano !== 'Todos') nome += '_' + ano;
+            else nome += '_todos_anos';
+            if (mes !== 'Todos') nome += '_' + mes.toLowerCase();
+            return nome;
+        }
+
         function exportarCSV() {
             const csv = Papa.unparse(prepararDados(), { delimiter: ";" });
-            baixar("\uFEFF" + csv, `cmm_orcamento_${document.getElementById('filtroAno').value}.csv`, "text/csv;charset=utf-8;");
+            baixar("\uFEFF" + csv, `${gerarNomeArquivoBase()}.csv`, "text/csv;charset=utf-8;");
         }
         function exportarXLSX() {
             const ws = XLSX.utils.json_to_sheet(prepararDados());
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Dados");
-            XLSX.writeFile(wb, `cmm_orcamento_${document.getElementById('filtroAno').value}.xlsx`);
+            XLSX.writeFile(wb, `${gerarNomeArquivoBase()}.xlsx`);
         }
         function exportarJSON() {
-            baixar(JSON.stringify(prepararDados(), null, 2), "cmm_orcamento.json", "application/json");
+            baixar(JSON.stringify(prepararDados(), null, 2), `${gerarNomeArquivoBase()}.json`, "application/json");
         }
         function exportarXML() {
             let xml = '<?xml version="1.0" encoding="UTF-8"?><orcamento>';
@@ -271,7 +282,7 @@
                 for(let k in l) xml += `<${k.replace(/[^\w]/g,'')}>${l[k]}</${k.replace(/[^\w]/g,'')}>`;
                 xml += '</registro>';
             });
-            baixar(xml + '</orcamento>', "cmm_orcamento.xml", "application/xml");
+            baixar(xml + '</orcamento>', `${gerarNomeArquivoBase()}.xml`, "application/xml");
         }
         function prepararDados() {
             return dadosVisiveis.map(l => ({
