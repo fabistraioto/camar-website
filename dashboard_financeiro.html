@@ -155,7 +155,19 @@
                         clean[cleanKey] = linha[key];
                     }
                     return clean;
-                }).filter(l => l.mes && l.ano && (limparNumeroBR(l.duodecimo) > 0 || limparNumeroBR(l.duodecimo_previsto) > 0));
+                }).filter(l => {
+                    if (!l.mes || !l.ano) return false;
+                    
+                    // CORREÇÃO: Só exibe o mês no gráfico se houver dinheiro real preenchido.
+                    // O Duodécimo Previsto sozinho não é mais suficiente para exibir o mês vazio!
+                    let d = limparNumeroBR(l.duodecimo);
+                    let e = limparNumeroBR(l.empenhado);
+                    let liq = limparNumeroBR(l.liquidado);
+                    let p = limparNumeroBR(l.pago);
+                    let r = limparNumeroBR(l.resultado);
+                    
+                    return (d > 0 || e > 0 || liq > 0 || p > 0 || r > 0);
+                });
 
                 popularFiltros(dadosOriginais);
                 aplicarFiltros();
@@ -237,44 +249,32 @@
                 xAxis: { type: 'category', data: eixoX, axisLabel: { rotate: 45 } },
                 yAxis: { type: 'value', axisLabel: { formatter: (v) => v >= 1000000 ? (v/1000000)+'M' : v >= 1000 ? (v/1000)+'k' : v } },
                 dataZoom: [{ type: 'slider', show: eixoX.length > 6, bottom: 30, height: 20 }],
-                
-                /* MÁGICA VISUAL APLICADA NAS SÉRIES AQUI */
                 series: [
                     { 
                         name: 'Previsto', 
                         type: 'line', 
                         data: d.map(l => limparNumeroBR(l.duodecimo_previsto)), 
-                        lineStyle: { type: 'dashed', color: '#94a3b8', width: 4 }, /* Linha mais grossa */
+                        // MÁGICA 1: O Previsto agora é uma área pontilhada no fundo
+                        lineStyle: { type: 'dotted', color: '#94a3b8', width: 3 }, 
                         itemStyle: { color: '#94a3b8' },
-                        symbolSize: 8, /* Bolinha maior */
-                        z: 1 /* Garante que fique atrás da preta */
+                        areaStyle: { color: 'rgba(148, 163, 184, 0.15)' }, // Sombra cinza claro
+                        symbolSize: 0, // Remove as bolinhas para não poluir
+                        z: 1 // Joga para trás das outras barras
                     },
                     { 
                         name: 'Recebido', 
                         type: 'line', 
-                        data: d.map(l => {
-                            let val = limparNumeroBR(l.duodecimo);
-                            return val === 0 ? null : val; /* Corta a linha se for 0 em meses futuros */
-                        }), 
-                        lineStyle: { width: 2, color: '#000000' }, /* Linha preta fina por cima */
+                        data: d.map(l => limparNumeroBR(l.duodecimo)), 
+                        // MÁGICA 2: O Recebido agora é uma linha preta grossa e imponente
+                        lineStyle: { type: 'solid', color: '#000000', width: 4 }, 
                         itemStyle: { color: '#000000' },
-                        symbolSize: 6, /* Bolinha menor para caber dentro da cinza */
-                        z: 2 /* Garante que fique na frente da cinza */
+                        symbolSize: 8, // Bolinha de marcação bem evidente
+                        z: 3 // Joga para frente do previsto
                     },
-                    { name: 'Empenhado', type: 'bar', data: d.map(l => limparNumeroBR(l.empenhado)), itemStyle: { color: '#5470C6' } },
-                    { name: 'Liquidado', type: 'bar', data: d.map(l => limparNumeroBR(l.liquidado)), itemStyle: { color: '#91CC75' } },
-                    { name: 'Pago', type: 'bar', data: d.map(l => limparNumeroBR(l.pago)), itemStyle: { color: '#FAC858' } },
-                    { 
-                        name: 'Saldo', 
-                        type: 'line', 
-                        smooth: true, 
-                        data: d.map(l => {
-                            let rec = limparNumeroBR(l.duodecimo);
-                            let val = limparNumeroBR(l.resultado);
-                            return rec === 0 ? null : val; /* Também corta a linha vermelha em meses futuros */
-                        }), 
-                        itemStyle: { color: '#EE6666' } 
-                    }
+                    { name: 'Empenhado', type: 'bar', data: d.map(l => limparNumeroBR(l.empenhado)), itemStyle: { color: '#5470C6' }, z: 2 },
+                    { name: 'Liquidado', type: 'bar', data: d.map(l => limparNumeroBR(l.liquidado)), itemStyle: { color: '#91CC75' }, z: 2 },
+                    { name: 'Pago', type: 'bar', data: d.map(l => limparNumeroBR(l.pago)), itemStyle: { color: '#FAC858' }, z: 2 },
+                    { name: 'Saldo', type: 'line', smooth: true, data: d.map(l => limparNumeroBR(l.resultado)), itemStyle: { color: '#EE6666' }, z: 3 }
                 ]
             };
             myChart.setOption(opt, true);
