@@ -303,8 +303,8 @@
 
         res.sort((a, b) => {
             if (a.situacao !== b.situacao) return a.situacao === "Ativo" ? -1 : 1;
-            // OTIMIZADO: Matemática agora é feita em milissegundos inteiros
-            return (parseDataBR(b.admissao) || 0) - (parseDataBR(a.admissao) || 0);
+            // Ordenação alfabética pelo nome
+            return (a.nome || "").localeCompare(b.nome || "");
         });
 
         renderizar(res);
