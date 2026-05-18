@@ -98,7 +98,7 @@
             <span class="card-perc perc-previsto">Orçamento Inicial</span>
         </div>
         <div class="card duodecimo">
-            <div class="card-titulo">Recebido</div>
+            <div class="card-titulo">Duodécimo Recebido</div>
             <div class="card-valor" id="kpiDuodecimo">R$ 0,00</div>
             <span class="card-perc perc-resultado" id="percRealizado">0% do Previsto</span>
         </div>
@@ -244,7 +244,7 @@
                     }, 
                     saveAsImage: { show: true, title: 'Imagem' } 
                 } },
-                legend: { data: ['Previsto', 'Recebido', 'Empenhado', 'Liquidado', 'Pago', 'Saldo'], bottom: 0 },
+                legend: { data: ['Duodécimo Previsto', 'Duodécimo Recebido', 'Valores Empenhados', 'Valores Liquidados', 'Valores Pagos', 'Saldo Orçamentário'], bottom: 0 },
                 grid: { top: '15%', bottom: '15%', containLabel: true },
                 xAxis: { type: 'category', data: eixoX, axisLabel: { rotate: 45 } },
                 yAxis: { type: 'value', axisLabel: { formatter: (v) => v >= 1000000 ? (v/1000000)+'M' : v >= 1000 ? (v/1000)+'k' : v } },
