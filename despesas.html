@@ -249,7 +249,8 @@
         // Dados começam obrigatoriamente a partir da terceira linha (Índice 2)
         for (let i = 2; i < linhas.length; i++) {
             if (!linhas[i].trim()) continue;
-            const colunas = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            // CORREÇÃO: "linhas" em vez de "lines"
+            const colunas = linhas[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
             let obj = {};
             
             headers.forEach((h, idx) => {
