@@ -251,11 +251,15 @@
                     saveAsImage: { show: true, title: 'Imagem' } 
                 } },
                 legend: { data: ['Duodécimo Previsto', 'Duodécimo Recebido', 'Valor Empenhado', 'Valor Liquidado', 'Valor Pago', 'Saldo Orçamentário'], bottom: 0 },
-                grid: { top: '15%', bottom: '15%', containLabel: true },
+                
+                // CORREÇÃO: Aumentada a margem inferior (bottom) para 110px para evitar sobreposição da legenda com a barra de rolagem e os textos inclinados
+                grid: { top: '15%', bottom: 110, containLabel: true },
+                
                 xAxis: { type: 'category', data: eixoX, axisLabel: { rotate: 45 } },
                 yAxis: { type: 'value', axisLabel: { formatter: (v) => v >= 1000000 ? (v/1000000)+'M' : v >= 1000 ? (v/1000)+'k' : v } },
                 
-                dataZoom: [{ type: 'slider', show: eixoX.length > 1, bottom: 30, height: 20, startValue: 0, endValue: indexUltimoPreenchido }],
+                // CORREÇÃO: Subindo o 'bottom' do slider de 30 para 55 para dar espaço à legenda caso ela quebre em duas linhas
+                dataZoom: [{ type: 'slider', show: eixoX.length > 1, bottom: 55, height: 20, startValue: 0, endValue: indexUltimoPreenchido }],
                 
                 series: [
                     { 
@@ -264,7 +268,7 @@
                         data: d.map(l => limparNumeroBR(l.duodecimo_previsto)), 
                         lineStyle: { type: 'solid', color: '#00ced1', width: 8 }, 
                         itemStyle: { color: '#00ced1' },
-                        symbolSize: 12, /* ALTERADO AQUI: Bolinhas adicionadas com tamanho 12 para aparecer na linha grossa */
+                        symbolSize: 12, 
                         z: 1 
                     },
                     { 
