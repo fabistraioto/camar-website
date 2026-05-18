@@ -10,6 +10,7 @@
     <style>
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f3f4f6; color: #1f2937; }
         
+        /* Barra superior de filtros */
         .painel-filtros {
             background: #ffffff;
             padding: 15px 20px;
@@ -22,195 +23,117 @@
             border-bottom: 1px solid #e5e7eb;
         }
 
-        .filtro-grupo label {
-            font-weight: bold;
-            color: #4b5563;
-            margin-right: 8px;
-            font-size: 14px;
-        }
+        .filtro-grupo label { font-weight: bold; color: #4b5563; margin-right: 8px; font-size: 14px; }
 
         .filtro-grupo select {
-            width: 200px;
-            height: 40px;
-            padding: 0 12px;
-            box-sizing: border-box;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #1f2937;
-            background-color: #fff;
-            cursor: pointer;
-            outline: none;
-            transition: border-color 0.2s;
+            width: 180px; height: 40px; padding: 0 12px; border: 1px solid #d1d5db;
+            border-radius: 6px; font-size: 14px; color: #1f2937; background-color: #fff;
+            cursor: pointer; outline: none;
         }
 
-        .filtro-grupo select:focus { border-color: #5470C6; }
-
+        /* Barra de Exportação */
         .painel-exportacao {
-            max-width: 1200px;
-            margin: 15px auto 0 auto;
-            padding: 0 15px;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 10px;
-            box-sizing: border-box;
+            max-width: 1240px; margin: 15px auto 0 auto; padding: 0 15px;
+            display: flex; justify-content: flex-end; align-items: center; gap: 10px;
         }
 
-        .painel-exportacao span {
-            font-size: 13px;
-            font-weight: bold;
-            color: #6b7280;
-            margin-right: 5px;
-            text-transform: uppercase;
-        }
+        .painel-exportacao span { font-size: 12px; font-weight: bold; color: #6b7280; text-transform: uppercase; }
 
         .btn-export {
-            background-color: #ffffff;
-            border: 1px solid #d1d5db;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 13px;
-            font-weight: bold;
-            color: #374151;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            background-color: #ffffff; border: 1px solid #d1d5db; padding: 6px 12px;
+            border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;
         }
+        .btn-export:hover { background-color: #f3f4f6; }
 
-        .btn-export:hover {
-            background-color: #f3f4f6;
-            border-color: #9ca3af;
-        }
-        
-        .btn-export.excel:hover { border-color: #16a34a; color: #16a34a; }
-        .btn-export.csv:hover { border-color: #2563eb; color: #2563eb; }
-
+        /* Grid de Cards - Atualizado para 6 colunas */
         .container-cards {
-            max-width: 1200px;
-            margin: 15px auto 10px auto;
-            padding: 0 15px;
+            max-width: 1240px; margin: 15px auto 10px auto; padding: 0 15px;
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            box-sizing: border-box;
+            grid-template-columns: repeat(6, 1fr); /* 6 colunas iguais */
+            gap: 8px; box-sizing: border-box;
         }
 
         .card {
-            background: #ffffff;
-            padding: 12px 5px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-            border-left: 4px solid #9ca3af;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            box-sizing: border-box;
+            background: #ffffff; padding: 10px 5px; border-radius: 8px;
+            text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            border-left: 4px solid #9ca3af; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; height: 100%;
         }
 
+        /* Cores dos Cards */
+        .card.previsto  { border-left-color: #94a3b8; } /* Cinza Azulado */
         .card.duodecimo { border-left-color: #000000; }
         .card.empenhado { border-left-color: #5470C6; }
         .card.liquidado { border-left-color: #91CC75; }
         .card.pago      { border-left-color: #FAC858; }
         .card.resultado { border-left-color: #EE6666; }
 
-        .card-titulo {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: #6b7280;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .card-valor {
-            font-size: 14px;
-            font-weight: bold;
-            color: #111827;
-            word-wrap: break-word; 
-        }
-
-        .card-perc {
-            font-size: 10px;
-            margin-top: 6px;
-            padding: 3px 6px;
-            border-radius: 4px;
-            display: inline-block;
-            font-weight: bold;
-        }
+        .card-titulo { font-size: 10px; text-transform: uppercase; color: #6b7280; font-weight: bold; margin-bottom: 3px; }
+        .card-valor { font-size: 13px; font-weight: bold; color: #111827; }
+        .card-perc { font-size: 9px; margin-top: 4px; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
         
-        .perc-empenhado { background-color: rgba(84, 112, 198, 0.15); color: #3730a3; } 
-        .perc-liquidado { background-color: rgba(145, 204, 117, 0.2); color: #166534; } 
-        .perc-pago      { background-color: rgba(250, 200, 88, 0.25); color: #92400e; } 
-        .perc-resultado { background-color: rgba(238, 102, 102, 0.15); color: #991b1b; }
+        .perc-previsto  { background-color: #f1f5f9; color: #475569; }
+        .perc-empenhado { background-color: rgba(84, 112, 198, 0.1); color: #3730a3; } 
+        .perc-liquidado { background-color: rgba(145, 204, 117, 0.1); color: #166534; } 
+        .perc-pago      { background-color: rgba(250, 200, 88, 0.1); color: #92400e; } 
+        .perc-resultado { background-color: rgba(238, 102, 102, 0.1); color: #991b1b; }
 
-        .container-grafico {
-            max-width: 1200px;
-            margin: 10px auto 20px auto;
-            padding: 0 15px;
-            box-sizing: border-box;
-        }
-
-        #meuGrafico { 
-            width: 100%; 
-            height: 520px; 
-            background: #ffffff; 
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-            padding: 15px 0;
-        }
+        /* Área do Gráfico */
+        .container-grafico { max-width: 1240px; margin: 10px auto 20px auto; padding: 0 15px; }
+        #meuGrafico { width: 100%; height: 500px; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); padding: 15px 0; }
     </style>
 </head>
 <body>
 
     <div class="painel-filtros">
         <div class="filtro-grupo">
-            <label for="filtroAno">Ano de Exercício:</label>
-            <select id="filtroAno">
-                <option value="Todos">Todos os Anos</option>
-            </select>
+            <label for="filtroAno">Ano:</label>
+            <select id="filtroAno"><option value="Todos">Todos</option></select>
         </div>
         <div class="filtro-grupo">
             <label for="filtroMes">Mês:</label>
-            <select id="filtroMes">
-                <option value="Todos">Todos os Meses</option>
-            </select>
+            <select id="filtroMes"><option value="Todos">Todos</option></select>
         </div>
     </div>
 
     <div class="painel-exportacao">
-        <span>Baixar Dados (Open Data):</span>
-        <button class="btn-export csv" onclick="exportarCSV()" title="Baixar planilha compatível com qualquer sistema">CSV</button>
-        <button class="btn-export excel" onclick="exportarXLSX()" title="Baixar planilha para Excel">XLSX</button>
-        <button class="btn-export" onclick="exportarJSON()" title="Baixar formato para programadores">JSON</button>
-        <button class="btn-export" onclick="exportarXML()" title="Baixar formato de sistema">XML</button>
+        <span>Dados Abertos (CMM):</span>
+        <button class="btn-export" onclick="exportarCSV()">CSV</button>
+        <button class="btn-export" onclick="exportarXLSX()">XLSX</button>
+        <button class="btn-export" onclick="exportarJSON()">JSON</button>
+        <button class="btn-export" onclick="exportarXML()">XML</button>
     </div>
 
     <div class="container-cards">
+        <div class="card previsto">
+            <div class="card-titulo">Previsto</div>
+            <div class="card-valor" id="kpiPrevisto">R$ 0,00</div>
+            <span class="card-perc perc-previsto">Orçamento Inicial</span>
+        </div>
         <div class="card duodecimo">
-            <div class="card-titulo">Total Duodécimo</div>
+            <div class="card-titulo">Recebido</div>
             <div class="card-valor" id="kpiDuodecimo">R$ 0,00</div>
+            <span class="card-perc perc-resultado" id="percRealizado">0% do Previsto</span>
         </div>
         <div class="card empenhado">
-            <div class="card-titulo">Total Empenhado</div>
+            <div class="card-titulo">Empenhado</div>
             <div class="card-valor" id="kpiEmpenhado">R$ 0,00</div>
             <span class="card-perc perc-empenhado" id="percEmpenhado">0%</span>
         </div>
         <div class="card liquidado">
-            <div class="card-titulo">Total Liquidado</div>
+            <div class="card-titulo">Liquidado</div>
             <div class="card-valor" id="kpiLiquidado">R$ 0,00</div>
             <span class="card-perc perc-liquidado" id="percLiquidado">0%</span>
         </div>
         <div class="card pago">
-            <div class="card-titulo">Total Pago</div>
+            <div class="card-titulo">Pago</div>
             <div class="card-valor" id="kpiPago">R$ 0,00</div>
             <span class="card-perc perc-pago" id="percPago">0%</span>
         </div>
         <div class="card resultado">
-            <div class="card-titulo">Saldo Orçamentário Disponível</div>
+            <div class="card-titulo">Saldo</div>
             <div class="card-valor" id="kpiResultado">R$ 0,00</div>
-            <span class="card-perc perc-resultado" id="percResultado">0%</span>
+            <span class="card-perc perc-resultado" id="percResultado">0% Livre</span>
         </div>
     </div>
 
@@ -221,282 +144,156 @@
     <script>
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSeiEl6tsmsHfu5qECIgTNFJtSLOHJWPUD334BxUtITfI-YKaWwH-vvVM5IBTO5WDypR_r3p_AjcxZL/pub?output=csv&t=' + new Date().getTime();
 
-        const formatarMoeda = (valor) => {
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+        const formatarMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+        
+        const limparNumeroBR = (v) => {
+            if (!v) return 0;
+            if (typeof v === 'number') return v;
+            let s = String(v).replace(/[^\d,-]/g, '');
+            return parseFloat(s.replace(',', '.')) || 0;
         };
 
-        const limparNumeroBR = (valor) => {
-            if (!valor) return 0;
-            if (typeof valor === 'number') return valor;
-            let textoLimpo = String(valor).replace(/[^\d,-]/g, '');
-            return parseFloat(textoLimpo.replace(',', '.')) || 0;
-        };
-
-        const calcularPercentual = (valor, total) => {
-            if (total === 0) return '0,0%';
-            return ((valor / total) * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
-        };
+        const calcularPerc = (v, t) => (t === 0) ? '0,0%' : ((v / t) * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
         const myChart = echarts.init(document.getElementById('meuGrafico'));
-        
-        let dadosOriginais = [];
-        let dadosVisiveis = [];
+        let dadosOriginais = [], dadosVisiveis = [];
 
         Papa.parse(csvUrl, {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
+            download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
-                const dadosLimpos = results.data.map(linha => {
-                    let linhaLimpa = {};
-                    for (let chave in linha) {
-                        if (chave) {
-                            let chaveLimpa = chave.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
-                            linhaLimpa[chaveLimpa] = linha[chave];
-                        }
+                dadosOriginais = results.data.map(linha => {
+                    let clean = {};
+                    for (let key in linha) {
+                        let cleanKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+                        clean[cleanKey] = linha[key];
                     }
-                    return linhaLimpa;
-                });
+                    return clean;
+                }).filter(l => l.mes && l.ano && (limparNumeroBR(l.duodecimo) > 0 || limparNumeroBR(l.duodecimo_previsto) > 0));
 
-                dadosOriginais = dadosLimpos.filter(linha => {
-                    if (!linha['mes'] || !linha['ano']) return false;
-                    let d = limparNumeroBR(linha['duodecimo']);
-                    let e = limparNumeroBR(linha['empenhado']);
-                    let l = limparNumeroBR(linha['liquidado']);
-                    let p = limparNumeroBR(linha['pago']);
-                    let r = limparNumeroBR(linha['resultado']);
-                    return (d !== 0 || e !== 0 || l !== 0 || p !== 0 || r !== 0);
-                });
-                
                 popularFiltros(dadosOriginais);
                 aplicarFiltros();
             }
         });
 
-        function popularFiltros(dados) {
-            const selectAno = document.getElementById('filtroAno');
-            const selectMes = document.getElementById('filtroMes');
-
-            const anosUnicos = [...new Set(dados.map(item => item.ano))].sort((a, b) => b - a);
-            const mesesUnicos = [...new Set(dados.map(item => item.mes.toUpperCase()))];
-
-            anosUnicos.forEach(ano => {
-                let option = document.createElement('option');
-                option.value = ano;
-                option.textContent = ano;
-                selectAno.appendChild(option);
-            });
-
-            mesesUnicos.forEach(mes => {
-                let option = document.createElement('option');
-                option.value = mes;
-                option.textContent = mes;
-                selectMes.appendChild(option);
-            });
-
-            const anoAtualDoSistema = new Date().getFullYear().toString();
-            if (anosUnicos.includes(anoAtualDoSistema)) {
-                selectAno.value = anoAtualDoSistema;
-            } else if (anosUnicos.length > 0) {
-                selectAno.value = anosUnicos[0]; 
-            }
-
-            selectAno.addEventListener('change', aplicarFiltros);
-            selectMes.addEventListener('change', aplicarFiltros);
+        function popularFiltros(d) {
+            const sAno = document.getElementById('filtroAno'), sMes = document.getElementById('filtroMes');
+            const anos = [...new Set(d.map(i => i.ano))].sort((a,b) => b-a);
+            const meses = [...new Set(d.map(i => i.mes.toUpperCase()))];
+            anos.forEach(a => { let o = document.createElement('option'); o.value = a; o.textContent = a; sAno.appendChild(o); });
+            meses.forEach(m => { let o = document.createElement('option'); o.value = m; o.textContent = m; sMes.appendChild(o); });
+            const atual = new Date().getFullYear().toString();
+            sAno.value = anos.includes(atual) ? atual : anos[0];
         }
 
         function aplicarFiltros() {
-            const anoSelecionado = document.getElementById('filtroAno').value;
-            const mesSelecionado = document.getElementById('filtroMes').value;
-
-            let dadosFiltrados = dadosOriginais;
-
-            if (anoSelecionado !== 'Todos') {
-                dadosFiltrados = dadosFiltrados.filter(linha => linha.ano === anoSelecionado);
-            }
-
-            if (mesSelecionado !== 'Todos') {
-                dadosFiltrados = dadosFiltrados.filter(linha => linha.mes.toUpperCase() === mesSelecionado.toUpperCase());
-            }
-
-            dadosVisiveis = dadosFiltrados; 
-            atualizarPainel(dadosFiltrados, anoSelecionado, mesSelecionado);
+            const aS = document.getElementById('filtroAno').value, mS = document.getElementById('filtroMes').value;
+            dadosVisiveis = dadosOriginais.filter(l => (aS === 'Todos' || l.ano === aS) && (mS === 'Todos' || l.mes.toUpperCase() === mS));
+            atualizarPainel(dadosVisiveis, aS, mS);
         }
 
-        function atualizarPainel(dados, ano = 'Todos', mes = 'Todos') {
-            let totalDuodecimo = 0, totalEmpenhado = 0, totalLiquidado = 0, totalPago = 0, totalResultado = 0;
-
-            dados.forEach(linha => {
-                totalDuodecimo += limparNumeroBR(linha['duodecimo']);
-                totalEmpenhado += limparNumeroBR(linha['empenhado']);
-                totalLiquidado += limparNumeroBR(linha['liquidado']);
-                totalPago += limparNumeroBR(linha['pago']);
-                totalResultado += limparNumeroBR(linha['resultado']);
+        function atualizarPainel(d, a, m) {
+            let tPre = 0, tRec = 0, tEmp = 0, tLiq = 0, tPag = 0, tRes = 0;
+            d.forEach(l => {
+                tPre += limparNumeroBR(l.duodecimo_previsto);
+                tRec += limparNumeroBR(l.duodecimo);
+                tEmp += limparNumeroBR(l.empenhado);
+                tLiq += limparNumeroBR(l.liquidado);
+                tPag += limparNumeroBR(l.pago);
+                tRes += limparNumeroBR(l.resultado);
             });
 
-            document.getElementById('kpiDuodecimo').textContent = formatarMoeda(totalDuodecimo);
-            document.getElementById('kpiEmpenhado').textContent = formatarMoeda(totalEmpenhado);
-            document.getElementById('kpiLiquidado').textContent = formatarMoeda(totalLiquidado);
-            document.getElementById('kpiPago').textContent = formatarMoeda(totalPago);
-            document.getElementById('kpiResultado').textContent = formatarMoeda(totalResultado);
+            document.getElementById('kpiPrevisto').textContent = formatarMoeda(tPre);
+            document.getElementById('kpiDuodecimo').textContent = formatarMoeda(tRec);
+            document.getElementById('kpiEmpenhado').textContent = formatarMoeda(tEmp);
+            document.getElementById('kpiLiquidado').textContent = formatarMoeda(tLiq);
+            document.getElementById('kpiPago').textContent = formatarMoeda(tPag);
+            document.getElementById('kpiResultado').textContent = formatarMoeda(tRes);
 
-            document.getElementById('percEmpenhado').textContent = calcularPercentual(totalEmpenhado, totalDuodecimo) + ' do Duodécimo';
-            document.getElementById('percLiquidado').textContent = calcularPercentual(totalLiquidado, totalDuodecimo) + ' do Duodécimo';
-            document.getElementById('percPago').textContent      = calcularPercentual(totalPago, totalDuodecimo) + ' do Duodécimo';
-            document.getElementById('percResultado').textContent = calcularPercentual(totalResultado, totalDuodecimo) + ' Livre';
+            document.getElementById('percRealizado').textContent = calcularPerc(tRec, tPre) + ' do Previsto';
+            document.getElementById('percEmpenhado').textContent = calcularPerc(tEmp, tRec) + ' do Recebido';
+            document.getElementById('percLiquidado').textContent = calcularPerc(tLiq, tRec) + ' do Recebido';
+            document.getElementById('percPago').textContent = calcularPerc(tPag, tRec) + ' do Recebido';
+            document.getElementById('percResultado').textContent = calcularPerc(tRes, tRec) + ' Livre';
 
-            let tituloDinamico = 'Acompanhamento Orçamentário';
-            if (ano !== 'Todos' && mes !== 'Todos') {
-                tituloDinamico += ` - Período: ${mes}/${ano}`;
-            } else if (ano !== 'Todos') {
-                tituloDinamico += ` - Exercício ${ano}`;
-            } else if (mes !== 'Todos') {
-                tituloDinamico += ` - Meses de ${mes}`;
-            }
-
-            renderizarGrafico(dados, tituloDinamico);
+            renderizarGrafico(d, `Acompanhamento Orçamentário ${a !== 'Todos' ? '- ' + a : ''}`);
         }
 
-        function renderizarGrafico(dados, titulo) {
-            const eixoX = dados.map(linha => linha['mes'].toUpperCase() + '/' + linha['ano']);
-            const serieDuodecimo = dados.map(linha => limparNumeroBR(linha['duodecimo']));
-            const serieEmpenhado = dados.map(linha => limparNumeroBR(linha['empenhado']));
-            const serieLiquidado = dados.map(linha => limparNumeroBR(linha['liquidado'])); 
-            const seriePago = dados.map(linha => limparNumeroBR(linha['pago']));
-            const serieResultado = dados.map(linha => limparNumeroBR(linha['resultado']));
-
-            const option = {
-                title: { text: titulo, left: 'center', textStyle: { fontSize: 16, color: '#111827' } },
-                toolbox: {
-                    feature: {
-                        dataView: { 
-                            show: true, 
-                            readOnly: true, 
-                            title: 'Ver Tabela', 
-                            lang: ['Tabela de Dados Orçamentários', 'Fechar', 'Atualizar'],
-                            optionToContent: function (opt) {
-                                let axisData = opt.xAxis[0].data;
-                                let series = opt.series;
-                                let table = '<div style="width:100%; overflow-y:auto; height:100%;"><table style="width:100%; border-collapse:collapse; text-align:center; font-family:Arial, sans-serif; font-size:14px;"><thead style="background-color:#f3f4f6; position:sticky; top:0;"><tr><th style="padding:10px; border-bottom:2px solid #d1d5db; color:#374151;">Período</th>';
-                                for (let i = 0; i < series.length; i++) table += '<th style="padding:10px; border-bottom:2px solid #d1d5db; color:#374151;">' + series[i].name + '</th>';
-                                table += '</tr></thead><tbody>';
-                                for (let i = 0, l = axisData.length; i < l; i++) {
-                                    table += '<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:10px; font-weight:bold; color:#4b5563;">' + axisData[i] + '</td>';
-                                    for (let j = 0; j < series.length; j++) table += '<td style="padding:10px; color:#1f2937;">' + formatarMoeda(series[j].data[i]) + '</td>';
-                                    table += '</tr>';
-                                }
-                                table += '</tbody></table></div>';
-                                return table;
+        function renderizarGrafico(d, titulo) {
+            const eixoX = d.map(l => l.mes.toUpperCase() + '/' + l.ano);
+            const opt = {
+                title: { text: titulo, left: 'center', textStyle: { fontSize: 16 } },
+                tooltip: { trigger: 'axis', valueFormatter: (v) => formatarMoeda(v) },
+                toolbox: { feature: { 
+                    dataView: { show: true, readOnly: true, title: 'Tabela', lang:['Dados','Fechar','Ver'],
+                        optionToContent: function(opt) {
+                            let axis = opt.xAxis[0].data, series = opt.series;
+                            let table = '<table style="width:100%;text-align:center;border-collapse:collapse;font-size:12px"><thead><tr style="background:#f3f4f6"><th>Mês</th>';
+                            series.forEach(s => table += `<th>${s.name}</th>`);
+                            table += '</tr></thead><tbody>';
+                            for(let i=0; i<axis.length; i++) {
+                                table += `<tr><td style="font-weight:bold">${axis[i]}</td>`;
+                                series.forEach(s => table += `<td>${formatarMoeda(s.data[i])}</td>`);
+                                table += '</tr>';
                             }
-                        },
-                        saveAsImage: { show: true, title: 'Baixar Imagem' }
-                    },
-                    right: 20, top: 0
-                },
-                tooltip: { trigger: 'axis', valueFormatter: (value) => formatarMoeda(value) },
-                legend: { data: ['Duodécimo', 'Empenhado', 'Liquidado', 'Pago', 'Resultado'], bottom: 0 },
-                grid: { top: '12%', left: '3%', right: '4%', bottom: '15%', containLabel: true },
+                            return table + '</tbody></table>';
+                        }
+                    }, 
+                    saveAsImage: { show: true, title: 'Imagem' } 
+                } },
+                legend: { data: ['Previsto', 'Recebido', 'Empenhado', 'Liquidado', 'Pago', 'Saldo'], bottom: 0 },
+                grid: { top: '15%', bottom: '15%', containLabel: true },
                 xAxis: { type: 'category', data: eixoX, axisLabel: { rotate: 45 } },
-                yAxis: { type: 'value', axisLabel: { formatter: (value) => { if (value >= 1000000) return (value / 1000000) + 'M'; if (value >= 1000) return (value / 1000) + 'k'; return value; } } },
-                dataZoom: [{ type: 'slider', show: eixoX.length > 1, start: 0, end: 100, bottom: 30, height: 20 }],
+                yAxis: { type: 'value', axisLabel: { formatter: (v) => v >= 1000000 ? (v/1000000)+'M' : v >= 1000 ? (v/1000)+'k' : v } },
+                dataZoom: [{ type: 'slider', show: eixoX.length > 6, bottom: 30, height: 20 }],
                 series: [
-                    { name: 'Duodécimo', type: 'line', smooth: true, data: serieDuodecimo, itemStyle: { color: '#000000' } },
-                    { name: 'Empenhado', type: 'bar', data: serieEmpenhado, itemStyle: { color: '#5470C6' } },
-                    { name: 'Liquidado', type: 'bar', data: serieLiquidado, itemStyle: { color: '#91CC75' } },
-                    { name: 'Pago', type: 'bar', data: seriePago, itemStyle: { color: '#FAC858' } },
-                    { name: 'Resultado', type: 'line', smooth: true, data: serieResultado, itemStyle: { color: '#EE6666' } }
+                    { name: 'Previsto', type: 'line', data: d.map(l => limparNumeroBR(l.duodecimo_previsto)), lineStyle: { type: 'dashed', color: '#94a3b8' }, itemStyle: { color: '#94a3b8' } },
+                    { name: 'Recebido', type: 'line', data: d.map(l => limparNumeroBR(l.duodecimo)), itemStyle: { color: '#000000' } },
+                    { name: 'Empenhado', type: 'bar', data: d.map(l => limparNumeroBR(l.empenhado)), itemStyle: { color: '#5470C6' } },
+                    { name: 'Liquidado', type: 'bar', data: d.map(l => limparNumeroBR(l.liquidado)), itemStyle: { color: '#91CC75' } },
+                    { name: 'Pago', type: 'bar', data: d.map(l => limparNumeroBR(l.pago)), itemStyle: { color: '#FAC858' } },
+                    { name: 'Saldo', type: 'line', smooth: true, data: d.map(l => limparNumeroBR(l.resultado)), itemStyle: { color: '#EE6666' } }
                 ]
             };
-
-            myChart.setOption(option, true);
+            myChart.setOption(opt, true);
         }
 
-        window.addEventListener('resize', function() { myChart.resize(); });
-
-        /* =========================================================================
-           SISTEMA DE EXPORTAÇÃO DE DADOS ABERTOS (OPEN DATA)
-           ========================================================================= */
-
-        // Função que gera o nome do arquivo de forma inteligente e dinâmica
-        function gerarNomeArquivoBase() {
-            const ano = document.getElementById('filtroAno').value;
-            const mes = document.getElementById('filtroMes').value;
-            let nome = 'orcamento_cmm'; // Começa com cmm (Câmara Municipal de Marília)
-
-            if (ano !== 'Todos') {
-                nome += '_' + ano;
-            } else {
-                nome += '_todos_anos';
-            }
-
-            if (mes !== 'Todos') {
-                nome += '_' + mes.toLowerCase();
-            }
-
-            return nome;
-        }
-
-        function prepararDadosExportacao() {
-            return dadosVisiveis.map(linha => ({
-                "Ano": linha.ano,
-                "Mês": linha.mes.toUpperCase(),
-                "Duodécimo (R$)": limparNumeroBR(linha.duodecimo),
-                "Empenhado (R$)": limparNumeroBR(linha.empenhado),
-                "Liquidado (R$)": limparNumeroBR(linha.liquidado),
-                "Pago (R$)": limparNumeroBR(linha.pago),
-                "Resultado (R$)": limparNumeroBR(linha.resultado)
-            }));
-        }
-
-        function criarDownload(conteudo, nomeArquivo, tipoMime) {
-            const blob = new Blob([conteudo], { type: tipoMime });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = nomeArquivo;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+        window.addEventListener('resize', () => myChart.resize());
 
         function exportarCSV() {
-            const dadosTratados = prepararDadosExportacao();
-            const csv = Papa.unparse(dadosTratados, { delimiter: ";" });
-            const nomeArquivo = gerarNomeArquivoBase() + ".csv";
-            criarDownload("\uFEFF" + csv, nomeArquivo, "text/csv;charset=utf-8;");
+            const csv = Papa.unparse(prepararDados(), { delimiter: ";" });
+            baixar("\uFEFF" + csv, `cmm_orcamento_${document.getElementById('filtroAno').value}.csv`, "text/csv;charset=utf-8;");
         }
-
         function exportarXLSX() {
-            const dadosTratados = prepararDadosExportacao();
-            const ws = XLSX.utils.json_to_sheet(dadosTratados);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Orçamento");
-            const nomeArquivo = gerarNomeArquivoBase() + ".xlsx";
-            XLSX.writeFile(wb, nomeArquivo);
+            const ws = XLSX.utils.json_to_sheet(prepararDados());
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Dados");
+            XLSX.writeFile(wb, `cmm_orcamento_${document.getElementById('filtroAno').value}.xlsx`);
         }
-
         function exportarJSON() {
-            const dadosTratados = prepararDadosExportacao();
-            const json = JSON.stringify(dadosTratados, null, 2);
-            const nomeArquivo = gerarNomeArquivoBase() + ".json";
-            criarDownload(json, nomeArquivo, "application/json");
+            baixar(JSON.stringify(prepararDados(), null, 2), "cmm_orcamento.json", "application/json");
         }
-
         function exportarXML() {
-            const dadosTratados = prepararDadosExportacao();
-            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<orcamento>\n';
-            dadosTratados.forEach(linha => {
-                xml += '  <registro>\n';
-                for (let key in linha) {
-                    let chaveXml = key.replace(/[\s\(\)\$]/g, "").toLowerCase();
-                    xml += `    <${chaveXml}>${linha[key]}</${chaveXml}>\n`;
-                }
-                xml += '  </registro>\n';
+            let xml = '<?xml version="1.0" encoding="UTF-8"?><orcamento>';
+            prepararDados().forEach(l => {
+                xml += '<registro>';
+                for(let k in l) xml += `<${k.replace(/[^\w]/g,'')}>${l[k]}</${k.replace(/[^\w]/g,'')}>`;
+                xml += '</registro>';
             });
-            xml += '</orcamento>';
-            const nomeArquivo = gerarNomeArquivoBase() + ".xml";
-            criarDownload(xml, nomeArquivo, "application/xml");
+            baixar(xml + '</orcamento>', "cmm_orcamento.xml", "application/xml");
+        }
+        function prepararDados() {
+            return dadosVisiveis.map(l => ({
+                "Ano": l.ano, "Mes": l.mes,
+                "Duodecimo_Previsto": limparNumeroBR(l.duodecimo_previsto),
+                "Duodecimo_Recebido": limparNumeroBR(l.duodecimo),
+                "Empenhado": limparNumeroBR(l.empenhado),
+                "Liquidado": limparNumeroBR(l.liquidado),
+                "Pago": limparNumeroBR(l.pago),
+                "Resultado": limparNumeroBR(l.resultado)
+            }));
+        }
+        function baixar(c, n, t) {
+            const b = new Blob([c], { type: t }), u = URL.createObjectURL(b), a = document.createElement('a');
+            a.href = u; a.download = n; a.click(); URL.revokeObjectURL(u);
         }
     </script>
 </body>
