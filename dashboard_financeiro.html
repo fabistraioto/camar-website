@@ -118,7 +118,7 @@
             <span class="card-perc perc-pago" id="percPago">0%</span>
         </div>
         <div class="card resultado">
-            <div class="card-titulo">Saldo Orçamentário</div>
+            <div class="card-titulo">Saldo Orçamentário Disponível</div>
             <div class="card-valor" id="kpiResultado">R$ 0,00</div>
             <span class="card-perc perc-resultado" id="percResultado">0% Livre</span>
         </div>
@@ -251,19 +251,17 @@
                     saveAsImage: { show: true, title: 'Imagem' } 
                 } },
                 
-                // MÁGICA: Legenda dividida estruturalmente em duas linhas!
                 legend: [
                     { 
                         data: ['Duodécimo Previsto', 'Duodécimo Recebido', 'Saldo Orçamentário'], 
-                        bottom: 25 // Fica na linha superior da legenda
+                        bottom: 25 
                     },
                     { 
                         data: ['Valor Empenhado', 'Valor Liquidado', 'Valor Pago'], 
-                        bottom: 0  // Fica na linha inferior da legenda
+                        bottom: 0  
                     }
                 ],
                 
-                // CORREÇÃO: Grid e Slider ajustados para acomodarem duas linhas na legenda
                 grid: { top: '15%', bottom: 130, containLabel: true },
                 
                 xAxis: { type: 'category', data: eixoX, axisLabel: { rotate: 45 } },
@@ -330,14 +328,52 @@
 
         window.addEventListener('resize', () => myChart.resize());
 
+        // NOVA FUNÇÃO: Obtém a fatia exata dos dados que está visível na barra de rolagem (zoom)
+        function obterDadosZoom() {
+            let optAtual = myChart.getOption();
+            if (optAtual && optAtual.dataZoom && optAtual.dataZoom.length > 0) {
+                let startIdx = optAtual.dataZoom[0].startValue;
+                let endIdx = optAtual.dataZoom[0].endValue;
+                return dadosVisiveis.slice(startIdx, endIdx + 1);
+            }
+            return dadosVisiveis;
+        }
+
+        // FUNÇÃO ATUALIZADA: Nomeia o arquivo com o mês de início e fim da barra de rolagem
         function gerarNomeArquivoBase() {
             const ano = document.getElementById('filtroAno').value;
-            const mes = document.getElementById('filtroMes').value;
             let nome = 'orcamento_cmm'; 
+            
             if (ano !== 'Todos') nome += '_' + ano;
             else nome += '_todos_anos';
-            if (mes !== 'Todos') nome += '_' + mes.toLowerCase();
+
+            let dadosExportar = obterDadosZoom();
+            if (dadosExportar.length > 0) {
+                let mesInicio = dadosExportar[0].mes.toLowerCase();
+                let mesFim = dadosExportar[dadosExportar.length - 1].mes.toLowerCase();
+                
+                if (mesInicio === mesFim) {
+                    nome += '_' + mesInicio; // Ex: orcamento_cmm_2026_marco
+                } else {
+                    nome += '_' + mesInicio + '_a_' + mesFim; // Ex: orcamento_cmm_2026_jan_a_jun
+                }
+            }
+
             return nome;
+        }
+
+        // FUNÇÃO ATUALIZADA: Agora prepara apenas os dados visíveis no zoom para o download
+        function prepararDados() {
+            let dadosExportar = obterDadosZoom();
+            return dadosExportar.map(l => ({
+                "Ano": l.ano, "Mes": l.mes,
+                "Duodecimo_Previsto": limparNumeroBR(l.duodecimo_previsto),
+                "Duodecimo_Recebido": limparNumeroBR(l.duodecimo),
+                "Empenhado": limparNumeroBR(l.empenhado),
+                "Liquidado": limparNumeroBR(l.liquidado),
+                "Pago": limparNumeroBR(l.pago),
+                "Resultado": limparNumeroBR(l.resultado)
+            }));
         }
 
         function exportarCSV() {
@@ -360,17 +396,6 @@
                 xml += '</registro>';
             });
             baixar(xml + '</orcamento>', `${gerarNomeArquivoBase()}.xml`, "application/xml");
-        }
-        function prepararDados() {
-            return dadosVisiveis.map(l => ({
-                "Ano": l.ano, "Mes": l.mes,
-                "Duodecimo_Previsto": limparNumeroBR(l.duodecimo_previsto),
-                "Duodecimo_Recebido": limparNumeroBR(l.duodecimo),
-                "Empenhado": limparNumeroBR(l.empenhado),
-                "Liquidado": limparNumeroBR(l.liquidado),
-                "Pago": limparNumeroBR(l.pago),
-                "Resultado": limparNumeroBR(l.resultado)
-            }));
         }
         function baixar(c, n, t) {
             const b = new Blob([c], { type: t }), u = URL.createObjectURL(b), a = document.createElement('a');
