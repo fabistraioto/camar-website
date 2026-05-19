@@ -24,6 +24,27 @@
             cursor: pointer; outline: none;
         }
 
+        /* ESTILO DO BADGE DE ATUALIZAÇÃO (Igual à imagem anexada) */
+        .badge-atualizacao {
+            background-color: rgba(46, 204, 113, 0.12);
+            border: 1px solid rgba(46, 204, 113, 0.25);
+            padding: 8px 16px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #136342;
+        }
+        .badge-atualizacao .ponto-verde {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 4px 4px, #5effa4, #1aa35a);
+            box-shadow: 0 0 5px rgba(46, 204, 113, 0.6);
+        }
+
         .painel-exportacao {
             max-width: 1240px; margin: 15px auto 0 auto; padding: 0 15px;
             display: flex; justify-content: flex-end; align-items: center; gap: 10px;
@@ -80,6 +101,10 @@
         <div class="filtro-grupo">
             <label for="filtroMes">Mês:</label>
             <select id="filtroMes"><option value="Todos">Todos</option></select>
+        </div>
+        <div class="badge-atualizacao">
+            <span class="ponto-verde"></span>
+            <span id="txtAtualizacao">Carregando atualização...</span>
         </div>
     </div>
 
@@ -145,31 +170,54 @@
         const myChart = echarts.init(document.getElementById('meuGrafico'));
         let dadosOriginais = [], dadosVisiveis = [];
 
-        Papa.parse(csvUrl, {
-            download: true, header: true, skipEmptyLines: true,
-            complete: function(results) {
-                dadosOriginais = results.data.map(linha => {
-                    let clean = {};
-                    for (let key in linha) {
-                        let cleanKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
-                        clean[cleanKey] = linha[key];
-                    }
-                    return clean;
-                }).filter(l => {
-                    if (!l.mes || !l.ano) return false;
-                    let d = limparNumeroBR(l.duodecimo);
-                    let e = limparNumeroBR(l.empenhado);
-                    let liq = limparNumeroBR(l.liquidado);
-                    let p = limparNumeroBR(l.pago);
-                    let r = limparNumeroBR(l.resultado);
-                    let prev = limparNumeroBR(l.duodecimo_previsto);
-                    return (d > 0 || e > 0 || liq > 0 || p > 0 || r > 0 || prev > 0);
-                });
+        // LEITURA MODIFICADA: Captura a primeira linha de metadados antes de rodar o PapaParse
+        fetch(csvUrl)
+            .then(res => res.text())
+            .then(textoBruto => {
+                const linhas = textoBruto.split(/\r?\n/);
+                const primeiraLinha = linhas[0];
+                
+                // Extrai o texto limpo da primeira célula (removendo aspas e delimitadores)
+                let textoAtualizacao = primeiraLinha.split(/[;,]/)[0].replace(/"/g, '').trim();
+                
+                // Injeta o texto no Badge do cabeçalho
+                if (textoAtualizacao) {
+                    document.getElementById('txtAtualizacao').textContent = textoAtualizacao;
+                }
 
-                popularFiltros(dadosOriginais);
-                aplicarFiltros();
-            }
-        });
+                // Junta o restante das linhas (a partir da linha 2) para processar os dados normais
+                const dadosTabelaCsv = linhas.slice(1).join('\n');
+
+                Papa.parse(dadosTabelaCsv, {
+                    header: true, skipEmptyLines: true,
+                    complete: function(results) {
+                        dadosOriginais = results.data.map(linha => {
+                            let clean = {};
+                            for (let key in linha) {
+                                let cleanKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+                                clean[cleanKey] = linha[key];
+                            }
+                            return clean;
+                        }).filter(l => {
+                            if (!l.mes || !l.ano) return false;
+                            let d = limparNumeroBR(l.duodecimo);
+                            let e = limparNumeroBR(l.empenhado);
+                            let liq = limparNumeroBR(l.liquidado);
+                            let p = limparNumeroBR(l.pago);
+                            let r = limparNumeroBR(l.resultado);
+                            let prev = limparNumeroBR(l.duodecimo_previsto);
+                            return (d > 0 || e > 0 || liq > 0 || p > 0 || r > 0 || prev > 0);
+                        });
+
+                        popularFiltros(dadosOriginais);
+                        aplicarFiltros();
+                    }
+                });
+            })
+            .catch(err => {
+                console.error("Erro no carregamento:", err);
+                document.getElementById('txtAtualizacao').textContent = "Atualização indisponível";
+            });
 
         function popularFiltros(d) {
             const sAno = document.getElementById('filtroAno'), sMes = document.getElementById('filtroMes');
@@ -252,22 +300,15 @@
                 } },
                 
                 legend: [
-                    { 
-                        data: ['Duodécimo Previsto', 'Duodécimo Recebido', 'Saldo Orçamentário'], 
-                        bottom: 25 
-                    },
-                    { 
-                        data: ['Valor Empenhado', 'Valor Liquidado', 'Valor Pago'], 
-                        bottom: 0  
-                    }
+                    { data: ['Duodécimo Previsto', 'Duodécimo Recebido', 'Saldo Orçamentário'], bottom: 25 },
+                    { data: ['Valor Empenhado', 'Valor Liquidado', 'Valor Pago'], bottom: 0 }
                 ],
                 
                 grid: { top: '15%', bottom: 130, containLabel: true },
-                
                 xAxis: { type: 'category', data: eixoX, axisLabel: { rotate: 45 } },
                 yAxis: { type: 'value', axisLabel: { formatter: (v) => v >= 1000000 ? (v/1000000)+'M' : v >= 1000 ? (v/1000)+'k' : v } },
                 
-                dataZoom: [{ type: 'slider', show: eixoX.length > 1, bottom: 65, height: 20, startValue: 0, endValue: indexUltimoPreenchido }],
+                dataZoom: [{ type: 'slider', show: eixoX.length > 1, bottom: 65, height: 20, startValue: 0, endValue: indexUltidoPreenchido || indexUltimoPreenchido }],
                 
                 series: [
                     { 
@@ -328,7 +369,6 @@
 
         window.addEventListener('resize', () => myChart.resize());
 
-        // NOVA FUNÇÃO: Obtém a fatia exata dos dados que está visível na barra de rolagem (zoom)
         function obterDadosZoom() {
             let optAtual = myChart.getOption();
             if (optAtual && optAtual.dataZoom && optAtual.dataZoom.length > 0) {
@@ -339,7 +379,6 @@
             return dadosVisiveis;
         }
 
-        // FUNÇÃO ATUALIZADA: Nomeia o arquivo com o mês de início e fim da barra de rolagem
         function gerarNomeArquivoBase() {
             const ano = document.getElementById('filtroAno').value;
             let nome = 'orcamento_cmm'; 
@@ -353,16 +392,15 @@
                 let mesFim = dadosExportar[dadosExportar.length - 1].mes.toLowerCase();
                 
                 if (mesInicio === mesFim) {
-                    nome += '_' + mesInicio; // Ex: orcamento_cmm_2026_marco
+                    nome += '_' + mesInicio;
                 } else {
-                    nome += '_' + mesInicio + '_a_' + mesFim; // Ex: orcamento_cmm_2026_jan_a_jun
+                    nome += '_' + mesInicio + '_a_' + mesFim;
                 }
             }
 
             return nome;
         }
 
-        // FUNÇÃO ATUALIZADA: Agora prepara apenas os dados visíveis no zoom para o download
         function prepararDados() {
             let dadosExportar = obterDadosZoom();
             return dadosExportar.map(l => ({
