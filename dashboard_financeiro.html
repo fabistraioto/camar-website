@@ -24,7 +24,7 @@
             cursor: pointer; outline: none;
         }
 
-        /* ESTILO DO BADGE DE ATUALIZAÇÃO (Igual à imagem anexada) */
+        /* ESTILO DO BADGE DE ATUALIZAÇÃO */
         .badge-atualizacao {
             background-color: rgba(46, 204, 113, 0.12);
             border: 1px solid rgba(46, 204, 113, 0.25);
@@ -170,22 +170,27 @@
         const myChart = echarts.init(document.getElementById('meuGrafico'));
         let dadosOriginais = [], dadosVisiveis = [];
 
-        // LEITURA MODIFICADA: Captura a primeira linha de metadados antes de rodar o PapaParse
+        // LEITURA CORRIGIDA: Trata a primeira linha isoladamente via PapaParse para suportar a vírgula interna da data
         fetch(csvUrl)
             .then(res => res.text())
             .then(textoBruto => {
                 const linhas = textoBruto.split(/\r?\n/);
                 const primeiraLinha = linhas[0];
                 
-                // Extrai o texto limpo da primeira célula (removendo aspas e delimitadores)
-                let textoAtualizacao = primeiraLinha.split(/[;,]/)[0].replace(/"/g, '').trim();
+                const primeiraLinhaParseada = Papa.parse(primeiraLinha).data[0];
+                let textoAtualizacao = primeiraLinhaParseada && primeiraLinhaParseada[0] ? primeiraLinhaParseada[0].trim() : "";
                 
-                // Injeta o texto no Badge do cabeçalho
+                // Transforma dinamicamente "MODIF_REAL:" em "Atualizado em" e ajusta os conectores
+                if (textoAtualizacao.toUpperCase().includes("MODIF_REAL")) {
+                    textoAtualizacao = textoAtualizacao
+                        .replace(/MODIF_REAL:\s*/i, "Atualizado em ")
+                        .replace(",", " às");
+                }
+                
                 if (textoAtualizacao) {
                     document.getElementById('txtAtualizacao').textContent = textoAtualizacao;
                 }
 
-                // Junta o restante das linhas (a partir da linha 2) para processar os dados normais
                 const dadosTabelaCsv = linhas.slice(1).join('\n');
 
                 Papa.parse(dadosTabelaCsv, {
@@ -193,9 +198,10 @@
                     complete: function(results) {
                         dadosOriginais = results.data.map(linha => {
                             let clean = {};
-                            for (let key in linha) {
-                                let cleanKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
-                                clean[cleanKey] = linha[key];
+                            for (let key in ImageLink) { // Note: Loop iterando chaves originais da linha
+                                let keyString = String(key);
+                                let cleanKey = keyString.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+                                clean[cleanKey] = linha[keyString];
                             }
                             return clean;
                         }).filter(l => {
@@ -308,7 +314,8 @@
                 xAxis: { type: 'category', data: eixoX, axisLabel: { rotate: 45 } },
                 yAxis: { type: 'value', axisLabel: { formatter: (v) => v >= 1000000 ? (v/1000000)+'M' : v >= 1000 ? (v/1000)+'k' : v } },
                 
-                dataZoom: [{ type: 'slider', show: eixoX.length > 1, bottom: 65, height: 20, startValue: 0, endValue: indexUltidoPreenchido || indexUltimoPreenchido }],
+                // CORREÇÃO: Variável tipada incorretamente corrigida para evitar falha catastrófica de script
+                dataZoom: [{ type: 'slider', show: eixoX.length > 1, bottom: 65, height: 20, startValue: 0, endValue: indexUltimoPreenchido }],
                 
                 series: [
                     { 
