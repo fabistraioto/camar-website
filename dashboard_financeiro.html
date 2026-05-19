@@ -170,17 +170,15 @@
         const myChart = echarts.init(document.getElementById('meuGrafico'));
         let dadosOriginais = [], dadosVisiveis = [];
 
-        // LEITURA CORRIGIDA: Trata a primeira linha isoladamente via PapaParse para suportar a vírgula interna da data
+        // LEITURA CORRIGIDA: Quebra por ponto e vírgula e ignora aspas para manter a hora perfeitamente intacta
         fetch(csvUrl)
             .then(res => res.text())
             .then(textoBruto => {
                 const linhas = textoBruto.split(/\r?\n/);
                 const primeiraLinha = linhas[0];
                 
-                const primeiraLinhaParseada = Papa.parse(primeiraLinha).data[0];
-                let textoAtualizacao = primeiraLinhaParseada && primeiraLinhaParseada[0] ? primeiraLinhaParseada[0].trim() : "";
+                let textoAtualizacao = primeiraLinha.split(';')[0].replace(/"/g, '').trim();
                 
-                // Transforma dinamicamente "MODIF_REAL:" em "Atualizado em" e ajusta os conectores
                 if (textoAtualizacao.toUpperCase().includes("MODIF_REAL")) {
                     textoAtualizacao = textoAtualizacao
                         .replace(/MODIF_REAL:\s*/i, "Atualizado em ")
@@ -198,10 +196,9 @@
                     complete: function(results) {
                         dadosOriginais = results.data.map(linha => {
                             let clean = {};
-                            for (let key in ImageLink) { // Note: Loop iterando chaves originais da linha
-                                let keyString = String(key);
-                                let cleanKey = keyString.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
-                                clean[cleanKey] = linha[keyString];
+                            for (let key in linha) { // CORRIGIDO: Loop oficial recuperado e funcional
+                                let cleanKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+                                clean[cleanKey] = linha[key];
                             }
                             return clean;
                         }).filter(l => {
@@ -314,7 +311,7 @@
                 xAxis: { type: 'category', data: eixoX, axisLabel: { rotate: 45 } },
                 yAxis: { type: 'value', axisLabel: { formatter: (v) => v >= 1000000 ? (v/1000000)+'M' : v >= 1000 ? (v/1000)+'k' : v } },
                 
-                // CORREÇÃO: Variável tipada incorretamente corrigida para evitar falha catastrófica de script
+                // CORREÇÃO: Zoom apontando corretamente para o índice limpo e estável
                 dataZoom: [{ type: 'slider', show: eixoX.length > 1, bottom: 65, height: 20, startValue: 0, endValue: indexUltimoPreenchido }],
                 
                 series: [
