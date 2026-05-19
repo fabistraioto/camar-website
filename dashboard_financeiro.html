@@ -112,7 +112,7 @@
         </div>
         
         <div style="display: flex; align-items: center; gap: 10px;">
-            <span>Dados Abertos (CMM):</span>
+            <span>Opções de Download:</span>
             <button class="btn-export" onclick="exportarCSV()">CSV</button>
             <button class="btn-export" onclick="exportarXLSX()">XLSX</button>
             <button class="btn-export" onclick="exportarJSON()">JSON</button>
@@ -122,12 +122,12 @@
 
     <div class="container-cards">
         <div class="card previsto">
-            <div class="card-titulo">Duodécimo Previsto</div>
+            <div class="card-titulo">Receita Prevista</div>
             <div class="card-valor" id="kpiPrevisto">R$ 0,00</div>
             <span class="card-perc perc-previsto">Orçamento do Período</span>
         </div>
         <div class="card duodecimo">
-            <div class="card-titulo">Duodécimo Recebido</div>
+            <div class="card-titulo">Receita Recebida</div>
             <div class="card-valor" id="kpiDuodecimo">R$ 0,00</div>
             <span class="card-perc perc-resultado" id="percRealizado">0% do Previsto</span>
         </div>
@@ -147,7 +147,7 @@
             <span class="card-perc perc-pago" id="percPago">0%</span>
         </div>
         <div class="card resultado">
-            <div class="card-titulo">Saldo Orçamentário Disponível</div>
+            <div class="card-titulo">Saldo Orçamentário</div>
             <div class="card-valor" id="kpiResultado">R$ 0,00</div>
             <span class="card-perc perc-resultado" id="percResultado">0% Livre</span>
         </div>
@@ -316,7 +316,7 @@
                 } },
                 
                 legend: [
-                    { data: ['Duodécimo Previsto', 'Duodécimo Recebido', 'Saldo Orçamentário'], bottom: 25 },
+                    { data: ['Receita Prevista', 'Receita Recebida', 'Saldo Orçamentário'], bottom: 25 },
                     { data: ['Valor Empenhado', 'Valor Liquidado', 'Valor Pago'], bottom: 0 }
                 ],
                 
@@ -328,7 +328,7 @@
                 
                 series: [
                     { 
-                        name: 'Duodécimo Previsto', 
+                        name: 'Receita Prevista', 
                         type: 'line', 
                         data: d.map(l => limparNumeroBR(l.duodecimo_previsto)), 
                         lineStyle: { type: 'solid', color: '#00ced1', width: 8 }, 
@@ -337,7 +337,7 @@
                         z: 1 
                     },
                     { 
-                        name: 'Duodécimo Recebido', 
+                        name: 'Receita Recebida', 
                         type: 'line', 
                         data: d.map(l => {
                             let val = limparNumeroBR(l.duodecimo);
