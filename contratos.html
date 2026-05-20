@@ -193,7 +193,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
-    // URL convertida automaticamente para saída em CSV amigável para requisições AJAX
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOFxEcL_ieplRjzBjFVqfv7jj1EsXNyWbf3Db_1JxfzOCFx1qNhFRswrGWVlcwyD1H0qFb-vsLc3jf/pub?output=csv";
     
     let tabela;
@@ -239,19 +238,39 @@
 
     function processarCSV(str) {
         const linhas = str.trim().split("\n");
-        // Captura o carimbo cronológico na célula A1 (linha 0)
         const match = linhas[0].match(/(\d{2}\/\d{2}\/\d{4},?\s*\d{2}:\d{2})/);
         carimboAtualizacao = match ? `Atualizado em ${match[1].replace(',', '')}` : "Dados Sincronizados";
 
-        // Lê os cabeçalhos reais na linha 1
-        const headers = linhas[1].split(",").map(h => h.trim().replace(/"/g, '').toLowerCase());
+        // Novo separador inteligente: lê caractere por caractere e não quebra com aspas esquecidas
+        function separarColunas(linha) {
+            let colunas = [];
+            let valorAtual = "";
+            let dentroDeAspas = false;
+
+            for (let i = 0; i < linha.length; i++) {
+                let char = linha[i];
+                if (char === '"') {
+                    dentroDeAspas = !dentroDeAspas;
+                } else if (char === ',' && !dentroDeAspas) {
+                    colunas.push(valorAtual.trim());
+                    valorAtual = "";
+                } else {
+                    valorAtual += char;
+                }
+            }
+            colunas.push(valorAtual.trim());
+            // Limpa as aspas residuais do texto
+            return colunas.map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"'));
+        }
+
+        const headers = separarColunas(linhas[1]).map(h => h.toLowerCase());
         
         return linhas.slice(2).map(row => {
-            const colunas = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            const colunas = separarColunas(row);
             let obj = {};
             
             headers.forEach((h, i) => {
-                let val = colunas[i] ? colunas[i].replace(/"/g, '').trim() : "";
+                let val = colunas[i] ? colunas[i] : "";
                 if (h.includes("n_contrato")) obj.n_contrato = val;
                 if (h.includes("razao_social")) obj.razao_social = val;
                 if (h.includes("objeto_contrato")) obj.objeto_contrato = val;
@@ -263,7 +282,6 @@
                 if (h.includes("situacao")) obj.situacao = val;
             });
             
-            // Unifica termos textuais para otimizar e acelerar a busca global instantânea
             let buscaUnificada = `${obj.razao_social || ''} ${obj.objeto_contrato || ''} ${obj.n_contrato || ''} ${obj.fiscal || ''}`;
             obj.busca_indexada = removerAcentos(buscaUnificada.toLowerCase());
             
@@ -281,7 +299,7 @@
             if (d.vigencia_contrato) { const p = d.vigencia_contrato.split('/'); if(p[2] && p[2].length === 4) anos.add(p[2]); }
         });
         
-        // Alimenta o seletor de Situação de forma dinâmica baseada na sua planilha
+        // Alimenta o seletor de Situação
         let htmlStatus = '<option value="">Situação (Todas)</option>';
         [...statuses].sort().forEach(s => {
             htmlStatus += `<option value="${s}">${s}</option>`;
@@ -337,7 +355,6 @@
             columns: [{
                 data: null,
                 render: function(d) {
-                    // Decide a cor da Badge de Status com base no texto
                     const sitNormalizado = (d.situacao || '').toLowerCase();
                     const statusClass = (sitNormalizado.includes('encerrado') || sitNormalizado.includes('inativo') || sitNormalizado.includes('suspenso')) ? 'status-desligado' : 'status-ativo';
                     
@@ -395,7 +412,8 @@
         const data = tabela.rows({ filter: 'applied' }).data().toArray();
         let csv = "\ufeffN_Contrato,Razao_Social,Objeto_Contrato,Data_Contrato,Valor_Contrato,Vigencia_Contrato,Modalidade,Fiscal,Situacao\n";
         data.forEach(d => { 
-            csv += `"${d.n_contrato}","${d.razao_social}","${d.objeto_contrato}","${d.data_contrato}","${d.valor_contrato}","${d.vigencia_contrato}","${d.modalidade}","${d.fiscal}","${d.situacao}"\n`; 
+            const objSafe = d.objeto_contrato ? d.objeto_contrato.replace(/"/g, '""') : "";
+            csv += `"${d.n_contrato}","${d.razao_social}","${objSafe}","${d.data_contrato}","${d.valor_contrato}","${d.vigencia_contrato}","${d.modalidade}","${d.fiscal}","${d.situacao}"\n`; 
         });
         downloadFile(csv, gerarNomeArquivoBase() + ".csv", "text/csv");
     }
