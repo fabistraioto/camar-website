@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Relatório de Sanções e Contratos</title>
+    <title>Relatório de Contratos</title>
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
     
@@ -29,8 +29,7 @@
         button.btn-filtro:hover { background: #00274d; }
 
         /* FILTROS RESPONSIVOS */
-        .painel-filtros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
-        .painel-filtros:last-child { margin-bottom: 0; }
+        .painel-filtros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
         
         /* EXPORTAÇÃO RESPONSIVA E CARROSSEL */
         .painel-exportacao { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
@@ -54,21 +53,26 @@
         
         .card-info { background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .card-header { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; background: #fff; display: flex; justify-content: space-between; align-items: center; }
-        .card-header-texto { display: flex; flex-direction: column; gap: 2px; width: 80%; }
+        .card-header-texto { display: flex; flex-direction: column; gap: 2px; width: 100%; }
         .nome-principal { font-size: 15px; font-weight: 800; color: #003b75; text-transform: uppercase; word-break: break-word; }
         .subtitulo-card { font-size: 12px; color: #64748b; font-weight: 500; text-transform: uppercase; }
         
-        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; text-align: center; max-width: 150px; }
-        .status-grave { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        .status-leve { background: #fef08a; color: #854d0e; border: 1px solid #fde047; }
-        
-        /* GRELHA DOS CARDS AJUSTADA PARA 3 COLUNAS */
+        /* GRELHA DOS CARDS - 3 COLUNAS */
         .card-body { display: grid; grid-template-columns: repeat(3, 1fr); padding: 12px 15px; gap: 12px; }
         .span-2 { grid-column: span 2; }
+        .span-3 { grid-column: span 3; }
         
         .info-col { display: flex; flex-direction: column; }
         .info-label { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
         .info-valor { font-size: 13px; font-weight: 700; color: #1e293b; text-align: justify; }
+
+        /* ACORDEÃO (OBSERVAÇÕES) */
+        .btn-obs { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; width: fit-content; gap: 8px; transition: 0.2s; text-transform: uppercase; }
+        .btn-obs:hover { background: #e2e8f0; color: #0f172a; }
+        .obs-content { display: none; margin-top: 8px; padding: 12px; background: #f8fafc; border-left: 3px solid #003b75; border-radius: 0 6px 6px 0; font-size: 13px; color: #334155; line-height: 1.5; }
+        .obs-content.mostrar { display: block; animation: fadeIn 0.3s ease-in-out; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* PAGINAÇÃO */
         .dt-bottom-controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px; background: white; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 10px; margin-bottom: 20px;}
@@ -96,19 +100,18 @@
             .painel-filtros { grid-template-columns: 1fr; }
             .topo { flex-direction: column; gap: 10px; text-align: center; }
             .card-header { flex-direction: column; text-align: center; gap: 10px; }
-            .card-header-texto { width: 100%; }
             .dt-custom-header, .dt-bottom-controls { flex-direction: column; text-align: center; }
             .dataTables_wrapper .dataTables_paginate { flex-wrap: wrap; justify-content: center; margin-top: 10px !important;}
-            /* Ajuste para não quebrar a grelha em telemóvel */
             .card-body { grid-template-columns: 1fr; }
-            .span-2 { grid-column: span 1; }
+            .span-2, .span-3 { grid-column: span 1; }
         }
 
         @media print {
-            .topo, fieldset, .dt-bottom-controls { display: none !important; }
+            .topo, fieldset, .dt-bottom-controls, .btn-obs { display: none !important; }
             #cabecalho-impressao { display: flex !important; align-items: center; gap: 20px; border-bottom: 2px solid #003b75; padding-bottom: 10px; margin-bottom: 20px; }
             .card-info { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; margin-bottom: 15px; }
             #main-container { display: block !important; margin: 0; }
+            .obs-content { display: block !important; border: 1px solid #ddd; } /* Força exibir na impressão */
         }
     </style>
 </head>
@@ -116,7 +119,7 @@
 
 <div id="wrapper">
     <header class="topo">
-        <h1>Relatório de Sanções e Contratos</h1>
+        <h1>Relatório de Contratos</h1>
         <div class="logo-container">
             <img src="Brasão_de_Marília.png" alt="Brasão de Marília" width="45" height="50" class="brasao">
             <span class="texto-camara">Câmara Municipal de Marília</span>
@@ -126,7 +129,7 @@
     <div id="cabecalho-impressao">
         <img src="Brasão_de_Marília.png" width="63" height="70" alt="Brasão de Marília">
         <div>
-            <h1 style="margin:0; color:#003b75;">Relatório de Sanções e Contratos</h1>
+            <h1 style="margin:0; color:#003b75;">Relatório de Contratos</h1>
             <p style="margin:0; font-weight:bold;">Câmara Municipal de Marília</p>
         </div>
     </div>
@@ -143,21 +146,7 @@
             
             <div class="painel-filtros">
                 <input type="text" id="filtroTexto" placeholder="Pesquisar por Razão Social ou CNPJ..." autocomplete="off" aria-label="Pesquisar por Razão Social ou CNPJ">
-                <select id="filtroTipoSancao" aria-label="Filtrar por Tipo de Sanção"><option value="">Tipo de Sanção</option></select>
-                <select id="filtroAnoContrato" aria-label="Filtrar por Ano do Contrato"><option value="">Ano do Contrato</option></select>
-                <select id="filtroAnoSancao" aria-label="Filtrar por Ano da Sanção"><option value="">Ano da Sanção</option></select>
-            </div>
-            
-            <div class="painel-filtros">
-                <select id="filtroMesSancao" aria-label="Filtrar por Mês da Sanção">
-                    <option value="">Mês da Sanção</option>
-                    <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
-                    <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
-                    <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
-                    <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
-                </select>
-                <div></div>
-                <div></div>
+                <input type="text" id="filtroContrato" placeholder="Número do Contrato..." autocomplete="off" aria-label="Pesquisar por Número do Contrato">
                 <button class="btn-filtro" onclick="limparFiltros()">Limpar filtros</button>
             </div>
         </fieldset>
@@ -212,12 +201,14 @@
 
     function removerAcentos(str) { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : ""; }
 
-    function parseDataBR(str) {
-        if (!str || str === "-" || str === "—") return null;
-        const p = str.split('/');
-        if (p.length !== 3) return null;
-        return new Date(p[2], p[1] - 1, p[0]).getTime();
-    }
+    // Função de clique global para o acordeão da observação
+    window.toggleObservacao = function(idBotao) {
+        const conteudo = document.getElementById(idBotao);
+        if (conteudo) {
+            conteudo.classList.toggle('mostrar');
+            enviarAlturaIframe(); // Recalcula a altura do iframe quando o acordeão abrir
+        }
+    };
 
     function processarCSV(csvText) {
         const wb = XLSX.read(csvText, { type: 'string' });
@@ -229,7 +220,8 @@
         let linhaCabecalho = 0;
         let primeiraLinhaTexto = linhasMatriz[0].join(",");
         
-        if (!primeiraLinhaTexto.toLowerCase().includes("ano_contrato") && linhasMatriz[1] && linhasMatriz[1].join(",").toLowerCase().includes("ano_contrato")) {
+        // Proteção para identificar onde começam os cabeçalhos das 6 colunas
+        if (!primeiraLinhaTexto.toLowerCase().includes("cnpj") && linhasMatriz[1] && linhasMatriz[1].join(",").toLowerCase().includes("cnpj")) {
             linhaCabecalho = 1;
             let matchDataHora = primeiraLinhaTexto.match(/(\d{1,2}\/\d{1,2}\/\d{4})[^\d]*(\d{1,2}:\d{2})/);
             if (matchDataHora) {
@@ -259,15 +251,6 @@
             let cnpjLimpo = obj.cnpj ? obj.cnpj.replace(/\D/g, '') : "";
             obj.busca_nome = removerAcentos(razaoLimpa) + " " + cnpjLimpo;
             
-            if (obj.data_sancao && obj.data_sancao.includes('/')) {
-                const partes = obj.data_sancao.split('/');
-                obj.ano_sancao_extraido = partes[2];
-                obj.mes_sancao_extraido = partes[1];
-            } else {
-                obj.ano_sancao_extraido = "";
-                obj.mes_sancao_extraido = "";
-            }
-            
             lista.push(obj);
         }
         return lista;
@@ -280,7 +263,6 @@
             const response = await fetch(`${CSV_URL}&cache=${Date.now()}`);
             const text = await response.text();
             dadosGlobais = processarCSV(text);
-            popularFiltrosDynamic();
             aplicarFiltros();
             $('#badge-atualizacao').text(`🟢 ${carimboAtualizacao}`);
             $('#loader').hide();
@@ -291,47 +273,19 @@
         }
     }
 
-    function popularFiltrosDynamic() {
-        const tipos = [...new Set(dadosGlobais.map(d => d.tipo_sancao))].filter(Boolean).sort();
-        $('#filtroTipoSancao').html('<option value="">Tipo de Sanção</option>');
-        tipos.forEach(t => $('#filtroTipoSancao').append(`<option value="${t}">${t}</option>`));
-
-        const anosContrato = [...new Set(dadosGlobais.map(d => d.ano_contrato))].filter(Boolean).sort((a,b) => b - a);
-        $('#filtroAnoContrato').html('<option value="">Ano do Contrato</option>');
-        anosContrato.forEach(a => $('#filtroAnoContrato').append(`<option value="${a}">${a}</option>`));
-
-        const anosSancao = [...new Set(dadosGlobais.map(d => d.ano_sancao_extraido))].filter(a => a && a.length === 4).sort((a,b) => b - a);
-        $('#filtroAnoSancao').html('<option value="">Ano da Sanção</option>');
-        anosSancao.forEach(a => $('#filtroAnoSancao').append(`<option value="${a}">${a}</option>`));
-    }
-
-    function ordenarSancoes(lista) {
-        return lista.sort((a, b) => {
-            const dataA = parseDataBR(a.data_sancao) || 0;
-            const dataB = parseDataBR(b.data_sancao) || 0;
-            return dataB - dataA;
-        });
-    }
-
     function aplicarFiltros() {
         const buscaTexto = removerAcentos($('#filtroTexto').val().toLowerCase().replace(/\D/g, ''));
         const buscaOriginal = removerAcentos($('#filtroTexto').val().toLowerCase());
-        const tipoSancao = $('#filtroTipoSancao').val();
-        const anoContrato = $('#filtroAnoContrato').val();
-        const anoSancao = $('#filtroAnoSancao').val();
-        const mesSancao = $('#filtroMesSancao').val();
+        const buscaContrato = removerAcentos($('#filtroContrato').val().toLowerCase());
 
         let filtrados = dadosGlobais.filter(d => {
             const matchTexto = !buscaOriginal || d.busca_nome.includes(buscaOriginal) || d.busca_nome.includes(buscaTexto);
-            const matchTipo = !tipoSancao || d.tipo_sancao === tipoSancao;
-            const matchAnoContrato = !anoContrato || d.ano_contrato === anoContrato;
-            const matchAnoSancao = !anoSancao || d.ano_sancao_extraido === anoSancao;
-            const matchMesSancao = !mesSancao || d.mes_sancao_extraido === mesSancao;
+            const matchContrato = !buscaContrato || (d.numero_contrato && removerAcentos(d.numero_contrato.toLowerCase()).includes(buscaContrato));
 
-            return matchTexto && matchTipo && matchAnoContrato && matchAnoSancao && matchMesSancao;
+            return matchTexto && matchContrato;
         });
 
-        renderizarTabela(ordenarSancoes(filtrados));
+        renderizarTabela(filtrados);
     }
 
     function renderizarTabela(dados) {
@@ -340,14 +294,14 @@
         tabela = $('#tabela').DataTable({
             data: dados,
             pageLength: 10,
-            ordering: false,
+            ordering: false, // Mantém a ordem original da planilha
             language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json', lengthMenu: "Exibir _MENU_ resultados" },
             dom: 'lrt<"dt-bottom-controls"ip>',
             columns: [{
                 data: null,
                 render: function(d) {
-                    const ts = d.tipo_sancao ? d.tipo_sancao.toLowerCase() : "";
-                    const badgeClass = (ts.includes("multa") || ts.includes("suspen") || ts.includes("inidone")) ? "status-grave" : "status-leve";
+                    const idObservacao = 'obs-' + Math.random().toString(36).substr(2, 9);
+                    const temObservacao = d.observacao && d.observacao.trim() !== "";
 
                     return `
                         <div class="card-info">
@@ -356,18 +310,28 @@
                                     <span class="nome-principal">${d.razao_social || "Razão Social não informada"}</span>
                                     <span class="subtitulo-card">CNPJ: ${d.cnpj || "—"}</span>
                                 </div>
-                                <span class="status-badge ${badgeClass}">${d.tipo_sancao || "Sanção"}</span>
                             </div>
                             <div class="card-body">
-                                <div class="info-col"><span class="info-label">Contrato</span><span class="info-valor">${d.numero_contrato || "—"}/${d.ano_contrato || "—"}</span></div>
-                                <div class="info-col span-2"><span class="info-label">Objeto do Contrato</span><span class="info-valor">${d.objeto || "—"}</span></div>
+                                <div class="info-col"><span class="info-label">Contrato</span><span class="info-valor">${d.numero_contrato || "—"}</span></div>
+                                <div class="info-col span-2"><span class="info-label">Objeto do Contrato</span><span class="info-valor">${d.objeto_contrato || "—"}</span></div>
                                 
-                                <div class="info-col"><span class="info-label">Motivo da Penalidade</span><span class="info-valor">${d.motivo || "—"}</span></div>
-                                <div class="info-col"><span class="info-label">Data da Sanção</span><span class="info-valor">${d.data_sancao || "—"}</span></div>
-                                <div class="info-col"><span class="info-label">Valor da Multa / Ação</span><span class="info-valor">${d.valor || "—"}</span></div>
+                                <div class="info-col span-3"><span class="info-label">Motivo da Sanção</span><span class="info-valor">${d.motivo_sancao || "—"}</span></div>
                                 
-                                <div class="info-col"><span class="info-label">Processo Adm. Punitivo</span><span class="info-valor">${d.processo_administrativo_punitivo || "—"}</span></div>
-                                <div class="info-col span-2"><span class="info-label">Fundamento Legal</span><span class="info-valor">${d.fundamento || "—"}</span></div>
+                                ${temObservacao ? `
+                                    <div class="info-col span-3">
+                                        <button class="btn-obs" onclick="window.toggleObservacao('${idObservacao}')">
+                                            📋 Ver Observação <span>▼</span>
+                                        </button>
+                                        <div id="${idObservacao}" class="obs-content">
+                                            ${d.observacao}
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div class="info-col span-3">
+                                        <span class="info-label">Observação</span>
+                                        <span class="info-valor" style="color: #94a3b8; font-style: italic;">Nenhuma observação registrada.</span>
+                                    </div>
+                                `}
                             </div>
                         </div>
                     `;
@@ -389,41 +353,41 @@
     }
 
     function limparFiltros() {
-        $('#filtroTexto, #filtroTipoSancao, #filtroAnoContrato, #filtroAnoSancao, #filtroMesSancao').val('');
+        $('#filtroTexto, #filtroContrato').val('');
         aplicarFiltros();
     }
 
     function gerarNomeArquivoBase() {
-        let partes = ["sancoes_contratos"];
+        let partes = ["contratos"];
         const texto = $('#filtroTexto').val().trim();
         if (texto) partes.push(texto.replace(/\s+/g, '_'));
-        if ($('#filtroTipoSancao').val()) partes.push($('#filtroTipoSancao').val().replace(/\s+/g, '_'));
-        if ($('#filtroAnoContrato').val()) partes.push($('#filtroAnoContrato').val());
+        const contrato = $('#filtroContrato').val().trim();
+        if (contrato) partes.push("contrato_" + contrato.replace(/[^a-zA-Z0-9]/g, ''));
         
         return removerAcentos(partes.join('_')).replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
     }
 
     function exportarCSV() {
         const data = tabela.rows({ filter: 'applied' }).data().toArray();
-        let csv = "\ufeffAno Contrato,Numero Contrato,Razao Social,CNPJ,Objeto,Data Sancao,Tipo Sancao,Valor,Motivo,Fundamento,Processo Administrativo\n";
+        let csv = "\ufeffCNPJ,Razao Social,Numero Contrato,Objeto Contrato,Motivo Sancao,Observacao\n";
         data.forEach(d => { 
-            csv += `"${d.ano_contrato}","${d.numero_contrato}","${d.razao_social}","${d.cnpj}","${d.objeto}","${d.data_sancao}","${d.tipo_sancao}","${d.valor}","${d.motivo}","${d.fundamento}","${d.processo_administrativo_punitivo}"\n`; 
+            csv += `"${d.cnpj}","${d.razao_social}","${d.numero_contrato}","${d.objeto_contrato}","${d.motivo_sancao}","${d.observacao}"\n`; 
         });
         downloadFile(csv, gerarNomeArquivoBase() + ".csv", "text/csv");
     }
 
     function exportarXLSX() {
         const data = tabela.rows({ filter: 'applied' }).data().toArray();
-        const dataLimpa = data.map(({ busca_nome, ano_sancao_extraido, mes_sancao_extraido, ...resto }) => resto);
+        const dataLimpa = data.map(({ busca_nome, ...resto }) => resto);
         const ws = XLSX.utils.json_to_sheet(dataLimpa);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Sanções");
+        XLSX.utils.book_append_sheet(wb, ws, "Contratos");
         XLSX.writeFile(wb, gerarNomeArquivoBase() + ".xlsx");
     }
 
     function exportarJSON() {
         const data = tabela.rows({ filter: 'applied' }).data().toArray();
-        const dataLimpa = data.map(({ busca_nome, ano_sancao_extraido, mes_sancao_extraido, ...resto }) => resto);
+        const dataLimpa = data.map(({ busca_nome, ...resto }) => resto);
         downloadFile(JSON.stringify(dataLimpa, null, 2), gerarNomeArquivoBase() + ".json", "application/json");
     }
 
@@ -433,7 +397,7 @@
         data.forEach(d => {
             xml += '<registro>';
             for (let k in d) {
-                if(typeof d[k] !== 'object' && k !== 'busca_nome' && k !== 'ano_sancao_extraido' && k !== 'mes_sancao_extraido') {
+                if(typeof d[k] !== 'object' && k !== 'busca_nome') {
                      xml += `<${k}>${d[k]}</${k}>`;
                 }
             }
@@ -458,8 +422,7 @@
     }
 
     $(document).ready(function() {
-        $('select').on('change', aplicarFiltros);
-        $('#filtroTexto').on('input', aplicarFiltros); 
+        $('#filtroTexto, #filtroContrato').on('input', aplicarFiltros); 
         carregarDados();
     });
 </script>
