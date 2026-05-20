@@ -19,11 +19,7 @@
         .logo-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .texto-camara { font-size: 9px; color: #cbd5e1; letter-spacing: 2px; font-weight: 500; text-transform: uppercase; white-space: nowrap; margin-top: 2px; }
 
-        .brasao {
-            max-width: 100%;
-            height: auto;
-            object-fit: contain;
-        }
+        .brasao { max-width: 100%; height: auto; object-fit: contain; }
         
         .painel-grupo { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 15px; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .titulo-painel { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 0 10px; }
@@ -49,7 +45,6 @@
         .dt-custom-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 5px 0; }
         .badge-contagem { background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; border: 1px solid #bae6fd; }
 
-        /* CORREÇÃO DO MENU "EXIBIR X RESULTADOS" */
         .dataTables_length label { display: flex !important; align-items: center; gap: 8px; font-size: 13px; color: #475569; font-weight: 500; margin: 0; white-space: nowrap; }
         .dataTables_length select { width: auto !important; height: auto !important; padding: 4px 10px !important; display: inline-block; }
 
@@ -87,9 +82,6 @@
 
         #cabecalho-impressao { display: none; }
 
-        /* =========================================
-           4. TELA PEQUENA (CELULAR) E IMPRESSÃO
-           ========================================= */
         @media (max-width: 600px) {
             .topo { flex-direction: column; gap: 10px; text-align: center; }
             .card-header { flex-direction: column; text-align: center; gap: 10px; }
@@ -128,20 +120,20 @@
 
     <div id="loader">
         <div class="spinner"></div>
-        <span>Carregando base de dados de contratos...</span>
+        <span>A carregar base de dados de contratos...</span>
     </div>
 
     <main class="container" id="main-container" style="display: none;">
         <fieldset class="painel-grupo">
             <legend class="titulo-painel">Filtros de Pesquisa</legend>
-            <div id="badge-atualizacao" class="badge-atualizacao">⏳ Sincronizando...</div>
+            <div id="badge-atualizacao" class="badge-atualizacao">⏳ A sincronizar...</div>
             
             <div class="painel-filtros" style="margin-bottom: 10px;">
-                <input type="text" id="filtroTexto" placeholder="Pesquisar por razão social, contrato, objeto..." autocomplete="off" aria-label="Pesquisar por texto">
-                <select id="filtroStatus" aria-label="Filtrar por Situação">
+                <input type="text" id="filtroTexto" placeholder="Pesquisar por razão social, contrato, objeto..." autocomplete="off">
+                <select id="filtroStatus">
                     <option value="">Situação (Todas)</option>
                 </select>
-                <select id="filtroTipoData" aria-label="Filtrar por Tipo de Data">
+                <select id="filtroTipoData">
                     <option value="">Filtrar período por...</option>
                     <option value="data_contrato">Data do Contrato</option>
                     <option value="vigencia_contrato">Vigência do Contrato</option>
@@ -149,14 +141,14 @@
             </div>
             
             <div class="painel-filtros">
-                <select id="filtroMes" aria-label="Filtrar por Mês">
+                <select id="filtroMes">
                     <option value="">Mês</option>
                     <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
                     <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
                     <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
                     <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                 </select>
-                <select id="filtroAno" aria-label="Filtrar por Ano"><option value="">Ano</option></select>
+                <select id="filtroAno"><option value="">Ano</option></select>
                 <button class="btn-filtro" onclick="limparFiltros()">Limpar filtros</button>
             </div>
         </fieldset>
@@ -177,11 +169,11 @@
             <legend class="titulo-painel">Visualização</legend>
             <div class="dt-custom-header">
                 <div id="comprimento-tabela"></div> 
-                <div id="contagem-registros" class="badge-contagem">0 registros encontrados</div>
+                <div id="contagem-registros" class="badge-contagem">0 registos encontrados</div>
             </div>
         </fieldset>
 
-        <table id="tabela" style="width:100%" role="presentation">
+        <table id="tabela" style="width:100%">
             <thead><tr><th>Dados dos Contratos</th></tr></thead>
             <tbody></tbody>
         </table>
@@ -199,7 +191,6 @@
     let dadosGlobais = [];
     let carimboAtualizacao = "";
 
-    // INFRAESTRUTURA
     function enviarAlturaIframe() {
         setTimeout(() => {
             const wrapper = document.getElementById('wrapper');
@@ -221,72 +212,94 @@
         return removerAcentos(partes.join('_')).replace(/[^a-zA-Z0-9_]/g, '');
     }
 
-    // CARREGAMENTO E PROCESSAMENTO
+    // Leitor Avançado (Motor substituído para resolver as quebras e as aspas)
+    function lerCSVAvançado(texto) {
+        let resultado = [];
+        let linha = [];
+        let celula = "";
+        let dentroAspas = false;
+        
+        for (let i = 0; i < texto.length; i++) {
+            let char = texto[i];
+            let proxChar = texto[i + 1];
+            
+            if (char === '"' && dentroAspas && proxChar === '"') {
+                celula += '"';
+                i++; 
+            } else if (char === '"') {
+                dentroAspas = !dentroAspas;
+            } else if (char === ',' && !dentroAspas) {
+                linha.push(celula.trim());
+                celula = "";
+            } else if ((char === '\n' || char === '\r') && !dentroAspas) {
+                if (char === '\r' && proxChar === '\n') i++; 
+                linha.push(celula.trim());
+                resultado.push(linha);
+                linha = [];
+                celula = "";
+            } else {
+                celula += char;
+            }
+        }
+        if (celula !== "" || linha.length > 0) {
+            linha.push(celula.trim());
+            resultado.push(linha);
+        }
+        return resultado;
+    }
+
     async function carregarDados() {
         $('#loader').show(); $('#main-container').hide();
         try {
             const response = await fetch(`${SHEET_URL}&cache=${Date.now()}`);
             const text = await response.text();
-            dadosGlobais = processarCSV(text);
+            
+            const linhasMatriz = lerCSVAvançado(text);
+            
+            if(linhasMatriz.length > 0 && linhasMatriz[0][0]) {
+                const match = linhasMatriz[0][0].match(/(\d{2}\/\d{2}\/\d{4},?\s*\d{2}:\d{2})/);
+                carimboAtualizacao = match ? `Atualizado em ${match[1].replace(',', '')}` : "Dados Sincronizados";
+            }
+
+            // Descobre onde estão os cabeçalhos (caso exista alguma linha vazia no topo)
+            let indexCabecalho = 1;
+            for(let i=0; i < Math.min(5, linhasMatriz.length); i++) {
+                const linhaTexto = linhasMatriz[i].join(" ").toLowerCase();
+                if(linhaTexto.includes("contrato") || linhaTexto.includes("social")) {
+                    indexCabecalho = i;
+                    break;
+                }
+            }
+
+            const headers = linhasMatriz[indexCabecalho].map(h => removerAcentos(h.trim().toLowerCase()));
+
+            dadosGlobais = linhasMatriz.slice(indexCabecalho + 1).map(colunas => {
+                let obj = {};
+                headers.forEach((h, i) => {
+                    let val = colunas[i] ? colunas[i] : "";
+                    if (h.includes("n_contrato") || h === "contrato") obj.n_contrato = val;
+                    else if (h.includes("razao") || h.includes("social")) obj.razao_social = val;
+                    else if (h.includes("objeto")) obj.objeto_contrato = val;
+                    else if (h.includes("data")) obj.data_contrato = val;
+                    else if (h.includes("valor")) obj.valor_contrato = val;
+                    else if (h.includes("vigencia")) obj.vigencia_contrato = val;
+                    else if (h.includes("modalidade")) obj.modalidade = val;
+                    else if (h.includes("fiscal")) obj.fiscal = val;
+                    else if (h.includes("situacao") || h.includes("status")) obj.situacao = val;
+                });
+                
+                let buscaUnificada = `${obj.razao_social || ''} ${obj.objeto_contrato || ''} ${obj.n_contrato || ''} ${obj.fiscal || ''}`;
+                obj.busca_indexada = removerAcentos(buscaUnificada.toLowerCase().replace(/\n/g, ' '));
+                return obj;
+            }).filter(d => d.n_contrato || d.razao_social);
+
             popularFiltrosDinamicos();
             aplicarFiltros();
+            
             $('#badge-atualizacao').text(`🟢 ${carimboAtualizacao}`);
             $('#loader').hide();
             $('#main-container').fadeIn(400, () => enviarAlturaIframe());
         } catch (e) { console.error(e); }
-    }
-
-    function processarCSV(str) {
-        const linhas = str.trim().split("\n");
-        const match = linhas[0].match(/(\d{2}\/\d{2}\/\d{4},?\s*\d{2}:\d{2})/);
-        carimboAtualizacao = match ? `Atualizado em ${match[1].replace(',', '')}` : "Dados Sincronizados";
-
-        // Novo separador inteligente: lê caractere por caractere e não quebra com aspas esquecidas
-        function separarColunas(linha) {
-            let colunas = [];
-            let valorAtual = "";
-            let dentroDeAspas = false;
-
-            for (let i = 0; i < linha.length; i++) {
-                let char = linha[i];
-                if (char === '"') {
-                    dentroDeAspas = !dentroDeAspas;
-                } else if (char === ',' && !dentroDeAspas) {
-                    colunas.push(valorAtual.trim());
-                    valorAtual = "";
-                } else {
-                    valorAtual += char;
-                }
-            }
-            colunas.push(valorAtual.trim());
-            // Limpa as aspas residuais do texto
-            return colunas.map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"'));
-        }
-
-        const headers = separarColunas(linhas[1]).map(h => h.toLowerCase());
-        
-        return linhas.slice(2).map(row => {
-            const colunas = separarColunas(row);
-            let obj = {};
-            
-            headers.forEach((h, i) => {
-                let val = colunas[i] ? colunas[i] : "";
-                if (h.includes("n_contrato")) obj.n_contrato = val;
-                if (h.includes("razao_social")) obj.razao_social = val;
-                if (h.includes("objeto_contrato")) obj.objeto_contrato = val;
-                if (h.includes("data_contrato")) obj.data_contrato = val;
-                if (h.includes("valor_contrato")) obj.valor_contrato = val;
-                if (h.includes("vigencia_contrato")) obj.vigencia_contrato = val;
-                if (h.includes("modalidade")) obj.modalidade = val;
-                if (h.includes("fiscal")) obj.fiscal = val;
-                if (h.includes("situacao")) obj.situacao = val;
-            });
-            
-            let buscaUnificada = `${obj.razao_social || ''} ${obj.objeto_contrato || ''} ${obj.n_contrato || ''} ${obj.fiscal || ''}`;
-            obj.busca_indexada = removerAcentos(buscaUnificada.toLowerCase());
-            
-            return obj;
-        }).filter(d => d.n_contrato || d.razao_social);
     }
 
     function popularFiltrosDinamicos() {
@@ -299,21 +312,16 @@
             if (d.vigencia_contrato) { const p = d.vigencia_contrato.split('/'); if(p[2] && p[2].length === 4) anos.add(p[2]); }
         });
         
-        // Alimenta o seletor de Situação
         let htmlStatus = '<option value="">Situação (Todas)</option>';
-        [...statuses].sort().forEach(s => {
-            htmlStatus += `<option value="${s}">${s}</option>`;
-        });
+        [...statuses].sort().forEach(s => { htmlStatus += `<option value="${s}">${s}</option>`; });
         $('#filtroStatus').html(htmlStatus);
 
-        // Alimenta o seletor de Ano
         let arrAnos = [...anos].sort((a,b) => b-a);
         let htmlAno = '<option value="">Ano</option>';
         arrAnos.forEach(a => { htmlAno += `<option value="${a}">${a}</option>`; });
         $('#filtroAno').html(htmlAno);
     }
 
-    // LÓGICA DE FILTRO E RENDER
     function aplicarFiltros() {
         const txt = removerAcentos($('#filtroTexto').val().toLowerCase());
         const sit = $('#filtroStatus').val();
@@ -337,9 +345,7 @@
             return matchTexto && matchSit && matchData;
         });
 
-        // Ordenação padrão: Alfabética por Razão Social
         res.sort((a, b) => (a.razao_social || "").localeCompare(b.razao_social || ""));
-
         renderizar(res);
     }
 
@@ -350,7 +356,7 @@
             data: dados,
             pageLength: 10,
             ordering: false,
-            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json', lengthMenu: "Exibir _MENU_ resultados" },
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-PT.json', lengthMenu: "Exibir _MENU_ resultados" },
             dom: 'lrt<"dt-bottom-controls"ip>',
             columns: [{
                 data: null,
@@ -358,6 +364,9 @@
                     const sitNormalizado = (d.situacao || '').toLowerCase();
                     const statusClass = (sitNormalizado.includes('encerrado') || sitNormalizado.includes('inativo') || sitNormalizado.includes('suspenso')) ? 'status-desligado' : 'status-ativo';
                     
+                    // Transforma os "Enters" (quebras de linha reais) em quebras de linha de HTML para ficarem perfeitas no cartão
+                    const objetoFormatado = d.objeto_contrato ? d.objeto_contrato.replace(/\n/g, '<br>') : '-';
+
                     return `
                         <div class="card-info">
                             <div class="card-header">
@@ -370,7 +379,7 @@
                             <div class="card-body">
                                 <div class="info-col full-width">
                                     <span class="info-label">Objeto do Contrato</span>
-                                    <span class="info-valor" style="font-weight: 500; font-size: 12.5px;">${d.objeto_contrato || '-'}</span>
+                                    <span class="info-valor" style="font-weight: 500; font-size: 12.5px;">${objetoFormatado}</span>
                                 </div>
                                 <div class="info-col">
                                     <span class="info-label">Valor do Contrato</span>
@@ -395,19 +404,16 @@
             initComplete: function() { $('.dataTables_length').appendTo('#comprimento-tabela'); enviarAlturaIframe(); },
             drawCallback: function() { 
                 const total = this.api().rows({ filter: 'applied' }).count();
-                $('#contagem-registros').html(`<b>${total}</b> contratos encontrados`);
+                $('#contagem-registros').html(`<b>${total}</b> registos encontrados`);
                 enviarAlturaIframe(); 
             }
         });
 
         tabela.on('page.dt', function () {
-            setTimeout(function() {
-                document.getElementById('painel-visualizacao').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
+            setTimeout(function() { document.getElementById('painel-visualizacao').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
         });
     }
 
-    // EXPORTAÇÃO
     function exportarCSV() {
         const data = tabela.rows({ filter: 'applied' }).data().toArray();
         let csv = "\ufeffN_Contrato,Razao_Social,Objeto_Contrato,Data_Contrato,Valor_Contrato,Vigencia_Contrato,Modalidade,Fiscal,Situacao\n";
@@ -421,15 +427,8 @@
     function exportarXLSX() {
         const data = tabela.rows({ filter: 'applied' }).data().toArray();
         const dataFormatada = data.map(d => ({
-            "Nº Contrato": d.n_contrato,
-            "Razão Social": d.razao_social,
-            "Objeto": d.objeto_contrato,
-            "Data Contrato": d.data_contrato,
-            "Valor": d.valor_contrato,
-            "Vigência": d.vigencia_contrato,
-            "Modalidade": d.modalidade,
-            "Fiscal": d.fiscal,
-            "Situação": d.situacao
+            "Nº Contrato": d.n_contrato, "Razão Social": d.razao_social, "Objeto": d.objeto_contrato, "Data Contrato": d.data_contrato,
+            "Valor": d.valor_contrato, "Vigência": d.vigencia_contrato, "Modalidade": d.modalidade, "Fiscal": d.fiscal, "Situação": d.situacao
         }));
         const ws = XLSX.utils.json_to_sheet(dataFormatada);
         const wb = XLSX.utils.book_new();
@@ -439,11 +438,7 @@
 
     function exportarJSON() {
         const data = tabela.rows({ filter: 'applied' }).data().toArray();
-        const exportData = data.map(d => {
-            let item = {...d};
-            delete item.busca_indexada;
-            return item;
-        });
+        const exportData = data.map(d => { let item = {...d}; delete item.busca_indexada; return item; });
         downloadFile(JSON.stringify(exportData, null, 2), gerarNomeArquivoBase() + ".json", "application/json");
     }
 
@@ -452,11 +447,7 @@
         let xml = '<?xml version="1.0" encoding="UTF-8"?><contratos>';
         data.forEach(d => {
             xml += '<contrato>';
-            for (let k in d) {
-                if(typeof d[k] !== 'object' && k !== 'busca_indexada') {
-                     xml += `<${k}>${d[k]}</${k}>`;
-                }
-            }
+            for (let k in d) if(typeof d[k] !== 'object' && k !== 'busca_indexada') xml += `<${k}>${d[k]}</${k}>`;
             xml += '</contrato>';
         });
         xml += '</contratos>';
