@@ -28,7 +28,7 @@
         button.btn-filtro { height: 38px; border-radius: 6px; background: #003b75; color: white; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; width: 100%; }
         button.btn-filtro:hover { background: #00274d; }
 
-        /* FILTROS RESPONSIVOS */
+        /* FILTROS RESPONSIVOS - ADAPTADOS PARA UMA ÚNICA LINHA */
         .painel-filtros { display: grid; grid-template-columns: 2fr 1fr 150px; gap: 10px; margin-bottom: 10px; }
         
         /* EXPORTAÇÃO RESPONSIVA E CARROSSEL */
@@ -70,21 +70,7 @@
         .btn-obs { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; width: fit-content; gap: 8px; transition: 0.2s; text-transform: uppercase; }
         .btn-obs:hover { background: #e2e8f0; color: #0f172a; }
         
-        /* Ajustes aplicados aqui: texto justificado */
-        .obs-content { 
-            display: none; 
-            margin-top: 10px; 
-            padding: 15px; 
-            background: #f8fafc; 
-            border: 1px solid #e2e8f0;
-            border-left: 4px solid #003b75; 
-            border-radius: 6px; 
-            font-size: 13.5px; 
-            color: #475569; 
-            line-height: 1.7; 
-            text-align: left; 
-            white-space: pre-wrap; /* Esta é a regra de ouro para respeitar a planilha */
-        }
+        .obs-content { display: none; margin-top: 8px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #003b75; border-radius: 6px; font-size: 13.5px; color: #475569; line-height: 1.7; text-align: left; white-space: pre-wrap; }
         .obs-content.mostrar { display: block; animation: fadeIn 0.3s ease-in-out; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
@@ -314,7 +300,6 @@
                 render: function(d) {
                     const idObservacao = 'obs-' + Math.random().toString(36).substr(2, 9);
                     const temObservacao = d.observacao && d.observacao.trim() !== "";
-                    
                     const textoObservacaoFormatado = temObservacao ? d.observacao : "";
 
                     return `
@@ -327,9 +312,9 @@
                             </div>
                             <div class="card-body">
                                 <div class="info-col"><span class="info-label">Contrato</span><span class="info-valor">${d.numero_contrato || "—"}</span></div>
-                                <div class="info-col span-2"><span class="info-label">Objeto do Contrato</span><span class="info-valor">${d.objeto_contrato || "—"}</span></div>
+                                <div class="info-col span-2"><span class="info-label">Motivo da Sanção</span><span class="info-valor">${d.motivo_sancao || "—"}</span></div>
                                 
-                                <div class="info-col span-3"><span class="info-label">Motivo da Sanção</span><span class="info-valor">${d.motivo_sancao || "—"}</span></div>
+                                <div class="info-col span-3"><span class="info-label">Objeto do Contrato</span><span class="info-valor">${d.objeto_contrato || "—"}</span></div>
                                 
                                 ${temObservacao ? `
                                     <div class="info-col span-3">
@@ -383,7 +368,6 @@
         const data = tabela.rows({ filter: 'applied' }).data().toArray();
         let csv = "\ufeffCNPJ,Razao Social,Numero Contrato,Objeto Contrato,Motivo Sancao,Observacao\n";
         data.forEach(d => { 
-            // Limpa as quebras de linha reais do CSV para não quebrar a formatação da exportação
             const obsLimpa = d.observacao ? d.observacao.replace(/\r?\n/g, ' ') : '';
             csv += `"${d.cnpj}","${d.razao_social}","${d.numero_contrato}","${d.objeto_contrato}","${d.motivo_sancao}","${obsLimpa}"\n`; 
         });
