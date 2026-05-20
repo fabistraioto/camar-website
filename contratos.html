@@ -56,7 +56,6 @@
         .card-header { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; background: #fff; display: flex; justify-content: space-between; align-items: center; }
         .card-header-texto { display: flex; flex-direction: column; gap: 2px; width: 75%; }
         .nome-principal { font-size: 15px; font-weight: 800; color: #003b75; text-transform: uppercase; word-break: break-word; }
-        .subtitulo-card { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; }
         
         .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; text-align: center; white-space: nowrap; }
         .status-ativo { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
@@ -65,8 +64,10 @@
         .card-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); padding: 12px 15px; gap: 12px; }
         .info-col { display: flex; flex-direction: column; }
         .info-col.full-width { grid-column: 1 / -1; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #f1f5f9; }
+        .info-col.sub-info { grid-column: 1 / -1; background: transparent; padding: 0; border: none; margin-bottom: -4px; margin-top: -4px; }
         .info-label { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
         .info-valor { font-size: 13px; font-weight: 700; color: #1e293b; }
+        .texto-secundario { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; }
 
         /* PAGINAÇÃO */
         .dt-bottom-controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px; background: white; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 10px; margin-bottom: 20px;}
@@ -120,13 +121,13 @@
 
     <div id="loader">
         <div class="spinner"></div>
-        <span>A carregar base de dados de contratos...</span>
+        <span>Carregando base de dados de contratos...</span>
     </div>
 
     <main class="container" id="main-container" style="display: none;">
         <fieldset class="painel-grupo">
             <legend class="titulo-painel">Filtros de Pesquisa</legend>
-            <div id="badge-atualizacao" class="badge-atualizacao">⏳ A sincronizar...</div>
+            <div id="badge-atualizacao" class="badge-atualizacao">⏳ Sincronizando...</div>
             
             <div class="painel-filtros" style="margin-bottom: 10px;">
                 <input type="text" id="filtroTexto" placeholder="Pesquisar por razão social, contrato, objeto..." autocomplete="off">
@@ -169,7 +170,7 @@
             <legend class="titulo-painel">Visualização</legend>
             <div class="dt-custom-header">
                 <div id="comprimento-tabela"></div> 
-                <div id="contagem-registros" class="badge-contagem">0 registos encontrados</div>
+                <div id="contagem-registros" class="badge-contagem">0 registros encontrados</div>
             </div>
         </fieldset>
 
@@ -203,6 +204,14 @@
 
     function removerAcentos(str) { return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : ""; }
 
+    // Converte a data formato DD/MM/AAAA para milissegundos para ordenação precisa
+    function converterDataParaTimestamp(dataStr) {
+        if (!dataStr || dataStr === "-") return 0;
+        const partes = dataStr.split('/');
+        if (partes.length !== 3) return 0;
+        return new Date(partes[2], partes[1] - 1, partes[0]).getTime();
+    }
+
     function gerarNomeArquivoBase() {
         let partes = ["contratos"];
         const txt = $('#filtroTexto').val().trim();
@@ -212,7 +221,7 @@
         return removerAcentos(partes.join('_')).replace(/[^a-zA-Z0-9_]/g, '');
     }
 
-    // Leitor Avançado (Motor substituído para resolver as quebras e as aspas)
+    // Leitor Avançado à prova de aspas e vírgulas textuais internas
     function lerCSVAvançado(texto) {
         let resultado = [];
         let linha = [];
@@ -261,7 +270,6 @@
                 carimboAtualizacao = match ? `Atualizado em ${match[1].replace(',', '')}` : "Dados Sincronizados";
             }
 
-            // Descobre onde estão os cabeçalhos (caso exista alguma linha vazia no topo)
             let indexCabecalho = 1;
             for(let i=0; i < Math.min(5, linhasMatriz.length); i++) {
                 const linhaTexto = linhasMatriz[i].join(" ").toLowerCase();
@@ -288,6 +296,9 @@
                     else if (h.includes("situacao") || h.includes("status")) obj.situacao = val;
                 });
                 
+                // Converte e armazena o timestamp para otimizar a ordenação cronológica rápida
+                obj.timestamp_contrato = converterDataParaTimestamp(obj.data_contrato);
+
                 let buscaUnificada = `${obj.razao_social || ''} ${obj.objeto_contrato || ''} ${obj.n_contrato || ''} ${obj.fiscal || ''}`;
                 obj.busca_indexada = removerAcentos(buscaUnificada.toLowerCase().replace(/\n/g, ' '));
                 return obj;
@@ -313,7 +324,9 @@
         });
         
         let htmlStatus = '<option value="">Situação (Todas)</option>';
-        [...statuses].sort().forEach(s => { htmlStatus += `<option value="${s}">${s}</option>`; });
+        [...statuses].sort().forEach(s => {
+            htmlStatus += `<option value="${s}">${s}</option>`;
+        });
         $('#filtroStatus').html(htmlStatus);
 
         let arrAnos = [...anos].sort((a,b) => b-a);
@@ -345,7 +358,22 @@
             return matchTexto && matchSit && matchData;
         });
 
-        res.sort((a, b) => (a.razao_social || "").localeCompare(b.razao_social || ""));
+        // REQUISITO: Ativos primeiro, Encerrados depois | Do mais novo para o mais antigo (Decrescente por timestamp)
+        res.sort((a, b) => {
+            const sitA = (a.situacao || "").toLowerCase();
+            const sitB = (b.situacao || "").toLowerCase();
+            const aEncerrado = sitA.includes('encerrado') || sitA.includes('inativo') || sitA.includes('suspenso');
+            const bEncerrado = sitB.includes('encerrado') || sitB.includes('inativo') || sitB.includes('suspenso');
+
+            // 1. Agrupamento por status (Quem NÃO é encerrado fica acima)
+            if (aEncerrado !== bEncerrado) {
+                return aEncerrado ? 1 : -1;
+            }
+            
+            // 2. Critério de desempate interno: Do mais novo (maior timestamp) para o mais antigo (menor timestamp)
+            return b.timestamp_contrato - a.timestamp_contrato;
+        });
+
         renderizar(res);
     }
 
@@ -356,7 +384,7 @@
             data: dados,
             pageLength: 10,
             ordering: false,
-            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-PT.json', lengthMenu: "Exibir _MENU_ resultados" },
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json', lengthMenu: "Exibir _MENU_ resultados" },
             dom: 'lrt<"dt-bottom-controls"ip>',
             columns: [{
                 data: null,
@@ -364,7 +392,13 @@
                     const sitNormalizado = (d.situacao || '').toLowerCase();
                     const statusClass = (sitNormalizado.includes('encerrado') || sitNormalizado.includes('inativo') || sitNormalizado.includes('suspenso')) ? 'status-desligado' : 'status-ativo';
                     
-                    // Transforma os "Enters" (quebras de linha reais) em quebras de linha de HTML para ficarem perfeitas no cartão
+                    // REQUISITO: Tradutor inteligente para converter as siglas das modalidades em nomes formais extensos
+                    let modalidadeTraduzida = d.modalidade || '-';
+                    const modNormalizada = modalidadeTraduzida.trim().toUpperCase();
+                    if (modNormalizada === 'PE') modalidadeTraduzida = "Pregão Eletrônico";
+                    else if (modNormalizada === 'DL') modalidadeTraduzida = "Dispensa de Licitação";
+                    else if (modNormalizada === 'INEX') modalidadeTraduzida = "Inexigibilidade";
+
                     const objetoFormatado = d.objeto_contrato ? d.objeto_contrato.replace(/\n/g, '<br>') : '-';
 
                     return `
@@ -372,11 +406,13 @@
                             <div class="card-header">
                                 <div class="card-header-texto">
                                     <span class="nome-principal">${d.razao_social || 'Razão Social Não Informada'}</span>
-                                    <span class="subtitulo-card">Contrato: ${d.n_contrato || '-'} | Modalidade: ${d.modalidade || '-'}</span>
                                 </div>
                                 <span class="status-badge ${statusClass}">${d.situacao || 'N/I'}</span>
                             </div>
                             <div class="card-body">
+                                <div class="info-col sub-info">
+                                    <span class="texto-secundario"><b>Número do Contrato:</b> ${d.n_contrato || '-'} &nbsp;|&nbsp; <b>Modalidade:</b> ${modalidadeTraduzida}</span>
+                                </div>
                                 <div class="info-col full-width">
                                     <span class="info-label">Objeto do Contrato</span>
                                     <span class="info-valor" style="font-weight: 500; font-size: 12.5px;">${objetoFormatado}</span>
@@ -404,7 +440,7 @@
             initComplete: function() { $('.dataTables_length').appendTo('#comprimento-tabela'); enviarAlturaIframe(); },
             drawCallback: function() { 
                 const total = this.api().rows({ filter: 'applied' }).count();
-                $('#contagem-registros').html(`<b>${total}</b> registos encontrados`);
+                $('#contagem-registros').html(`<b>${total}</b> contratos encontrados`);
                 enviarAlturaIframe(); 
             }
         });
@@ -438,7 +474,7 @@
 
     function exportarJSON() {
         const data = tabela.rows({ filter: 'applied' }).data().toArray();
-        const exportData = data.map(d => { let item = {...d}; delete item.busca_indexada; return item; });
+        const exportData = data.map(d => { let item = {...d}; delete item.busca_indexada; delete item.timestamp_contrato; return item; });
         downloadFile(JSON.stringify(exportData, null, 2), gerarNomeArquivoBase() + ".json", "application/json");
     }
 
@@ -447,7 +483,7 @@
         let xml = '<?xml version="1.0" encoding="UTF-8"?><contratos>';
         data.forEach(d => {
             xml += '<contrato>';
-            for (let k in d) if(typeof d[k] !== 'object' && k !== 'busca_indexada') xml += `<${k}>${d[k]}</${k}>`;
+            for (let k in d) if(typeof d[k] !== 'object' && k !== 'busca_indexada' && k !== 'timestamp_contrato') xml += `<${k}>${d[k]}</${k}>`;
             xml += '</contrato>';
         });
         xml += '</contratos>';
