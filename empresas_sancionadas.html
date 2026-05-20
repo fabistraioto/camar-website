@@ -316,8 +316,7 @@
                     const idObservacao = 'obs-' + Math.random().toString(36).substr(2, 9);
                     const temObservacao = d.observacao && d.observacao.trim() !== "";
                     
-                    // Tratamento aplicado aqui: Substitui \n por <br>
-                    const textoObservacaoFormatado = temObservacao ? d.observacao.replace(/\r?\n/g, '<br>') : "";
+                    const textoObservacaoFormatado = temObservacao ? d.observacao : "";
 
                     return `
                         <div class="card-info">
