@@ -193,7 +193,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
-    // URL convertida automaticamente para saída em CSV amigável para requisições AJAX
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOFxEcL_ieplRjzBjFVqfv7jj1EsXNyWbf3Db_1JxfzOCFx1qNhFRswrGWVlcwyD1H0qFb-vsLc3jf/pub?output=csv";
     
     let tabela;
@@ -222,44 +221,64 @@
         return removerAcentos(partes.join('_')).replace(/[^a-zA-Z0-9_]/g, '');
     }
 
-    // CARREGAMENTO E PROCESSAMENTO
+    // CARREGAMENTO
     async function carregarDados() {
         $('#loader').show(); $('#main-container').hide();
         try {
             const response = await fetch(`${SHEET_URL}&cache=${Date.now()}`);
-            if (!response.ok) throw new Error(`Erro na requisição: Status ${response.status}`);
+            if (!response.ok) throw new Error("Erro de conexão com o Google Sheets.");
             
             const text = await response.text();
             dadosGlobais = processarCSV(text);
+            
             popularFiltrosDinamicos();
             aplicarFiltros();
+            
             $('#badge-atualizacao').text(`🟢 ${carimboAtualizacao}`);
             $('#loader').hide();
             $('#main-container').fadeIn(400, () => enviarAlturaIframe());
         } catch (e) { 
-            console.error(e);
-            $('#loader').html(`<div style="color: #991b1b; text-align: center;">
-                <p><b>Falha ao carregar os dados da planilha.</b></p>
-                <p style="font-size: 12px; font-weight: normal;">Verifique se a planilha está 'Publicada na Web' ou veja o console (F12) para mais detalhes.</p>
-            </div>`);
+            console.error(e); 
+            $('#loader').html(`<div style="color: #991b1b; text-align: center;"><b>Erro ao processar a planilha.</b><br>Verifique o console (F12).</div>`);
         }
     }
 
+    // O SEGREDO: Novo Processador CSV à prova de falhas (Lida com "Enters" dentro das células)
     function processarCSV(str) {
-        const linhas = str.trim().split("\n");
-        // Captura o carimbo cronológico na célula A1 (linha 0)
-        const match = linhas[0].match(/(\d{2}\/\d{2}\/\d{4},?\s*\d{2}:\d{2})/);
+        // Função interna que lê o CSV caractere por caractere (não congela o navegador)
+        function csvToArray(text) {
+            let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
+            for (l of text) {
+                if ('"' === l) {
+                    if (s && l === p) row[i] += l;
+                    s = !s;
+                } else if (',' === l && s) l = row[++i] = '';
+                else if ('\n' === l && s) {
+                    if ('\r' === p) row[i] = row[i].slice(0, -1);
+                    row = ret[++r] = ['']; i = 0;
+                } else row[i] += l;
+                p = l;
+            }
+            if (ret[ret.length - 1].length === 1 && ret[ret.length - 1][0] === '') ret.pop();
+            return ret;
+        }
+
+        const linhasMatriz = csvToArray(str);
+        if (linhasMatriz.length < 2) return [];
+
+        // Linha 1 (Índice 0): Data de Atualização
+        const carimboStr = linhasMatriz[0][0] || "";
+        const match = carimboStr.match(/(\d{2}\/\d{2}\/\d{4},?\s*\d{2}:\d{2})/);
         carimboAtualizacao = match ? `Atualizado em ${match[1].replace(',', '')}` : "Dados Sincronizados";
 
-        // Lê os cabeçalhos reais na linha 1
-        const headers = linhas[1].split(",").map(h => h.trim().replace(/"/g, '').toLowerCase());
+        // Linha 2 (Índice 1): Cabeçalhos
+        const headers = linhasMatriz[1].map(h => h.trim().toLowerCase());
         
-        return linhas.slice(2).map(row => {
-            const colunas = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        // Linhas 3+ (Índice 2+): Dados dos Contratos
+        return linhasMatriz.slice(2).map(colunas => {
             let obj = {};
-            
             headers.forEach((h, i) => {
-                let val = colunas[i] ? colunas[i].replace(/"/g, '').trim() : "";
+                let val = colunas[i] ? colunas[i].trim() : "";
                 if (h.includes("n_contrato")) obj.n_contrato = val;
                 if (h.includes("razao_social")) obj.razao_social = val;
                 if (h.includes("objeto_contrato")) obj.objeto_contrato = val;
@@ -271,14 +290,14 @@
                 if (h.includes("situacao")) obj.situacao = val;
             });
             
-            // Unifica termos textuais para otimizar e acelerar a busca global instantânea
             let buscaUnificada = `${obj.razao_social || ''} ${obj.objeto_contrato || ''} ${obj.n_contrato || ''} ${obj.fiscal || ''}`;
-            obj.busca_indexada = removerAcentos(buscaUnificada.toLowerCase());
+            obj.busca_indexada = removerAcentos(buscaUnificada.toLowerCase().replace(/\n/g, ' '));
             
             return obj;
         }).filter(d => d.n_contrato || d.razao_social);
     }
 
+    // FILTROS E RENDERIZAÇÃO
     function popularFiltrosDinamicos() {
         let statuses = new Set();
         let anos = new Set();
@@ -289,84 +308,8 @@
             if (d.vigencia_contrato) { const p = d.vigencia_contrato.split('/'); if(p[2] && p[2].length === 4) anos.add(p[2]); }
         });
         
-        // Alimenta o seletor de Situação de forma dinâmica baseada na sua planilha
         let htmlStatus = '<option value="">Situação (Todas)</option>';
-        [...statuses].sort().forEach(s => {
-            htmlStatus += `<option value="${s}">${s}</option>`;
-        });
+        [...statuses].sort().forEach(s => { htmlStatus += `<option value="${s}">${s}</option>`; });
         $('#filtroStatus').html(htmlStatus);
 
-        // Alimenta o seletor de Ano
-        let arrAnos = [...anos].sort((a,b) => b-a);
-        let htmlAno = '<option value="">Ano</option>';
-        arrAnos.forEach(a => { htmlAno += `<option value="${a}">${a}</option>`; });
-        $('#filtroAno').html(htmlAno);
-    }
-
-    // LÓGICA DE FILTRO E RENDER
-    function aplicarFiltros() {
-        const txt = removerAcentos($('#filtroTexto').val().toLowerCase());
-        const sit = $('#filtroStatus').val();
-        const tipoData = $('#filtroTipoData').val();
-        const mes = $('#filtroMes').val();
-        const ano = $('#filtroAno').val();
-
-        const res = dadosGlobais.filter(d => {
-            const matchTexto = !txt || d.busca_indexada.includes(txt);
-            const matchSit = !sit || d.situacao === sit;
-
-            let matchData = true;
-            if (tipoData || mes || ano) {
-                const mContrato = d.data_contrato ? (!mes || d.data_contrato.split('/')[1] === mes) && (!ano || d.data_contrato.split('/')[2] === ano) : false;
-                const mVigencia = d.vigencia_contrato ? (!mes || d.vigencia_contrato.split('/')[1] === mes) && (!ano || d.vigencia_contrato.split('/')[2] === ano) : false;
-
-                if (tipoData === 'data_contrato') matchData = mContrato;
-                else if (tipoData === 'vigencia_contrato') matchData = mVigencia;
-                else matchData = mContrato || mVigencia;
-            }
-            return matchTexto && matchSit && matchData;
-        });
-
-        // Ordenação padrão: Alfabética por Razão Social
-        res.sort((a, b) => (a.razao_social || "").localeCompare(b.razao_social || ""));
-
-        renderizar(res);
-    }
-
-    function renderizar(dados) {
-        if (tabela) { tabela.destroy(); $('#comprimento-tabela').empty(); }
-
-        tabela = $('#tabela').DataTable({
-            data: dados,
-            pageLength: 10,
-            ordering: false,
-            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json', lengthMenu: "Exibir _MENU_ resultados" },
-            dom: 'lrt<"dt-bottom-controls"ip>',
-            columns: [{
-                data: null,
-                render: function(d) {
-                    // Decide a cor da Badge de Status com base no texto
-                    const sitNormalizado = (d.situacao || '').toLowerCase();
-                    const statusClass = (sitNormalizado.includes('encerrado') || sitNormalizado.includes('inativo') || sitNormalizado.includes('suspenso')) ? 'status-desligado' : 'status-ativo';
-                    
-                    return `
-                        <div class="card-info">
-                            <div class="card-header">
-                                <div class="card-header-texto">
-                                    <span class="nome-principal">${d.razao_social || 'Razão Social Não Informada'}</span>
-                                    <span class="subtitulo-card">Contrato: ${d.n_contrato || '-'} | Modalidade: ${d.modalidade || '-'}</span>
-                                </div>
-                                <span class="status-badge ${statusClass}">${d.situacao || 'N/I'}</span>
-                            </div>
-                            <div class="card-body">
-                                <div class="info-col full-width">
-                                    <span class="info-label">Objeto do Contrato</span>
-                                    <span class="info-valor" style="font-weight: 500; font-size: 12.5px;">${d.objeto_contrato || '-'}</span>
-                                </div>
-                                <div class="info-col">
-                                    <span class="info-label">Valor do Contrato</span>
-                                    <span class="info-valor" style="color: #0369a1;">${d.valor_contrato || '-'}</span>
-                                </div>
-                                <div class="info-col">
-                                    <span class="info-label">Data Contrato</span>
-                                    <span class="info-valor
+        let arrAnos = [...anos].sort((a
