@@ -71,7 +71,20 @@
         .btn-obs:hover { background: #e2e8f0; color: #0f172a; }
         
         /* Ajustes aplicados aqui: texto justificado */
-        .obs-content { display: none; margin-top: 8px; padding: 12px; background: #f8fafc; border-left: 3px solid #003b75; border-radius: 0 6px 6px 0; font-size: 13px; color: #334155; line-height: 1.6; text-align: justify; }
+        .obs-content { 
+            display: none; 
+            margin-top: 10px; 
+            padding: 15px; 
+            background: #f8fafc; 
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #003b75; 
+            border-radius: 6px; 
+            font-size: 13.5px; 
+            color: #475569; 
+            line-height: 1.7; 
+            text-align: left; 
+            white-space: pre-wrap; /* Esta é a regra de ouro para respeitar a planilha */
+        }
         .obs-content.mostrar { display: block; animation: fadeIn 0.3s ease-in-out; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
