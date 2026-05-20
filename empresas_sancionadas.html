@@ -29,7 +29,7 @@
         button.btn-filtro:hover { background: #00274d; }
 
         /* FILTROS RESPONSIVOS */
-        .painel-filtros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+        .painel-filtros { display: grid; grid-template-columns: 2fr 1fr 150px; gap: 10px; margin-bottom: 10px; }
         
         /* EXPORTAÇÃO RESPONSIVA E CARROSSEL */
         .painel-exportacao { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
@@ -107,7 +107,6 @@
            RESPONSIVIDADE CELULAR E IFRAME
            ========================================= */
         @media (max-width: 850px) {
-            .painel-filtros { grid-template-columns: repeat(2, 1fr); }
             .card-body { grid-template-columns: repeat(2, 1fr); }
         }
            
