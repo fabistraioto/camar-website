@@ -85,6 +85,7 @@
         .card-perc { font-size: 9px; margin-top: 4px; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
         
         .perc-previsto  { background-color: rgba(0, 206, 209, 0.1); color: #008b8b; }
+        .perc-duodecimo { background-color: rgba(0, 0, 0, 0.06); color: #1f2937; }
         .perc-empenhado { background-color: rgba(84, 112, 198, 0.1); color: #3730a3; } 
         .perc-liquidado { background-color: rgba(145, 204, 117, 0.1); color: #166534; } 
         .perc-pago      { background-color: rgba(250, 200, 88, 0.1); color: #92400e; } 
@@ -92,6 +93,24 @@
 
         .container-grafico { max-width: 1240px; margin: 10px auto 20px auto; padding: 0 15px; }
         #meuGrafico { width: 100%; height: 500px; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); padding: 15px 0; }
+
+        /* REGRAS DE RESPONSIVIDADE (MEDIA QUERIES) */
+        @media (max-width: 1024px) {
+            .container-cards { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        }
+
+        @media (max-width: 768px) {
+            .painel-exportacao { flex-direction: column-reverse; align-items: center; gap: 15px; }
+            .painel-exportacao div { justify-content: center; }
+            .container-cards { grid-template-columns: repeat(2, 1fr); }
+            #meuGrafico { height: 400px; }
+        }
+
+        @media (max-width: 480px) {
+            .painel-filtros { flex-direction: column; gap: 12px; }
+            .filtro-grupo select { width: 100%; max-width: 280px; }
+            .container-cards { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -113,7 +132,7 @@
             <span id="txtAtualizacao">Carregando atualização...</span>
         </div>
         
-        <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <span>Download:</span>
             <button class="btn-export" onclick="exportarCSV()">CSV</button>
             <button class="btn-export" onclick="exportarXLSX()">XLSX</button>
@@ -131,7 +150,7 @@
         <div class="card duodecimo">
             <div class="card-titulo">Receita Recebida</div>
             <div class="card-valor" id="kpiDuodecimo">R$ 0,00</div>
-            <span class="card-perc perc-resultado" id="percRealizado">0% do Previsto</span>
+            <span class="card-perc perc-duodecimo" id="percRealizado">0% do Previsto</span>
         </div>
         <div class="card empenhado">
             <div class="card-titulo">Valor Empenhado</div>
@@ -162,6 +181,24 @@
     <script>
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSeiEl6tsmsHfu5qECIgTNFJtSLOHJWPUD334BxUtITfI-YKaWwH-vvVM5IBTO5WDypR_r3p_AjcxZL/pub?output=csv&t=' + new Date().getTime();
 
+        // CACHE DO DOM: Otimiza a performance guardando a referência dos elementos uma única vez
+        const kpiElements = {
+            previsto: document.getElementById('kpiPrevisto'),
+            duodecimo: document.getElementById('kpiDuodecimo'),
+            empenhado: document.getElementById('kpiEmpenhado'),
+            liquidado: document.getElementById('kpiLiquidado'),
+            pago: document.getElementById('kpiPago'),
+            resultado: document.getElementById('kpiResultado'),
+            percRealizado: document.getElementById('percRealizado'),
+            percEmpenhado: document.getElementById('percEmpenhado'),
+            percLiquidado: document.getElementById('percLiquidado'),
+            percPago: document.getElementById('percPago'),
+            percResultado: document.getElementById('percResultado'),
+            txtAtualizacao: document.getElementById('txtAtualizacao'),
+            filtroAno: document.getElementById('filtroAno'),
+            filtroMes: document.getElementById('filtroMes')
+        };
+
         const formatarMoeda = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
         
         const limparNumeroBR = (v) => {
@@ -182,7 +219,6 @@
                 const linhas = textoBruto.split(/\r?\n/);
                 const primeiraLinha = linhas[0];
                 
-                // CORREÇÃO: Captura cirurgicamente apenas o padrão da data e hora, eliminando as vírgulas extras no final
                 let match = primeiraLinha.match(/MODIF_REAL:\s*\d{2}\/\d{2}\/\d{4},\s*\d{2}:\d{2}(:\d{2})?/i);
                 let textoAtualizacao = "";
                 
@@ -190,20 +226,19 @@
                     textoAtualizacao = match[0]
                         .replace(/MODIF_REAL:\s*/i, "Dados atualizados em ")
                         .replace(",", " às")
-                        .replace(/:\d{2}$/, ""); /* Corta os segundos do final */
+                        .replace(/:\d{2}$/, "");
                 } else {
-                    // Fallback de limpeza caso o padrão sofra microalterações
                     textoAtualizacao = primeiraLinha.replace(/[",;]+$/, '').replace(/"/g, '').trim();
                     if (textoAtualizacao.toUpperCase().includes("MODIF_REAL")) {
                         textoAtualizacao = textoAtualizacao
-                            .replace(/MODIF_REAL:\s*/i, "Dados atualizados em ")
+                            .replace(/MODIF_REAL:\s*/i, "Dados updated em ")
                             .replace(",", " às")
-                            .replace(/:\d{2}$/, ""); /* Corta os segundos do final */
+                            .replace(/:\d{2}$/, "");
                     }
                 }
                 
-                if (textoAtualizacao) {
-                    document.getElementById('txtAtualizacao').textContent = textoAtualizacao;
+                if (textoAtualizacao && kpiElements.txtAtualizacao) {
+                    kpiElements.txtAtualizacao.textContent = textoAtualizacao;
                 }
 
                 const dadosTabelaCsv = linhas.slice(1).join('\n');
@@ -236,16 +271,16 @@
             })
             .catch(err => {
                 console.error("Erro no carregamento:", err);
-                document.getElementById('txtAtualizacao').textContent = "Atualização indisponível";
+                if (kpiElements.txtAtualizacao) kpiElements.txtAtualizacao.textContent = "Atualização indisponível";
             });
 
         function popularFiltros(d) {
-            const sAno = document.getElementById('filtroAno'), sMes = document.getElementById('filtroMes');
+            const sAno = kpiElements.filtroAno, sMes = kpiElements.filtroMes;
             const anos = [...new Set(d.map(i => i.ano))].sort((a,b) => b-a);
             const meses = [...new Set(d.map(i => i.mes.toUpperCase()))];
             
             anos.forEach(a => { let o = document.createElement('option'); o.value = a; o.textContent = a; sAno.appendChild(o); });
-            meses.forEach(m => { let o = document.createElement('option'); o.value = m; o.textContent = m; sMes.appendChild(o); });
+            textMeses = meses.forEach(m => { let o = document.createElement('option'); o.value = m; o.textContent = m; sMes.appendChild(o); });
             
             const atual = new Date().getFullYear().toString();
             sAno.value = anos.includes(atual) ? atual : anos[0];
@@ -255,7 +290,7 @@
         }
 
         function aplicarFiltros() {
-            const aS = document.getElementById('filtroAno').value, mS = document.getElementById('filtroMes').value;
+            const aS = kpiElements.filtroAno.value, mS = kpiElements.filtroMes.value;
             dadosVisiveis = dadosOriginais.filter(l => (aS === 'Todos' || l.ano === aS) && (mS === 'Todos' || l.mes.toUpperCase() === mS));
             
             let titulo = `Acompanhamento Orçamentário ${aS !== 'Todos' ? '- ' + aS : ''}`;
@@ -273,18 +308,18 @@
                 tRes += limparNumeroBR(l.resultado);
             });
 
-            document.getElementById('kpiPrevisto').textContent = formatarMoeda(tPre);
-            document.getElementById('kpiDuodecimo').textContent = formatarMoeda(tRec);
-            document.getElementById('kpiEmpenhado').textContent = formatarMoeda(tEmp);
-            document.getElementById('kpiLiquidado').textContent = formatarMoeda(tLiq);
-            document.getElementById('kpiPago').textContent = formatarMoeda(tPag);
-            document.getElementById('kpiResultado').textContent = formatarMoeda(tRes);
+            kpiElements.previsto.textContent = formatarMoeda(tPre);
+            kpiElements.duodecimo.textContent = formatarMoeda(tRec);
+            kpiElements.empenhado.textContent = formatarMoeda(tEmp);
+            kpiElements.liquidado.textContent = formatarMoeda(tLiq);
+            kpiElements.pago.textContent = formatarMoeda(tPag);
+            kpiElements.resultado.textContent = formatarMoeda(tRes);
 
-            document.getElementById('percRealizado').textContent = calcularPerc(tRec, tPre) + ' do Previsto';
-            document.getElementById('percEmpenhado').textContent = calcularPerc(tEmp, tRec) + ' do Recebido';
-            document.getElementById('percLiquidado').textContent = calcularPerc(tLiq, tRec) + ' do Recebido';
-            document.getElementById('percPago').textContent = calcularPerc(tPag, tRec) + ' do Recebido';
-            document.getElementById('percResultado').textContent = calcularPerc(tRes, tRec) + ' Livre';
+            kpiElements.percRealizado.textContent = calcularPerc(tRec, tPre) + ' do Previsto';
+            kpiElements.percEmpenhado.textContent = calcularPerc(tEmp, tRec) + ' do Recebido';
+            kpiElements.percLiquidado.textContent = calcularPerc(tLiq, tRec) + ' do Recebido';
+            kpiElements.percPago.textContent = calcularPerc(tPag, tRec) + ' do Recebido';
+            kpiElements.percResultado.textContent = calcularPerc(tRes, tRec) + ' Livre';
         }
 
         function renderizarGrafico(d, titulo) {
@@ -400,7 +435,7 @@
         }
 
         function gerarNomeArquivoBase() {
-            const ano = document.getElementById('filtroAno').value;
+            const ano = kpiElements.filtroAno.value;
             let nome = 'orcamento_cmm'; 
             
             if (ano !== 'Todos') nome += '_' + ano;
