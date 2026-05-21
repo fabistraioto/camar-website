@@ -30,10 +30,9 @@
         button.btn-filtro { height: 38px; border-radius: 6px; background: #003b75; color: white; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; width: 100%; }
         button.btn-filtro:hover { background: #00274d; }
 
-        /* NOVO LAYOUT DE FILTROS (2 LINHAS DE 3, 1 LINHA DE 2) */
-        .painel-filtros { display: grid; gap: 10px; margin-bottom: 10px; }
-        .linha-2 { grid-template-columns: 2fr 1fr; } 
-        .linha-3 { grid-template-columns: repeat(3, 1fr); }
+        /* NOVO LAYOUT DE FILTROS (GRELHA ÚNICA PARA ALINHAMENTO PERFEITO) */
+        .painel-filtros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .span-2 { grid-column: span 2; }
 
         /* EXPORTAÇÃO RESPONSIVA */
         .painel-exportacao { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
@@ -101,7 +100,9 @@
             .card-body { grid-template-columns: 1fr 1fr; }
             .dt-custom-header, .dt-bottom-controls { flex-direction: column; text-align: center; }
             .dataTables_wrapper .dataTables_paginate { flex-wrap: wrap; justify-content: center; margin-top: 10px !important;}
-            .linha-2, .linha-3 { grid-template-columns: 1fr; }
+            /* Ajuste para mobile: empilha todos os filtros perfeitamente */
+            .painel-filtros { grid-template-columns: 1fr; }
+            .span-2 { grid-column: span 1; }
         }
 
         @media print {
@@ -141,14 +142,12 @@
             <legend class="titulo-painel">Filtros de Pesquisa</legend>
             <div id="badge-atualizacao" class="badge-atualizacao">⏳ Sincronizando...</div>
             
-            <div class="painel-filtros linha-2">
-                <input type="text" id="filtroTexto" placeholder="Pesquisar por razão social, CNPJ/CPF, contrato, objeto..." autocomplete="off">
+            <div class="painel-filtros">
+                <input type="text" id="filtroTexto" placeholder="Pesquisar por razão social, CNPJ/CPF, contrato, objeto..." autocomplete="off" class="span-2">
                 <select id="filtroFiscal">
                     <option value="">Fiscal</option>
                 </select>
-            </div>
-            
-            <div class="painel-filtros linha-3">
+                
                 <select id="filtroStatus">
                     <option value="">Situação</option>
                 </select>
@@ -160,9 +159,7 @@
                     <option value="data_contrato">Data do Contrato</option>
                     <option value="vigencia_contrato">Vigência do Contrato</option>
                 </select>
-            </div>
-            
-            <div class="painel-filtros linha-3" style="margin-bottom: 0;">
+                
                 <select id="filtroMes">
                     <option value="">Mês</option>
                     <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
@@ -368,7 +365,6 @@
         let anos = new Set();
         
         dadosGlobais.forEach(d => {
-            // REGRA NOVA: Não adiciona "Vigência Indeterminada" ao menu de filtros
             if (d.situacao && d.situacao !== "Vigência Indeterminada") {
                 statuses.add(d.situacao);
             }
@@ -414,7 +410,6 @@
         const res = dadosGlobais.filter(d => {
             const matchTexto = !txt || d.busca_indexada.includes(txt);
             
-            // REGRA NOVA: Se escolheu "Vigente", pega os Vigentes e os de Vigência Indeterminada
             let matchSit = true;
             if (sit) {
                 if (sit === "Vigente") {
@@ -486,10 +481,10 @@
                     if (temPdf || temSapl) {
                         htmlBotoesLinks += `<div class="info-row" style="margin-top: 4px;"><div class="container-links">`;
                         if (temPdf) {
-                            htmlBotoesLinks += `<a href="${d.link_pdf}" target="_blank" class="btn-link-externo btn-pdf">📄 Contrato (Inteiro Teor)</a>`;
+                            htmlBotoesLinks += `<a href="${d.link_pdf}" target="_blank" class="btn-link-externo btn-pdf">📄 Ir para o contrato</a>`;
                         }
                         if (temSapl) {
-                            htmlBotoesLinks += `<a href="${d.link_sapl}" target="_blank" class="btn-link-externo btn-sapl">📁 Pasta do Contrato (Aditivos)</a>`;
+                            htmlBotoesLinks += `<a href="${d.link_sapl}" target="_blank" class="btn-link-externo btn-sapl">📁 Ir para a pasta do contrato</a>`;
                         }
                         htmlBotoesLinks += `</div></div>`;
                     }
@@ -561,7 +556,7 @@
     }
 
     // ==========================================
-    // FUNÇÕES DE EXPORTAÇÃO BLINDADAS
+    // FUNÇÕES DE EXPORTAÇÃO BLINDADAS (COM LGPD)
     // ==========================================
     function gerarNomeArquivoBase() {
         let partes = ["contratos"];
