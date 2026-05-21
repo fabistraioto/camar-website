@@ -8,7 +8,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* AJUSTE IFRAME: box-sizing garante que o padding não ultrapasse os limites da tela */
         * { box-sizing: border-box; }
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f1f5f9; color: #1e293b; overflow-x: hidden; }
         
@@ -29,23 +28,10 @@
         }
         .filtro-grupo select:focus { border-color: #3b82f6; }
 
-        .badge-atualizacao {
-            background-color: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            padding: 8px 16px; border-radius: 30px;
-            display: flex; align-items: center; gap: 8px;
-            font-size: 13px; font-weight: bold; color: #1d4ed8;
-        }
-        .badge-atualizacao .ponto-azul {
-            width: 12px; height: 12px; border-radius: 50%;
-            background: radial-gradient(circle at 4px 4px, #60a5fa, #1d4ed8);
-            box-shadow: 0 0 5px rgba(59, 130, 246, 0.6);
-        }
-
-        /* AJUSTE IFRAME: max-width alterado para 100% para fluir nos 850px */
+        /* Painel de exportação ajustado para ficar à direita já que removemos o badge de atualização */
         .painel-exportacao {
             width: 100%; margin: 20px auto 0 auto; padding: 0 15px;
-            display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+            display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap;
         }
         .painel-exportacao span { font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase; }
 
@@ -56,7 +42,6 @@
         }
         .btn-export:hover { background-color: #f8fafc; border-color: #94a3b8; }
 
-        /* AJUSTE IFRAME: Largura fluida */
         .container-cards {
             width: 100%; margin: 15px auto 10px auto; padding: 0 15px;
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
@@ -83,7 +68,6 @@
         .perc-green { background-color: rgba(16, 185, 129, 0.1); color: #047857; }
         .perc-amber { background-color: rgba(245, 158, 114, 0.1); color: #b45309; }
 
-        /* AJUSTE IFRAME: Largura fluida */
         .container-graficos {
             width: 100%; margin: 10px auto 20px auto; padding: 0 15px;
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;
@@ -97,12 +81,11 @@
         .grafico-box { width: 100%; height: 350px; }
         .grafico-full { grid-column: span 2; }
 
-        /* REGRAS DE RESPONSIVIDADE (Ajustadas para 860px) */
         @media (max-width: 860px) {
             .container-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .container-graficos { grid-template-columns: 1fr; } /* Empilha os gráficos de pizza no iframe de 850px */
+            .container-graficos { grid-template-columns: 1fr; }
             .grafico-full { grid-column: span 1; }
-            .painel-exportacao { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .painel-exportacao { justify-content: center; }
         }
 
         @media (max-width: 480px) {
@@ -126,11 +109,6 @@
     </div>
 
     <div class="painel-exportacao">
-        <div class="badge-atualizacao">
-            <span class="ponto-azul"></span>
-            <span id="txtAtualizacao">Carregando atualização...</span>
-        </div>
-        
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <span>Exportar Período:</span>
             <button class="btn-export" onclick="exportarCSV()">CSV</button>
@@ -183,7 +161,6 @@
         const domElements = {
             filtroAno: document.getElementById('filtroAno'),
             filtroMes: document.getElementById('filtroMes'),
-            txtAtualizacao: document.getElementById('txtAtualizacao'),
             kpiTotal: document.getElementById('kpiTotal'),
             kpiSLA: document.getElementById('kpiSLA'),
             kpiRespondidas: document.getElementById('kpiRespondidas'),
@@ -201,50 +178,30 @@
         let dadosOriginais = [], dadosVisiveis = [];
         const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
-        function converterDataBR(str) {
+        // Função ultra-resiliente para converter datas, ignorando lixo textual e horários
+        function limparEConverterData(str) {
             if (!str) return null;
-            const partes = str.trim().split('/');
-            if (partes.length !== 3) return null;
-            const dia = parseInt(partes[0], 10);
-            const mes = parseInt(partes[1], 10) - 1;
-            const ano = parseInt(partes[2], 10);
-            const d = new Date(ano, mes, dia);
-            return isNaN(d.getTime()) ? null : d;
+            let apenasData = str.trim().split(' ')[0]; // Corta qualquer horário que venha junto
+            
+            if (apenasData.includes('/')) {
+                let partes = apenasData.split('/');
+                if (partes.length === 3) {
+                    return new Date(parseInt(partes[2], 10), parseInt(partes[1], 10) - 1, parseInt(partes[0], 10));
+                }
+            } else if (apenasData.includes('-')) {
+                let partes = apenasData.split('-');
+                if (partes.length === 3) {
+                    return new Date(parseInt(partes[0], 10), parseInt(partes[1], 10) - 1, parseInt(partes[2], 10));
+                }
+            }
+            return null;
         }
 
         fetch(csvUrl)
             .then(res => res.text())
             .then(textoBruto => {
-                const linhas = textoBruto.split(/\r?\n/);
-                const primeiraLinha = linhas[0];
-                
-                let match = primeiraLinha.match(/MODIF_REAL:\s*\d{2}\/\d{2}\/\d{4},\s*\d{2}:\d{2}(:\d{2})?/i);
-                let textoAtualizacao = "";
-                
-                if (match) {
-                    textoAtualizacao = match[0]
-                        .replace(/MODIF_REAL:\s*/i, "Dados atualizados em ")
-                        .replace(",", " às")
-                        .replace(/:\d{2}$/, "");
-                } else {
-                    textoAtualizacao = primeiraLinha.replace(/[",;]+$/, '').replace(/"/g, '').trim();
-                    if (textoAtualizacao.toUpperCase().includes("MODIF_REAL")) {
-                        textoAtualizacao = textoAtualizacao
-                            .replace(/MODIF_REAL:\s*/i, "Dados atualizados em ")
-                            .replace(",", " às")
-                            .replace(/:\d{2}$/, "");
-                    }
-                }
-                
-                if (textoAtualizacao && domElements.txtAtualizacao) {
-                    domElements.txtAtualizacao.textContent = textoAtualizacao;
-                } else {
-                    domElements.txtAtualizacao.textContent = "Conectado à Base de Dados Ativa";
-                }
-
-                const dadosTabelaCsv = linhas.slice(1).join('\n');
-
-                Papa.parse(dadosTabelaCsv, {
+                // Como a 1ª linha de data/hora foi removida, passamos o texto direto para o PapaParse
+                Papa.parse(textoBruto, {
                     header: true,
                     skipEmptyLines: true,
                     complete: function(results) {
@@ -258,8 +215,8 @@
                             const dataAbertura = clean.datadeabertura;
                             const dataResp = clean.dataresposta; 
                             
-                            const objAbertura = converterDataBR(dataAbertura);
-                            const objResposta = converterDataBR(dataResp);
+                            const objAbertura = limparEConverterData(dataAbertura);
+                            const objResposta = limparEConverterData(dataResp);
                             
                             if (objAbertura) {
                                 clean._anoAbertura = objAbertura.getFullYear().toString();
@@ -269,13 +226,16 @@
                                 clean._mesAberturaNome = "Indefinido";
                             }
 
+                            // Define como respondido se a célula tem qualquer conteúdo válido
+                            const estaRespondido = dataResp && dataResp.trim() !== "";
+                            clean._respondido = estaRespondido;
+
+                            // Cálculo matemático do SLA apenas se ambas as datas forem válidas
                             if (objAbertura && objResposta) {
                                 let diferencaTempo = objResposta.getTime() - objAbertura.getTime();
                                 clean._slaDias = Math.max(0, Math.floor(diferencaTempo / (1000 * 60 * 60 * 24)));
-                                clean._respondido = true;
                             } else {
                                 clean._slaDias = null;
-                                clean._respondido = false;
                             }
 
                             clean.tipo_exibicao = linha["Tipo"] || "Não Informado";
@@ -292,7 +252,6 @@
             })
             .catch(err => {
                 console.error("Erro no carregamento:", err);
-                domElements.txtAtualizacao.textContent = "Erro na sincronização";
             });
 
         function popularFiltrosDinamicos(d) {
@@ -366,7 +325,6 @@
                 mapaAssunto[l.assunto_exibicao] = (mapaAssunto[l.assunto_exibicao] || 0) + 1;
             });
 
-            // GRÁFICO 1: Tipos
             let dataTipo = Object.keys(mapaTipo).map(k => ({ name: k, value: mapaTipo[k] }));
             charts.tipo.setOption({
                 title: { text: 'Distribuição por Tipo', left: 'center', textStyle: { fontSize: 14, color: '#334155' } },
@@ -379,7 +337,6 @@
                 }]
             }, true);
 
-            // GRÁFICO 2: Canais
             let dataCanal = Object.keys(mapaCanal).map(k => ({ name: k, value: mapaCanal[k] }));
             charts.canal.setOption({
                 title: { text: 'Canais de Entrada', left: 'center', textStyle: { fontSize: 14, color: '#334155' } },
@@ -393,17 +350,14 @@
                 }]
             }, true);
 
-            // GRÁFICO 3: ASSUNTOS (MODIFICADO)
-            // 1. Removemos o limitador (.slice) para puxar TODOS os assuntos
             let dadosAssuntosOrdenados = Object.keys(mapaAssunto)
                 .map(k => ({ assunto: k, total: mapaAssunto[k] }))
                 .sort((a, b) => b.total - a.total);
 
-            // 2. Cálculo dinâmico da altura da DIV baseado na quantidade de barras (para não esmagá-las)
             const chartAssuntoDOM = document.getElementById('chartAssunto');
             const novaAltura = Math.max(350, dadosAssuntosOrdenados.length * 35 + 80);
             chartAssuntoDOM.style.height = novaAltura + 'px';
-            charts.assunto.resize(); // Informa ao ECharts que a caixa mudou de tamanho
+            charts.assunto.resize(); 
 
             charts.assunto.setOption({
                 title: { text: 'Todos os Assuntos Recorrentes', left: 'left', textStyle: { fontSize: 14, color: '#334155' } },
@@ -413,13 +367,12 @@
                 yAxis: { 
                     type: 'category', 
                     data: dadosAssuntosOrdenados.map(i => i.assunto).reverse(),
-                    axisLabel: { width: 250, overflow: 'truncate' } // Evita que textos gigantes quebrem o layout do iframe
+                    axisLabel: { width: 250, overflow: 'truncate' } 
                 },
                 series: [{
                     name: 'Demandas', 
                     type: 'bar',
                     data: dadosAssuntosOrdenados.map(i => i.total).reverse(),
-                    // 3. Sistema de Cores Variadas para as barras
                     itemStyle: { 
                         color: function(params) {
                             const paleta = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6', '#6366f1', '#ec4899'];
@@ -445,7 +398,7 @@
                 "Canal de Entrada": l.canal_exibicao,
                 "Ano Abertura": l._anoAbertura,
                 "Mês Abertura": l._mesAberturaNome,
-                "Tempo Resposta (Dias)": l._respondido ? l._slaDias : "Pendente",
+                "Tempo Resposta (Dias)": l._respondido ? (l._slaDias !== null ? l._slaDias : 0) : "Pendente",
                 "Status": l._respondido ? "Respondido" : "Em Aberto"
             }));
         }
