@@ -312,7 +312,6 @@
         
         dadosGlobais.forEach(d => {
             if (d.situacao) statuses.add(d.situacao);
-            // Agora os anos do filtro são alimentados APENAS pela Data do Contrato
             if (d.data_contrato) { const p = d.data_contrato.split('/'); if(p[2] && p[2].length === 4) anos.add(p[2]); }
         });
         
@@ -345,7 +344,6 @@
                 const mContrato = d.data_contrato ? (!mes || d.data_contrato.split('/')[1] === mes) && (!ano || d.data_contrato.split('/')[2] === ano) : false;
                 const mVigencia = d.vigencia_contrato ? (!mes || d.vigencia_contrato.split('/')[1] === mes) && (!ano || d.vigencia_contrato.split('/')[2] === ano) : false;
 
-                // NOVA LÓGICA: Padrão focado na Data do Contrato. Só usa Vigência se for selecionado explicitamente.
                 if (tipoData === 'vigencia_contrato') {
                     matchData = mVigencia;
                 } else {
@@ -465,51 +463,113 @@
         });
     }
 
+    // ==========================================
+    // FUNÇÕES DE EXPORTAÇÃO BLINDADAS
+    // ==========================================
+    function gerarNomeArquivoBase() {
+        let partes = ["contratos"];
+        
+        let campoBusca = document.getElementById('filtroTexto');
+        let txt = campoBusca && campoBusca.value ? campoBusca.value.trim() : "";
+        if (txt) partes.push(txt.replace(/\s+/g, '_'));
+        
+        let campoStatus = document.getElementById('filtroStatus');
+        let status = campoStatus && campoStatus.value ? campoStatus.value : "";
+        if (status) partes.push(status);
+        
+        let campoAno = document.getElementById('filtroAno');
+        let ano = campoAno && campoAno.value ? campoAno.value : "";
+        if (ano) partes.push(ano);
+        
+        return removerAcentos(partes.join('_')).replace(/[^a-zA-Z0-9_]/g, '');
+    }
+
     function exportarCSV() {
-        const data = tabela.rows({ filter: 'applied' }).data().toArray();
-        let csv = "\ufeffN_Contrato,Razao_Social,Objeto_Contrato,Data_Contrato,Valor_Contrato,Vigencia_Contrato,Modalidade,Fiscal,Situacao\n";
-        data.forEach(d => { 
-            const objSafe = d.objeto_contrato ? d.objeto_contrato.replace(/"/g, '""') : "";
-            csv += `"${d.n_contrato}","${d.razao_social}","${objSafe}","${d.data_contrato}","${d.valor_contrato}","${d.vigencia_contrato}","${d.modalidade}","${d.fiscal}","${d.situacao}"\n`; 
-        });
-        downloadFile(csv, gerarNomeArquivoBase() + ".csv", "text/csv");
+        try {
+            const data = tabela.rows({ filter: 'applied' }).data().toArray();
+            let csv = "\ufeffN_Contrato,Razao_Social,Objeto_Contrato,Data_Contrato,Valor_Contrato,Vigencia_Contrato,Modalidade,Fiscal,Situacao,Link_PDF,Link_SAPL\n";
+            data.forEach(d => { 
+                const objSafe = d.objeto_contrato ? String(d.objeto_contrato).replace(/"/g, '""') : "";
+                const pdfSafe = d.link_pdf && d.link_pdf !== '-' ? d.link_pdf : "";
+                const saplSafe = d.link_sapl && d.link_sapl !== '-' ? d.link_sapl : "";
+                csv += `"${d.n_contrato || ''}","${d.razao_social || ''}","${objSafe}","${d.data_contrato || ''}","${d.valor_contrato || ''}","${d.vigencia_contrato || ''}","${d.modalidade || ''}","${d.fiscal || ''}","${d.situacao || ''}","${pdfSafe}","${saplSafe}"\n`; 
+            });
+            downloadFile(csv, gerarNomeArquivoBase() + ".csv", "text/csv");
+        } catch(e) { alert("Erro ao exportar CSV: " + e.message); console.error(e); }
     }
 
     function exportarXLSX() {
-        const data = tabela.rows({ filter: 'applied' }).data().toArray();
-        const dataFormatada = data.map(d => ({
-            "Nº Contrato": d.n_contrato, "Razão Social": d.razao_social, "Objeto": d.objeto_contrato, "Data do Contrato": d.data_contrato,
-            "Valor": d.valor_contrato, "Vigente Até": d.vigencia_contrato, "Modalidade": d.modalidade, "Fiscal": d.fiscal, "Situação": d.situacao
-        }));
-        const ws = XLSX.utils.json_to_sheet(dataFormatada);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Contratos");
-        XLSX.writeFile(wb, gerarNomeArquivoBase() + ".xlsx");
+        try {
+            const data = tabela.rows({ filter: 'applied' }).data().toArray();
+            const dataFormatada = data.map(d => ({
+                "Nº Contrato": d.n_contrato || '', 
+                "Razão Social": d.razao_social || '', 
+                "Objeto": d.objeto_contrato || '', 
+                "Data do Contrato": d.data_contrato || '',
+                "Valor": d.valor_contrato || '', 
+                "Vigente Até": d.vigencia_contrato || '', 
+                "Modalidade": d.modalidade || '', 
+                "Fiscal": d.fiscal || '', 
+                "Situação": d.situacao || '',
+                "Link PDF": d.link_pdf !== '-' ? d.link_pdf || '' : "",
+                "Link SAPL": d.link_sapl !== '-' ? d.link_sapl || '' : ""
+            }));
+            const ws = XLSX.utils.json_to_sheet(dataFormatada);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Contratos");
+            XLSX.writeFile(wb, gerarNomeArquivoBase() + ".xlsx");
+        } catch(e) { alert("Erro ao exportar Excel: " + e.message); console.error(e); }
     }
 
     function exportarJSON() {
-        const data = tabela.rows({ filter: 'applied' }).data().toArray();
-        const exportData = data.map(d => { let item = {...d}; delete item.busca_indexada; delete item.peso_ordenacao_contrato; return item; });
-        downloadFile(JSON.stringify(exportData, null, 2), gerarNomeArquivoBase() + ".json", "application/json");
+        try {
+            const data = tabela.rows({ filter: 'applied' }).data().toArray();
+            const exportData = data.map(d => { 
+                let item = {...d}; 
+                delete item.busca_indexada; 
+                delete item.peso_ordenacao_contrato; 
+                return item; 
+            });
+            downloadFile(JSON.stringify(exportData, null, 2), gerarNomeArquivoBase() + ".json", "application/json");
+        } catch(e) { alert("Erro ao exportar JSON: " + e.message); console.error(e); }
     }
 
     function exportarXML() {
-        const data = tabela.rows({ filter: 'applied' }).data().toArray();
-        let xml = '<?xml version="1.0" encoding="UTF-8"?><contratos>';
-        data.forEach(d => {
-            xml += '<contrato>';
-            for (let k in d) if(typeof d[k] !== 'object' && k !== 'busca_indexada' && k !== 'peso_ordenacao_contrato') xml += `<${k}>${d[k]}</${k}>`;
-            xml += '</contrato>';
-        });
-        xml += '</contratos>';
-        downloadFile(xml, gerarNomeArquivoBase() + ".xml", "application/xml");
+        try {
+            const data = tabela.rows({ filter: 'applied' }).data().toArray();
+            let xml = '<?xml version="1.0" encoding="UTF-8"?><contratos>';
+            data.forEach(d => {
+                xml += '<contrato>';
+                for (let k in d) {
+                    if(typeof d[k] !== 'object' && k !== 'busca_indexada' && k !== 'peso_ordenacao_contrato') {
+                        xml += `<${k}>${d[k]}</${k}>`;
+                    }
+                }
+                xml += '</contrato>';
+            });
+            xml += '</contratos>';
+            downloadFile(xml, gerarNomeArquivoBase() + ".xml", "application/xml");
+        } catch(e) { alert("Erro ao exportar XML: " + e.message); console.error(e); }
     }
 
     function downloadFile(content, fileName, mime) {
         const blob = new Blob([content], { type: mime });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = url; a.download = fileName; a.click();
+        
+        a.style.display = "none";
+        a.href = url; 
+        a.download = fileName;
+        
+        // Injeta e clica no link invisível
+        document.body.appendChild(a); 
+        a.click();
+        
+        // Limpa a memória logo em seguida
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 100);
     }
 
     function imprimirSeguro() {
