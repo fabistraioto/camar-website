@@ -322,12 +322,10 @@
                     else if (h.includes("vigencia")) obj.vigencia_contrato = val;
                     else if (h.includes("modalidade")) obj.modalidade = val;
                     else if (h.includes("fiscal")) obj.fiscal = val;
-                    // A coluna Situação não é mais mapeada aqui.
                     else if (h.includes("link_pdf")) obj.link_pdf = val;
                     else if (h.includes("link_sapl")) obj.link_sapl = val;
                 });
                 
-                // CÁLCULO 100% AUTOMÁTICO DA SITUAÇÃO (IGNORA A PLANILHA)
                 let vigenciaTimestamp = converterDataParaTimestamp(obj.vigencia_contrato);
                 let hoje = new Date();
                 hoje.setHours(0, 0, 0, 0);
@@ -370,7 +368,10 @@
         let anos = new Set();
         
         dadosGlobais.forEach(d => {
-            if (d.situacao) statuses.add(d.situacao);
+            // REGRA NOVA: Não adiciona "Vigência Indeterminada" ao menu de filtros
+            if (d.situacao && d.situacao !== "Vigência Indeterminada") {
+                statuses.add(d.situacao);
+            }
             if (d.modalidade_filtro) modalidades.add(d.modalidade_filtro);
             if (d.fiscal_filtro && d.fiscal_filtro !== '-') fiscais.add(d.fiscal_filtro);
             if (d.data_contrato) { const p = d.data_contrato.split('/'); if(p[2] && p[2].length === 4) anos.add(p[2]); }
@@ -412,7 +413,17 @@
 
         const res = dadosGlobais.filter(d => {
             const matchTexto = !txt || d.busca_indexada.includes(txt);
-            const matchSit = !sit || d.situacao === sit;
+            
+            // REGRA NOVA: Se escolheu "Vigente", pega os Vigentes e os de Vigência Indeterminada
+            let matchSit = true;
+            if (sit) {
+                if (sit === "Vigente") {
+                    matchSit = (d.situacao === "Vigente" || d.situacao === "Vigência Indeterminada");
+                } else {
+                    matchSit = d.situacao === sit;
+                }
+            }
+            
             const matchMod = !mod || d.modalidade_filtro === mod;
             const matchFis = !fis || d.fiscal_filtro === fis;
 
@@ -550,7 +561,7 @@
     }
 
     // ==========================================
-    // FUNÇÕES DE EXPORTAÇÃO BLINDADAS (COM LGPD E SITUAÇÃO AUTOMÁTICA)
+    // FUNÇÕES DE EXPORTAÇÃO BLINDADAS
     // ==========================================
     function gerarNomeArquivoBase() {
         let partes = ["contratos"];
@@ -598,7 +609,7 @@
                 "Vigente Até": d.vigencia_contrato || '', 
                 "Modalidade": d.modalidade || '', 
                 "Fiscal": d.fiscal || '', 
-                "Situação": d.situacao || '', 
+                "Situação": d.situacao || '',
                 "Link PDF": d.link_pdf !== '-' ? d.link_pdf || '' : "",
                 "Link SAPL": d.link_sapl !== '-' ? d.link_sapl || '' : ""
             }));
