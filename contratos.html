@@ -288,4 +288,232 @@
                 let buscaUnificada = `${obj.razao_social || ''} ${obj.objeto_contrato || ''} ${obj.n_contrato || ''} ${obj.fiscal || ''}`;
                 obj.busca_indexada = removerAcentos(buscaUnificada.toLowerCase().replace(/\n/g, ' '));
                 return obj;
-            }).filter(d => d.n_
+            }).filter(d => d.n_contrato || d.razao_social);
+
+            popularFiltrosDinamicos();
+            aplicarFiltros();
+            
+            $('#badge-atualizacao').text(`🟢 ${carimboAtualizacao}`);
+            $('#loader').hide();
+            $('#main-container').fadeIn(400, () => enviarAlturaIframe());
+        } catch (e) { console.error(e); }
+    }
+
+    function popularFiltrosDinamicos() {
+        let statuses = new Set();
+        let anos = new Set();
+        
+        dadosGlobais.forEach(d => {
+            if (d.situacao) statuses.add(d.situacao);
+            if (d.data_contrato) { const p = d.data_contrato.split('/'); if(p[2] && p[2].length === 4) anos.add(p[2]); }
+            if (d.vigencia_contrato) { const p = d.vigencia_contrato.split('/'); if(p[2] && p[2].length === 4) anos.add(p[2]); }
+        });
+        
+        let htmlStatus = '<option value="">Situação (Todas)</option>';
+        [...statuses].sort().forEach(s => {
+            // Verifica se a opção é Vigente/Ativo para a deixar pré-selecionada
+            let selected = (s.toLowerCase().includes('vigente') || s.toLowerCase().includes('ativo')) ? 'selected' : '';
+            htmlStatus += `<option value="${s}" ${selected}>${s}</option>`;
+        });
+        $('#filtroStatus').html(htmlStatus);
+
+        let arrAnos = [...anos].sort((a,b) => b-a);
+        let htmlAno = '<option value="">Ano</option>';
+        arrAnos.forEach(a => { htmlAno += `<option value="${a}">${a}</option>`; });
+        $('#filtroAno').html(htmlAno);
+    }
+
+    function aplicarFiltros() {
+        const txt = removerAcentos($('#filtroTexto').val().toLowerCase());
+        const sit = $('#filtroStatus').val();
+        const tipoData = $('#filtroTipoData').val();
+        const mes = $('#filtroMes').val();
+        const ano = $('#filtroAno').val();
+
+        const res = dadosGlobais.filter(d => {
+            const matchTexto = !txt || d.busca_indexada.includes(txt);
+            const matchSit = !sit || d.situacao === sit;
+
+            let matchData = true;
+            if (tipoData || mes || ano) {
+                const mContrato = d.data_contrato ? (!mes || d.data_contrato.split('/')[1] === mes) && (!ano || d.data_contrato.split('/')[2] === ano) : false;
+                const mVigencia = d.vigencia_contrato ? (!mes || d.vigencia_contrato.split('/')[1] === mes) && (!ano || d.vigencia_contrato.split('/')[2] === ano) : false;
+
+                if (tipoData === 'data_contrato') matchData = mContrato;
+                else if (tipoData === 'vigencia_contrato') matchData = mVigencia;
+                else matchData = mContrato || mVigencia;
+            }
+            return matchTexto && matchSit && matchData;
+        });
+
+        // Ordenação: Vigentes/Ativos primeiro, Encerrados no final, e cronologicamente
+        res.sort((a, b) => {
+            const sitA = (a.situacao || "").toLowerCase();
+            const sitB = (b.situacao || "").toLowerCase();
+            const aEncerrado = sitA.includes('encerrado') || sitA.includes('inativo') || sitA.includes('suspenso');
+            const bEncerrado = sitB.includes('encerrado') || sitB.includes('inativo') || sitB.includes('suspenso');
+
+            if (aEncerrado !== bEncerrado) return aEncerrado ? 1 : -1;
+            return b.timestamp_contrato - a.timestamp_contrato;
+        });
+
+        renderizar(res);
+    }
+
+    function renderizar(dados) {
+        if (tabela) { tabela.destroy(); $('#comprimento-tabela').empty(); }
+
+        tabela = $('#tabela').DataTable({
+            data: dados,
+            pageLength: 10,
+            ordering: false,
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json', lengthMenu: "Exibir _MENU_ resultados" },
+            dom: 'lrt<"dt-bottom-controls"ip>',
+            columns: [{
+                data: null,
+                render: function(d) {
+                    const sitNormalizado = (d.situacao || '').toLowerCase();
+                    const statusClass = (sitNormalizado.includes('encerrado') || sitNormalizado.includes('inativo') || sitNormalizado.includes('suspenso')) ? 'status-desligado' : 'status-ativo';
+                    
+                    const objetoFormatado = d.objeto_contrato ? d.objeto_contrato.replace(/\n/g, '<br>') : '-';
+
+                    return `
+                        <div class="card-info">
+                            <div class="card-header">
+                                <div class="card-header-texto">
+                                    <span class="nome-principal">${d.razao_social || 'Razão Social Não Informada'}</span>
+                                </div>
+                                <span class="status-badge ${statusClass}">${d.situacao || 'N/I'}</span>
+                            </div>
+                            
+                            <div class="card-body">
+                                <div class="info-row">
+                                    <div class="info-col">
+                                        <span class="info-label">Número do Contrato</span>
+                                        <span class="info-valor">${d.n_contrato || '-'}</span>
+                                    </div>
+                                    <div class="info-col">
+                                        <span class="info-label">Modalidade</span>
+                                        <span class="info-valor" style="white-space: nowrap;">${d.modalidade || '-'}</span>
+                                    </div>
+                                    <div class="info-col">
+                                        <span class="info-label">Valor do Contrato</span>
+                                        <span class="info-valor">${d.valor_contrato || '-'}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-row">
+                                    <div class="info-col">
+                                        <span class="info-label">Fiscal</span>
+                                        <span class="info-valor">${d.fiscal || '-'}</span>
+                                    </div>
+                                    <div class="info-col">
+                                        <span class="info-label">Data do Contrato</span>
+                                        <span class="info-valor">${d.data_contrato || '-'}</span>
+                                    </div>
+                                    <div class="info-col">
+                                        <span class="info-label">Vigente Até</span>
+                                        <span class="info-valor">${d.vigencia_contrato || '-'}</span>
+                                    </div>
+                                </div>
+
+                                <div class="info-row" style="margin-top: 5px;">
+                                    <div class="info-col full-width">
+                                        <span class="info-label">Objeto do Contrato</span>
+                                        <span class="info-valor" style="font-weight: 500; font-size: 12.5px; text-transform: uppercase;">${objetoFormatado}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+            }],
+            initComplete: function() { $('.dataTables_length').appendTo('#comprimento-tabela'); enviarAlturaIframe(); },
+            drawCallback: function() { 
+                const total = this.api().rows({ filter: 'applied' }).count();
+                $('#contagem-registros').html(`<b>${total}</b> contratos encontrados`);
+                enviarAlturaIframe(); 
+            }
+        });
+
+        tabela.on('page.dt', function () {
+            setTimeout(function() { document.getElementById('painel-visualizacao').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+        });
+    }
+
+    function exportarCSV() {
+        const data = tabela.rows({ filter: 'applied' }).data().toArray();
+        let csv = "\ufeffN_Contrato,Razao_Social,Objeto_Contrato,Data_Contrato,Valor_Contrato,Vigencia_Contrato,Modalidade,Fiscal,Situacao\n";
+        data.forEach(d => { 
+            const objSafe = d.objeto_contrato ? d.objeto_contrato.replace(/"/g, '""') : "";
+            csv += `"${d.n_contrato}","${d.razao_social}","${objSafe}","${d.data_contrato}","${d.valor_contrato}","${d.vigencia_contrato}","${d.modalidade}","${d.fiscal}","${d.situacao}"\n`; 
+        });
+        downloadFile(csv, gerarNomeArquivoBase() + ".csv", "text/csv");
+    }
+
+    function exportarXLSX() {
+        const data = tabela.rows({ filter: 'applied' }).data().toArray();
+        const dataFormatada = data.map(d => ({
+            "Nº Contrato": d.n_contrato, "Razão Social": d.razao_social, "Objeto": d.objeto_contrato, "Data do Contrato": d.data_contrato,
+            "Valor": d.valor_contrato, "Vigente Até": d.vigencia_contrato, "Modalidade": d.modalidade, "Fiscal": d.fiscal, "Situação": d.situacao
+        }));
+        const ws = XLSX.utils.json_to_sheet(dataFormatada);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Contratos");
+        XLSX.writeFile(wb, gerarNomeArquivoBase() + ".xlsx");
+    }
+
+    function exportarJSON() {
+        const data = tabela.rows({ filter: 'applied' }).data().toArray();
+        const exportData = data.map(d => { let item = {...d}; delete item.busca_indexada; delete item.timestamp_contrato; return item; });
+        downloadFile(JSON.stringify(exportData, null, 2), gerarNomeArquivoBase() + ".json", "application/json");
+    }
+
+    function exportarXML() {
+        const data = tabela.rows({ filter: 'applied' }).data().toArray();
+        let xml = '<?xml version="1.0" encoding="UTF-8"?><contratos>';
+        data.forEach(d => {
+            xml += '<contrato>';
+            for (let k in d) if(typeof d[k] !== 'object' && k !== 'busca_indexada' && k !== 'timestamp_contrato') xml += `<${k}>${d[k]}</${k}>`;
+            xml += '</contrato>';
+        });
+        xml += '</contratos>';
+        downloadFile(xml, gerarNomeArquivoBase() + ".xml", "application/xml");
+    }
+
+    function downloadFile(content, fileName, mime) {
+        const blob = new Blob([content], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = fileName; a.click();
+    }
+
+    function imprimirSeguro() {
+        const len = tabela.page.len();
+        tabela.page.len(-1).draw('page');
+        setTimeout(() => { window.print(); tabela.page.len(len).draw('page'); }, 500);
+    }
+
+    function limparFiltros() { 
+        $('#filtroTexto').val(''); 
+        $('select').val(''); 
+        
+        // Retorna o filtro de status para "Vigente" (ou Ativo) por padrão ao limpar
+        let statusOpt = $('#filtroStatus option').filter(function() {
+            return $(this).text().toLowerCase().includes('vigente') || $(this).text().toLowerCase().includes('ativo');
+        }).first().val();
+        
+        if(statusOpt) {
+            $('#filtroStatus').val(statusOpt);
+        }
+        
+        aplicarFiltros(); 
+    }
+    
+    $(document).ready(function() {
+        $('#filtroTexto').on('input', aplicarFiltros);
+        $('select').on('change', aplicarFiltros);
+        carregarDados();
+    });
+</script>
+</body>
+</html>
