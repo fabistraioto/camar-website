@@ -28,7 +28,6 @@
         }
         .filtro-grupo select:focus { border-color: #3b82f6; }
 
-        /* Painel de exportação ajustado para ficar à direita já que removemos o badge de atualização */
         .painel-exportacao {
             width: 100%; margin: 20px auto 0 auto; padding: 0 15px;
             display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -178,10 +177,13 @@
         let dadosOriginais = [], dadosVisiveis = [];
         const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
-        // Função ultra-resiliente para converter datas, ignorando lixo textual e horários
+        // Função conversora ultra-robusta de datas
         function limparEConverterData(str) {
             if (!str) return null;
-            let apenasData = str.trim().split(' ')[0]; // Corta qualquer horário que venha junto
+            let strLimpa = String(str).trim();
+            if (strLimpa === "") return null;
+
+            let apenasData = strLimpa.split(' ')[0]; // Corta qualquer horário que venha junto
             
             if (apenasData.includes('/')) {
                 let partes = apenasData.split('/');
@@ -191,7 +193,11 @@
             } else if (apenasData.includes('-')) {
                 let partes = apenasData.split('-');
                 if (partes.length === 3) {
-                    return new Date(parseInt(partes[0], 10), parseInt(partes[1], 10) - 1, parseInt(partes[2], 10));
+                    if (partes[0].length === 4) { // Formato YYYY-MM-DD
+                        return new Date(parseInt(partes[0], 10), parseInt(partes[1], 10) - 1, parseInt(partes[2], 10));
+                    } else { // Formato DD-MM-YYYY
+                        return new Date(parseInt(partes[2], 10), parseInt(partes[1], 10) - 1, parseInt(partes[0], 10));
+                    }
                 }
             }
             return null;
@@ -200,7 +206,6 @@
         fetch(csvUrl)
             .then(res => res.text())
             .then(textoBruto => {
-                // Como a 1ª linha de data/hora foi removida, passamos o texto direto para o PapaParse
                 Papa.parse(textoBruto, {
                     header: true,
                     skipEmptyLines: true,
@@ -208,12 +213,22 @@
                         dadosOriginais = results.data.map(linha => {
                             let clean = {};
                             for (let key in linha) {
+                                if(!key) continue;
                                 let cleanKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
                                 clean[cleanKey] = linha[key];
                             }
                             
-                            const dataAbertura = clean.datadeabertura;
-                            const dataResp = clean.dataresposta; 
+                            // DETECTOR INTELIGENTE DE COLUNAS: 
+                            // Escaneia os cabeçalhos procurando palavras-chave ao invés de nomes exatos.
+                            let chaveAbertura = Object.keys(clean).find(k => k.includes('abertura') || k.includes('cadastro') || k.includes('criacao'));
+                            let chaveResposta = Object.keys(clean).find(k => k.includes('resposta') || k.includes('fechamento') || k.includes('conclusao'));
+                            
+                            let chaveTipo = Object.keys(clean).find(k => k.includes('tipo'));
+                            let chaveCanal = Object.keys(clean).find(k => k.includes('canal') || k.includes('origem'));
+                            let chaveAssunto = Object.keys(clean).find(k => k.includes('assunto') || k.includes('motivo'));
+                            
+                            const dataAbertura = chaveAbertura ? clean[chaveAbertura] : null;
+                            const dataResp = chaveResposta ? clean[chaveResposta] : null; 
                             
                             const objAbertura = limparEConverterData(dataAbertura);
                             const objResposta = limparEConverterData(dataResp);
@@ -226,11 +241,11 @@
                                 clean._mesAberturaNome = "Indefinido";
                             }
 
-                            // Define como respondido se a célula tem qualquer conteúdo válido
-                            const estaRespondido = dataResp && dataResp.trim() !== "";
+                            // Define como respondido se a célula da coluna "resposta" tiver texto válido
+                            const estaRespondido = dataResp && String(dataResp).trim() !== "";
                             clean._respondido = estaRespondido;
 
-                            // Cálculo matemático do SLA apenas se ambas as datas forem válidas
+                            // SLA: Calculado apenas se tiver data de abertura E de resposta válidas
                             if (objAbertura && objResposta) {
                                 let diferencaTempo = objResposta.getTime() - objAbertura.getTime();
                                 clean._slaDias = Math.max(0, Math.floor(diferencaTempo / (1000 * 60 * 60 * 24)));
@@ -238,9 +253,10 @@
                                 clean._slaDias = null;
                             }
 
-                            clean.tipo_exibicao = linha["Tipo"] || "Não Informado";
-                            clean.canal_exibicao = linha["Canal de Entrada"] || "Não Informado";
-                            clean.assunto_exibicao = linha["Assunto"] || "Não Informado";
+                            // Extrai os textos preservando a formatação original da planilha
+                            clean.tipo_exibicao = chaveTipo && clean[chaveTipo] ? clean[chaveTipo] : "Não Informado";
+                            clean.canal_exibicao = chaveCanal && clean[chaveCanal] ? clean[chaveCanal] : "Não Informado";
+                            clean.assunto_exibicao = chaveAssunto && clean[chaveAssunto] ? clean[chaveAssunto] : "Não Informado";
 
                             return clean;
                         }).filter(l => l._anoAbertura !== "Indefinido");
