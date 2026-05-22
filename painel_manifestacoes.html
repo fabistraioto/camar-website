@@ -371,9 +371,72 @@
                 }]
             }, true);
 
+            // GRÁFICO 3: ASSUNTOS (COM BARRA DE ROLAGEM INTERNA)
             let dadosAssuntosOrdenados = Object.keys(mapaAssunto)
                 .map(k => ({ assunto: k, total: mapaAssunto[k] }))
                 .sort((a, b) => b.total - a.total);
+
+            // Volta a ter altura fixa e controlada, ideal para o Iframe
+            const chartAssuntoDOM = document.getElementById('chartAssunto');
+            chartAssuntoDOM.style.height = '400px'; 
+            charts.assunto.resize(); 
+
+            // Calcula dinamicamente quantos itens mostrar na tela para não espremer
+            // Mostra no máximo 8 itens de uma vez, mas se tiver menos, mostra o que tem.
+            const itensNaTela = Math.min(dadosAssuntosOrdenados.length, 8);
+            
+            // O ECharts funciona de baixo para cima quando a barra é horizontal.
+            // Para ver os maiores primeiro no topo, começamos o zoom do final do array
+            const zoomStart = dadosAssuntosOrdenados.length > 8 ? 
+                ((dadosAssuntosOrdenados.length - itensNaTela) / dadosAssuntosOrdenados.length) * 100 : 0;
+
+            charts.assunto.setOption({
+                title: { text: 'Todos os Assuntos Recorrentes', left: 'left', textStyle: { fontSize: 14, color: '#334155' } },
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                grid: { left: '3%', right: '12%', bottom: '3%', top: '50px', containLabel: true },
+                xAxis: { type: 'value', boundaryGap: [0, 0.01] },
+                yAxis: { 
+                    type: 'category', 
+                    data: dadosAssuntosOrdenados.map(i => i.assunto).reverse(),
+                    axisLabel: { width: 200, overflow: 'truncate' } 
+                },
+                // ADIÇÃO DO SCROLL BAR VERTICAL (DATAZOOM)
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        show: dadosAssuntosOrdenados.length > 8, // Só mostra se tiver mais que 8 itens
+                        yAxisIndex: [0], // Aplica o scroll no eixo Y (vertical)
+                        left: '93%', // Posiciona no cantinho direito
+                        start: zoomStart, // Inicia focando no topo da lista (maiores valores)
+                        end: 100, // Vai até o fim do gráfico
+                        width: 20, // Largura da barrinha
+                        zoomLock: true // Trava o tamanho do "thumb", assim a pessoa só desliza
+                    },
+                    {
+                        type: 'inside', // Permite rolar com o scroll do mouse ou touch
+                        yAxisIndex: [0],
+                        start: zoomStart,
+                        end: 100,
+                        zoomOnMouseWheel: false,
+                        moveOnMouseWheel: true
+                    }
+                ],
+                color: [
+                    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', 
+                    '#06b6d4', '#f97316', '#14b8a6', '#6366f1', '#ec4899',
+                    '#84cc16', '#eab308', '#d946ef', '#0ea5e9', '#f43f5e'
+                ],
+                series: [{
+                    name: 'Demandas', 
+                    type: 'bar',
+                    colorBy: 'data', 
+                    data: dadosAssuntosOrdenados.map(i => i.total).reverse(),
+                    itemStyle: { 
+                        borderRadius: [0, 4, 4, 0] 
+                    },
+                    label: { show: true, position: 'right', fontSize: 10 }
+                }]
+            }, true);
 
             const chartAssuntoDOM = document.getElementById('chartAssunto');
             const novaAltura = Math.max(350, dadosAssuntosOrdenados.length * 35 + 80);
