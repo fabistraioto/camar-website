@@ -179,7 +179,6 @@
                 <button onclick="exportarJSON()">⬇️ JSON</button>
                 <button onclick="exportarXML()">⬇️ XML</button>
                 <button class="btn-acao" onclick="imprimirSeguro()">🖨️ Imprimir</button>
-                <button class="btn-acao" onclick="carregarDados()">🔄 Atualizar</button>
             </div>
         </fieldset>
 
@@ -234,9 +233,9 @@
         let matchDataHora = textoPrimeiraLinha.match(/(\d{1,2}\/\d{1,2}\/\d{4})[^\d]*(\d{1,2}:\d{2})/);
         
         if (matchDataHora) {
-            carimboAtualizacao = `Atualizado em ${matchDataHora[1]} às ${matchDataHora[2]}`;
+            carimboAtualizacao = `Dados atualizados em ${matchDataHora[1]} às ${matchDataHora[2]}`;
         } else {
-            carimboAtualizacao = textoPrimeiraLinha.split(',')[0].replace(/MODIF_REAL:\s*/i, "Atualizado em ");
+            carimboAtualizacao = textoPrimeiraLinha.split(',')[0].replace(/MODIF_REAL:\s*/i, "Dados atualizados em ");
         }
 
         const headers = linhas[1].split(',').map(h => h.trim().toLowerCase());
