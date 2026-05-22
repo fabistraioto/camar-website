@@ -400,17 +400,24 @@
                 
                 yAxis: { type: 'value' },
                 
-                // BARRA DE ROLAGEM HORIZONTAL REPOSICIONADA
+                // BARRA DE ROLAGEM HORIZONTAL TRAVADA E LIMPA
                 dataZoom: [
                     {
                         type: 'slider',
                         show: dadosAssuntosOrdenados.length > 8,
                         xAxisIndex: [0], 
-                        bottom: 10, // Define a distância fixa do rodapé da DIV (desgruda dos textos)
+                        bottom: 10, 
                         start: 0, 
                         end: zoomEnd, 
-                        height: 20, // Altura da barra de rolagem
-                        zoomLock: true
+                        height: 15, // Deixei um pouquinho mais fina para ficar mais elegante
+                        
+                        // AS TRAVAS DE TAMANHO E COMPORTAMENTO
+                        zoomLock: true, // Trava o redimensionamento
+                        brushSelect: false, // Impede que um clique no fundo crie uma nova barra
+                        minValueSpan: itensNaTela - 1, // Trava o mínimo de colunas na tela
+                        maxValueSpan: itensNaTela - 1, // Trava o máximo de colunas na tela
+                        handleSize: 0, // Esconde as "alças" laterais de redimensionamento
+                        showDetail: false // Remove os textos flutuantes chatos que aparecem ao arrastar
                     },
                     {
                         type: 'inside',
@@ -418,7 +425,10 @@
                         start: 0,
                         end: zoomEnd,
                         zoomOnMouseWheel: false,
-                        moveOnMouseWheel: true
+                        moveOnMouseWheel: true,
+                        // Trava o tamanho também para quem rola usando o mouse/touch
+                        minValueSpan: itensNaTela - 1, 
+                        maxValueSpan: itensNaTela - 1
                     }
                 ],
                 color: [
