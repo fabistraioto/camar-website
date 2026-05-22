@@ -213,19 +213,14 @@
                             let clean = {};
                             for (let key in linha) {
                                 if(!key) continue;
+                                // Remove pontuações e converte para minúsculas
                                 let cleanKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
                                 clean[cleanKey] = linha[key];
                             }
                             
-                            let chaveAbertura = Object.keys(clean).find(k => k.includes('abertura') || k.includes('cadastro') || k.includes('criacao'));
-                            let chaveResposta = Object.keys(clean).find(k => k.includes('resposta') || k.includes('fechamento') || k.includes('conclusao'));
-                            
-                            let chaveTipo = Object.keys(clean).find(k => k.includes('tipo'));
-                            let chaveCanal = Object.keys(clean).find(k => k.includes('canal') || k.includes('origem'));
-                            let chaveAssunto = Object.keys(clean).find(k => k.includes('assunto') || k.includes('motivo'));
-                            
-                            const dataAbertura = chaveAbertura ? clean[chaveAbertura] : null;
-                            const dataResp = chaveResposta ? clean[chaveResposta] : null; 
+                            // EXTRAÇÃO EXATA BASEADA NO SEU CABEÇALHO 
+                            const dataAbertura = clean.dataabertura || null;
+                            const dataResp = clean.dataconclusao || null; 
                             
                             const objAbertura = limparEConverterData(dataAbertura);
                             const objResposta = limparEConverterData(dataResp);
@@ -238,6 +233,7 @@
                                 clean._mesAberturaNome = "Indefinido";
                             }
 
+                            // Define como respondido se a célula tem qualquer conteúdo válido
                             const estaRespondido = dataResp && String(dataResp).trim() !== "";
                             clean._respondido = estaRespondido;
 
@@ -248,9 +244,10 @@
                                 clean._slaDias = null;
                             }
 
-                            clean.tipo_exibicao = chaveTipo && clean[chaveTipo] ? clean[chaveTipo] : "Não Informado";
-                            clean.canal_exibicao = chaveCanal && clean[chaveCanal] ? clean[chaveCanal] : "Não Informado";
-                            clean.assunto_exibicao = chaveAssunto && clean[chaveAssunto] ? clean[chaveAssunto] : "Não Informado";
+                            // Higienização para exibição
+                            clean.tipo_exibicao = linha["tipo"] || "Não Informado";
+                            clean.canal_exibicao = linha["canal_entrada"] || "Não Informado";
+                            clean.assunto_exibicao = linha["assuntos"] || "Não Informado";
 
                             return clean;
                         }).filter(l => l._anoAbertura !== "Indefinido");
@@ -335,6 +332,7 @@
                 mapaAssunto[l.assunto_exibicao] = (mapaAssunto[l.assunto_exibicao] || 0) + 1;
             });
 
+            // GRÁFICO 1
             let dataTipo = Object.keys(mapaTipo).map(k => ({ name: k, value: mapaTipo[k] }));
             charts.tipo.setOption({
                 title: { text: 'Distribuição por Tipo', left: 'center', textStyle: { fontSize: 14, color: '#334155' } },
@@ -347,6 +345,7 @@
                 }]
             }, true);
 
+            // GRÁFICO 2
             let dataCanal = Object.keys(mapaCanal).map(k => ({ name: k, value: mapaCanal[k] }));
             charts.canal.setOption({
                 title: { text: 'Canais de Entrada', left: 'center', textStyle: { fontSize: 14, color: '#334155' } },
@@ -359,20 +358,16 @@
                     center: ['50%', '50%'],
                     data: dataCanal, 
                     itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
-                    label: { 
-                        show: false 
-                    }
+                    label: { show: false }
                 }]
             }, true);
 
-            // GRÁFICO 3: ASSUNTOS (COLUNAS VERTICAIS COM SCROLL HORIZONTAL)
-            // GRÁFICO 3: ASSUNTOS (COLUNAS VERTICAIS COM SCROLL HORIZONTAL CORRIGIDO)
+            // GRÁFICO 3 (Assuntos Verticais com Scroll)
             let dadosAssuntosOrdenados = Object.keys(mapaAssunto)
                 .map(k => ({ assunto: k, total: mapaAssunto[k] }))
-                .sort((a, b) => b.total - a.total); 
+                .sort((a, b) => b.total - a.total);
 
             const chartAssuntoDOM = document.getElementById('chartAssunto');
-            // AUMENTAMOS A ALTURA TOTAL DO GRÁFICO PARA DAR ESPAÇO AOS TEXTOS E AO SCROLL
             chartAssuntoDOM.style.height = '450px'; 
             charts.assunto.resize(); 
 
@@ -383,24 +378,20 @@
             charts.assunto.setOption({
                 title: { text: 'Todos os Assuntos Recorrentes', left: 'center', textStyle: { fontSize: 14, color: '#334155' } },
                 tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-                
-                // AJUSTE CRÍTICO: 'bottom' aumentado para 35% (abre mais espaço para os textos inclinados)
                 grid: { left: '3%', right: '3%', bottom: '35%', top: '50px', containLabel: true },
                 
                 xAxis: { 
                     type: 'category', 
                     data: dadosAssuntosOrdenados.map(i => i.assunto),
                     axisLabel: { 
-                        width: 150, // Permite textos um pouco mais largos
+                        width: 150, 
                         overflow: 'truncate', 
                         interval: 0,
-                        rotate: 45 // Inclinação ajustada para 45 graus para economizar espaço horizontal
+                        rotate: 45 
                     } 
                 },
-                
                 yAxis: { type: 'value' },
                 
-                // BARRA DE ROLAGEM HORIZONTAL TRAVADA E LIMPA
                 dataZoom: [
                     {
                         type: 'slider',
@@ -409,15 +400,13 @@
                         bottom: 10, 
                         start: 0, 
                         end: zoomEnd, 
-                        height: 15, // Deixei um pouquinho mais fina para ficar mais elegante
-                        
-                        // AS TRAVAS DE TAMANHO E COMPORTAMENTO
-                        zoomLock: true, // Trava o redimensionamento
-                        brushSelect: false, // Impede que um clique no fundo crie uma nova barra
-                        minValueSpan: itensNaTela - 1, // Trava o mínimo de colunas na tela
-                        maxValueSpan: itensNaTela - 1, // Trava o máximo de colunas na tela
-                        handleSize: 0, // Esconde as "alças" laterais de redimensionamento
-                        showDetail: false // Remove os textos flutuantes chatos que aparecem ao arrastar
+                        height: 15,
+                        zoomLock: true,
+                        brushSelect: false,
+                        minValueSpan: itensNaTela - 1, 
+                        maxValueSpan: itensNaTela - 1,
+                        handleSize: 0,
+                        showDetail: false
                     },
                     {
                         type: 'inside',
@@ -426,7 +415,6 @@
                         end: zoomEnd,
                         zoomOnMouseWheel: false,
                         moveOnMouseWheel: true,
-                        // Trava o tamanho também para quem rola usando o mouse/touch
                         minValueSpan: itensNaTela - 1, 
                         maxValueSpan: itensNaTela - 1
                     }
