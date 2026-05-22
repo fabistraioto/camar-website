@@ -438,37 +438,6 @@
                 }]
             }, true);
 
-            const chartAssuntoDOM = document.getElementById('chartAssunto');
-            const novaAltura = Math.max(350, dadosAssuntosOrdenados.length * 35 + 80);
-            chartAssuntoDOM.style.height = novaAltura + 'px';
-            charts.assunto.resize(); 
-
-            charts.assunto.setOption({
-                title: { text: 'Todos os Assuntos Recorrentes', left: 'left', textStyle: { fontSize: 14, color: '#334155' } },
-                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-                grid: { left: '3%', right: '8%', bottom: '3%', top: '50px', containLabel: true },
-                xAxis: { type: 'value', boundaryGap: [0, 0.01] },
-                yAxis: { 
-                    type: 'category', 
-                    data: dadosAssuntosOrdenados.map(i => i.assunto).reverse(),
-                    axisLabel: { width: 250, overflow: 'truncate' } 
-                },
-                series: [{
-                    name: 'Demandas', 
-                    type: 'bar',
-                    data: dadosAssuntosOrdenados.map(i => i.total).reverse(),
-                    itemStyle: { 
-                        color: function(params) {
-                            const paleta = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6', '#6366f1', '#ec4899'];
-                            return paleta[params.dataIndex % paleta.length];
-                        },
-                        borderRadius: [0, 4, 4, 0] 
-                    },
-                    label: { show: true, position: 'right', fontSize: 10 }
-                }]
-            }, true);
-        }
-
         window.addEventListener('resize', () => {
             charts.tipo.resize();
             charts.canal.resize();
