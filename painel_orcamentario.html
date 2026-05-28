@@ -63,7 +63,7 @@
 
         .container-cards {
             max-width: 1240px; margin: 15px auto 30px auto; padding: 0 15px;
-            display: grid; grid-template-columns: repeat(6, 1fr); gap: 20px 10px; box-sizing: border-box;
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px 10px; box-sizing: border-box;
         }
 
         .card {
@@ -79,7 +79,6 @@
         .card.empenhado { border-left-color: #5470C6; }
         .card.liquidado { border-left-color: #91CC75; }
         .card.pago      { border-left-color: #FAC858; }
-        .card.resultado { border-left-color: #EE6666; }
 
         .card-titulo { font-size: 10px; text-transform: uppercase; color: #6b7280; font-weight: bold; margin-bottom: 3px; }
         .card-valor { font-size: 13px; font-weight: bold; color: #111827; }
@@ -90,7 +89,6 @@
         .perc-empenhado { background-color: rgba(84, 112, 198, 0.1); color: #3730a3; } 
         .perc-liquidado { background-color: rgba(145, 204, 117, 0.1); color: #166534; } 
         .perc-pago      { background-color: rgba(250, 200, 88, 0.1); color: #92400e; } 
-        .perc-resultado { background-color: rgba(238, 102, 102, 0.1); color: #991b1b; }
 
         .container-grafico { max-width: 1240px; margin: 10px auto 30px auto; padding: 0 15px; }
         #meuGrafico { width: 100%; height: 500px; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); padding: 15px 0; }
@@ -168,11 +166,6 @@
             <div class="card-valor" id="kpiPago">R$ 0,00</div>
             <span class="card-perc perc-pago" id="percPago">0%</span>
         </div>
-        <div class="card resultado">
-            <div class="card-titulo">Saldo Orçamentário</div>
-            <div class="card-valor" id="kpiResultado">R$ 0,00</div>
-            <span class="card-perc perc-resultado" id="percResultado">0% Livre</span>
-        </div>
     </div>
 
     <div class="container-grafico">
@@ -189,12 +182,10 @@
             empenhado: document.getElementById('kpiEmpenhado'),
             liquidado: document.getElementById('kpiLiquidado'),
             pago: document.getElementById('kpiPago'),
-            resultado: document.getElementById('kpiResultado'),
             percRealizado: document.getElementById('percRealizado'),
             percEmpenhado: document.getElementById('percEmpenhado'),
             percLiquidado: document.getElementById('percLiquidado'),
             percPago: document.getElementById('percPago'),
-            percResultado: document.getElementById('percResultado'),
             txtAtualizacao: document.getElementById('txtAtualizacao'),
             filtroAno: document.getElementById('filtroAno'),
             filtroMes: document.getElementById('filtroMes')
@@ -260,9 +251,8 @@
                             let e = limparNumeroBR(l.empenhado);
                             let liq = limparNumeroBR(l.liquidado);
                             let p = limparNumeroBR(l.pago);
-                            let r = limparNumeroBR(l.resultado);
                             let prev = limparNumeroBR(l.duodecimo_previsto);
-                            return (d > 0 || e > 0 || liq > 0 || p > 0 || r > 0 || prev > 0);
+                            return (d > 0 || e > 0 || liq > 0 || p > 0 || prev > 0);
                         });
 
                         popularFiltros(dadosOriginais);
@@ -299,14 +289,13 @@
         }
 
         function atualizarKPIs(d) {
-            let tPre = 0, tRec = 0, tEmp = 0, tLiq = 0, tPag = 0, tRes = 0;
+            let tPre = 0, tRec = 0, tEmp = 0, tLiq = 0, tPag = 0;
             d.forEach(l => {
                 tPre += limparNumeroBR(l.duodecimo_previsto);
                 tRec += limparNumeroBR(l.duodecimo);
                 tEmp += limparNumeroBR(l.empenhado);
                 tLiq += limparNumeroBR(l.liquidado);
                 tPag += limparNumeroBR(l.pago);
-                tRes += limparNumeroBR(l.resultado);
             });
 
             kpiElements.previsto.textContent = formatarMoeda(tPre);
@@ -314,13 +303,11 @@
             kpiElements.empenhado.textContent = formatarMoeda(tEmp);
             kpiElements.liquidado.textContent = formatarMoeda(tLiq);
             kpiElements.pago.textContent = formatarMoeda(tPag);
-            kpiElements.resultado.textContent = formatarMoeda(tRes);
 
             kpiElements.percRealizado.textContent = calcularPerc(tRec, tPre) + ' do Previsto';
             kpiElements.percEmpenhado.textContent = calcularPerc(tEmp, tRec) + ' do Recebido';
             kpiElements.percLiquidado.textContent = calcularPerc(tLiq, tRec) + ' do Recebido';
             kpiElements.percPago.textContent = calcularPerc(tPag, tRec) + ' do Recebido';
-            kpiElements.percResultado.textContent = calcularPerc(tRes, tRec) + ' Livre';
         }
 
         function renderizarGrafico(d, titulo) {
@@ -356,7 +343,7 @@
                 } },
                 
                 legend: [
-                    { data: ['Receita Prevista', 'Receita Recebida', 'Saldo Orçamentário'], bottom: 25 },
+                    { data: ['Receita Prevista', 'Receita Recebida'], bottom: 25 },
                     { data: ['Valor Empenhado', 'Valor Liquidado', 'Valor Pago'], bottom: 0 }
                 ],
                 
@@ -390,20 +377,7 @@
                     },
                     { name: 'Valor Empenhado', type: 'bar', data: d.map(l => limparNumeroBR(l.empenhado)), itemStyle: { color: '#5470C6' }, z: 2 },
                     { name: 'Valor Liquidado', type: 'bar', data: d.map(l => limparNumeroBR(l.liquidado)), itemStyle: { color: '#91CC75' }, z: 2 },
-                    { name: 'Valor Pago', type: 'bar', data: d.map(l => limparNumeroBR(l.pago)), itemStyle: { color: '#FAC858' }, z: 2 },
-                    { 
-                        name: 'Saldo Orçamentário', 
-                        type: 'line', 
-                        smooth: true, 
-                        data: d.map(l => {
-                            let rec = limparNumeroBR(l.duodecimo);
-                            let val = limparNumeroBR(l.resultado);
-                            return rec === 0 ? null : val;
-                        }), 
-                        itemStyle: { color: '#EE6666' }, 
-                        lineStyle: { width: 3 }, 
-                        z: 3 
-                    }
+                    { name: 'Valor Pago', type: 'bar', data: d.map(l => limparNumeroBR(l.pago)), itemStyle: { color: '#FAC858' }, z: 2 }
                 ]
             };
             
@@ -465,8 +439,7 @@
                 "Duodecimo_Recebido": limparNumeroBR(l.duodecimo),
                 "Empenhado": limparNumeroBR(l.empenhado),
                 "Liquidado": limparNumeroBR(l.liquidado),
-                "Pago": limparNumeroBR(l.pago),
-                "Resultado": limparNumeroBR(l.resultado)
+                "Pago": limparNumeroBR(l.pago)
             }));
         }
 
