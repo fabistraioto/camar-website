@@ -62,15 +62,16 @@
         .btn-export:hover { background-color: #f3f4f6; }
 
         .container-cards {
-            max-width: 1240px; margin: 15px auto 10px auto; padding: 0 15px;
-            display: grid; grid-template-columns: repeat(6, 1fr); gap: 20px 20px; box-sizing: border-box;
+            max-width: 1240px; margin: 15px auto 30px auto; padding: 0 15px;
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 20px 10px; box-sizing: border-box;
         }
 
         .card {
-            background: #ffffff; padding: 10px 5px; border-radius: 8px;
-            text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            background: #ffffff; padding: 15px 10px; border-radius: 8px;
+            text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.06);
             border-left: 4px solid #9ca3af; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; height: 100%;
+            justify-content: center; align-items: center; min-height: 100px;
+            box-sizing: border-box;
         }
 
         .card.previsto  { border-left-color: #00ced1; } 
@@ -91,7 +92,7 @@
         .perc-pago      { background-color: rgba(250, 200, 88, 0.1); color: #92400e; } 
         .perc-resultado { background-color: rgba(238, 102, 102, 0.1); color: #991b1b; }
 
-        .container-grafico { max-width: 1240px; margin: 10px auto 20px auto; padding: 0 15px; }
+        .container-grafico { max-width: 1240px; margin: 10px auto 30px auto; padding: 0 15px; }
         #meuGrafico { width: 100%; height: 500px; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); padding: 15px 0; }
 
         /* REGRAS DE RESPONSIVIDADE (MEDIA QUERIES) */
