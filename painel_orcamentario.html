@@ -94,21 +94,35 @@
         #meuGrafico { width: 100%; height: 500px; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); padding: 15px 0; }
 
         /* REGRAS DE RESPONSIVIDADE (MEDIA QUERIES) */
-        @media (max-width: 1024px) {
-            .container-cards { grid-template-columns: repeat(3, 1fr); gap: 20px 10px; }
+        
+        /* Telas médias (laptops menores, tablets deitados) */
+        @media (max-width: 1100px) {
+            .container-cards { grid-template-columns: repeat(6, 1fr); }
+            /* Os 3 primeiros cards dividem a primeira linha igualmente (2/6 cada) */
+            .card:nth-child(1), .card:nth-child(2), .card:nth-child(3) { grid-column: span 2; }
+            /* Os 2 últimos cards dividem a segunda linha igualmente (3/6 cada) */
+            .card:nth-child(4), .card:nth-child(5) { grid-column: span 3; }
         }
 
+        /* Telas pequenas (tablets em pé, celulares grandes) */
         @media (max-width: 768px) {
             .painel-exportacao { flex-direction: column-reverse; align-items: center; gap: 15px; }
             .painel-exportacao div { justify-content: center; }
             .container-cards { grid-template-columns: repeat(2, 1fr); }
+            /* Volta os 4 primeiros cards para o padrão (1 de espaço cada) */
+            .card:nth-child(1), .card:nth-child(2), .card:nth-child(3), .card:nth-child(4) { grid-column: span 1; }
+            /* O último card ocupa a largura toda na base para não ficar manco */
+            .card:nth-child(5) { grid-column: span 2; }
             #meuGrafico { height: 400px; }
         }
 
+        /* Telas muito pequenas (celulares menores) */
         @media (max-width: 480px) {
             .painel-filtros { flex-direction: column; gap: 12px; }
             .filtro-grupo select { width: 100%; max-width: 280px; }
             .container-cards { grid-template-columns: 1fr; }
+            /* Todos os cards ocupam 1 linha inteira */
+            .card:nth-child(1), .card:nth-child(2), .card:nth-child(3), .card:nth-child(4), .card:nth-child(5) { grid-column: span 1; }
         }
     </style>
 </head>
